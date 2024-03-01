@@ -1,0 +1,26 @@
+{
+  "version.label": {
+    "message": "Next",
+    "description": "The label for version current"
+  },
+  "sidebar.symbol_sdk.category.Symbol SDK": {
+    "message": "Symbol SDK",
+    "description": "The label for category Symbol SDK in sidebar symbol_sdk"
+  },
+  "sidebar.symbol_sdk.category.v2": {
+    "message": "v2",
+    "description": "The label for category v2 in sidebar symbol_sdk"
+  },
+  "sidebar.symbol_sdk.category.v2.link.generated-index.description": {
+    "message": "Learn about Symbol SDK v2",
+    "description": "The generated-index page description for category v2 in sidebar symbol_sdk"
+  },
+  "sidebar.symbol_sdk.category.v3": {
+    "message": "v3",
+    "description": "The label for category v3 in sidebar symbol_sdk"
+  },
+  "sidebar.symbol_sdk.category.v3.link.generated-index.description": {
+    "message": "Learn about Symbol SDK v3",
+    "description": "The generated-index page description for category v3 in sidebar symbol_sdk"
+  }
+}

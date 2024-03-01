@@ -1,0 +1,736 @@
+---
+sidebar_position: 7
+---
+
+# 7.メタデータ
+
+アカウント・モザイク・ネームスペースに対してKey-Value形式のデータを登録することができます。  
+Valueの最大値は1024バイトです。
+本章ではモザイク・ネームスペースの作成アカウントとメタデータの作成アカウントがどちらもAliceであることを前提に説明します。
+
+本章のサンプルスクリプトを実行する前に以下を実行して必要ライブラリを読み込んでおいてください。
+
+#### v2
+
+```js
+metaRepo = repo.createMetadataRepository();
+mosaicRepo = repo.createMosaicRepository();
+metaService = new sym.MetadataTransactionService(metaRepo);
+```
+
+#### v3
+
+v3 ではキーを生成するメソッドが無いため、 v2 と同様のキーを生成するためにハッシュライブラリをインポートする必要があります。
+
+```js
+sha3_256 = (await import('https://cdn.skypack.dev/@noble/hashes/sha3')).sha3_256;
+```
+
+## 7.1 アカウントに登録
+
+アカウントに対して、Key-Value値を登録します。
+
+#### v2
+
+```js
+key = sym.KeyGenerator.generateUInt64Key("key_account");
+value = "test";
+
+tx = await metaService.createAccountMetadataTransaction(
+    undefined,
+    networkType,
+    alice.address, //メタデータ記録先アドレス
+    key,value, //Key-Value値
+    alice.address //メタデータ作成者アドレス
+).toPromise();
+
+aggregateTx = sym.AggregateTransaction.createComplete(
+  sym.Deadline.create(epochAdjustment),
+  [tx.toAggregate(alice.publicAccount)],
+  networkType,[]
+).setMaxFeeForAggregate(100, 0);
+
+signedTx = alice.sign(aggregateTx,generationHash);
+await txRepo.announce(signedTx).toPromise();
+```
+
+#### v3
+
+```js
+// ターゲットと作成者アドレスの設定
+targetAddress = aliceAddress.toString();  // メタデータ記録先アドレス
+sourceAddress = aliceAddress.toString();  // メタデータ作成者アドレス
+
+// キーと値の設定
+key = "key_account";
+value = "test";
+
+// キー生成(v2 準拠)
+hasher = sha3_256.create();
+hasher.update((new TextEncoder()).encode(key));
+digest = hasher.digest();
+lower = [...digest.subarray(0, 4)];
+lower.reverse();
+lowerValue = BigInt("0x" + symbolSdk.utils.uint8ToHex(lower));
+higher = [...digest.subarray(4, 8)];
+higher.reverse();
+higherValue = BigInt("0x" + symbolSdk.utils.uint8ToHex(higher)) | 0x80000000n;
+keyId = lowerValue + higherValue * 0x100000000n;
+valueData = (new TextEncoder()).encode(value);
+
+// 同じキーのメタデータが登録されているか確認
+query = new URLSearchParams({
+  "targetAddress": targetAddress,
+  "sourceAddress": sourceAddress,
+  "scopedMetadataKey": keyId.toString(16).toUpperCase(),
+  "metadataType": 0
+});
+metadataInfo = await fetch(
+  new URL('/metadata?' + query.toString(), NODE),
+  {
+    method: 'GET',
+    headers: { 'Content-Type': 'application/json' },
+  }
+)
+.then((res) => res.json())
+.then((json) => {
+  return json.data;
+});
+// 登録済の場合は差分データを作成する
+sizeDelta = valueData.length;
+if (metadataInfo.length > 0) {
+  sizeDelta -= metadataInfo[0].metadataEntry.valueSize;
+  originData = symbolSdk.utils.hexToUint8(metadataInfo[0].metadataEntry.value);
+  diffData = new Uint8Array(Math.max(originData.length, valueData.length));
+  for (idx = 0; idx < diffData.length; idx++) {
+    diffData[idx] = (originData[idx] == undefined ? 0 : originData[idx]) ^ (valueData[idx] == undefined ? 0 : valueData[idx]);
+  }
+  valueData = diffData;
+}
+
+// アカウントメタデータ登録Tx作成
+tx = facade.transactionFactory.createEmbedded({
+  type: 'account_metadata_transaction_v1',      // Txタイプ:アカウントメタデータ登録Tx
+  signerPublicKey: aliceKey.publicKey,  // 署名者公開鍵
+  targetAddress: targetAddress,
+  scopedMetadataKey: keyId,
+  valueSizeDelta: sizeDelta,
+  value: valueData
+});
+
+// マークルハッシュの算出
+embeddedTransactions = [
+  tx
+];
+merkleHash = facade.constructor.hashEmbeddedTransactions(embeddedTransactions);
+
+// アグリゲートTx作成
+aggregateTx = facade.transactionFactory.create({
+  type: 'aggregate_complete_transaction_v2',
+  signerPublicKey: aliceKey.publicKey,  // 署名者公開鍵
+  deadline: facade.network.fromDatetime(Date.now()).addHours(2).timestamp, //Deadline:有効期限
+  transactionsHash: merkleHash,
+  transactions: embeddedTransactions
+});
+
+// 連署により追加される連署情報のサイズを追加して最終的なTxサイズを算出する
+requiredCosignatures = 0; // 必要な連署者の数を指定
+calculatedCosignatures = requiredCosignatures > aggregateTx.cosignatures.length ? requiredCosignatures : aggregateTx.cosignatures.length;
+sizePerCosignature = 8 + 32 + 64;
+calculatedSize = aggregateTx.size - aggregateTx.cosignatures.length * sizePerCosignature + calculatedCosignatures * sizePerCosignature;
+aggregateTx.fee = new symbolSdk.symbol.Amount(BigInt(calculatedSize * 100)); //手数料
+
+// 署名とアナウンス
+sig = facade.signTransaction(aliceKey, aggregateTx);
+jsonPayload = facade.transactionFactory.constructor.attachSignature(aggregateTx, sig);
+await fetch(
+  new URL('/transactions', NODE),
+  {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: jsonPayload,
+  }
+)
+.then((res) => res.json())
+.then((json) => {
+  return json;
+});
+```
+
+メタデータの登録には記録先アカウントが承諾を示す署名が必要です。
+また、記録先アカウントと記録者アカウントが同一でもアグリゲートトランザクションにする必要があります。
+
+異なるアカウントのメタデータに登録する場合は署名時に
+signTransactionWithCosignatoriesを使用します。
+
+#### v2
+
+```js
+tx = await metaService.createAccountMetadataTransaction(
+    undefined,
+    networkType,
+    bob.address, //メタデータ記録先アドレス
+    key,value, //Key-Value値
+    alice.address //メタデータ作成者アドレス
+).toPromise();
+
+aggregateTx = sym.AggregateTransaction.createComplete(
+  sym.Deadline.create(epochAdjustment),
+  [tx.toAggregate(alice.publicAccount)],
+  networkType,[]
+).setMaxFeeForAggregate(100, 1); // 第二引数に連署者の数:1
+
+signedTx = aggregateTx.signTransactionWithCosignatories(
+  alice,[bob],generationHash,// 第二引数に連署者
+);
+await txRepo.announce(signedTx).toPromise();
+```
+
+#### v3
+
+```js
+// ターゲットと作成者アドレスの設定
+targetAddress = bobAddress.toString();    // メタデータ記録先アドレス
+sourceAddress = aliceAddress.toString();  // メタデータ作成者アドレス
+
+// キーと値の設定
+key = "key_account";
+value = "test";
+
+// キー生成(v2 準拠)
+hasher = sha3_256.create();
+hasher.update((new TextEncoder()).encode(key));
+digest = hasher.digest();
+lower = [...digest.subarray(0, 4)];
+lower.reverse();
+lowerValue = BigInt("0x" + symbolSdk.utils.uint8ToHex(lower));
+higher = [...digest.subarray(4, 8)];
+higher.reverse();
+higherValue = BigInt("0x" + symbolSdk.utils.uint8ToHex(higher)) | 0x80000000n;
+keyId = lowerValue + higherValue * 0x100000000n;
+valueData = (new TextEncoder()).encode(value);
+
+// 同じキーのメタデータが登録されているか確認
+query = new URLSearchParams({
+  "targetAddress": targetAddress,
+  "sourceAddress": sourceAddress,
+  "scopedMetadataKey": keyId.toString(16).toUpperCase(),
+  "metadataType": 0
+});
+metadataInfo = await fetch(
+  new URL('/metadata?' + query.toString(), NODE),
+  {
+    method: 'GET',
+    headers: { 'Content-Type': 'application/json' },
+  }
+)
+.then((res) => res.json())
+.then((json) => {
+  return json.data;
+});
+// 登録済の場合は差分データを作成する
+sizeDelta = valueData.length;
+if (metadataInfo.length > 0) {
+  sizeDelta -= metadataInfo[0].metadataEntry.valueSize;
+  originData = symbolSdk.utils.hexToUint8(metadataInfo[0].metadataEntry.value);
+  diffData = new Uint8Array(Math.max(originData.length, valueData.length));
+  for (idx = 0; idx < diffData.length; idx++) {
+    diffData[idx] = (originData[idx] == undefined ? 0 : originData[idx]) ^ (valueData[idx] == undefined ? 0 : valueData[idx]);
+  }
+  valueData = diffData;
+}
+
+// アカウントメタデータ登録Tx作成
+tx = facade.transactionFactory.createEmbedded({
+  type: 'account_metadata_transaction_v1',      // Txタイプ:アカウントメタデータ登録Tx
+  signerPublicKey: aliceKey.publicKey,  // 署名者公開鍵
+  targetAddress: targetAddress,
+  scopedMetadataKey: keyId,
+  valueSizeDelta: sizeDelta,
+  value: valueData
+});
+
+// マークルハッシュの算出
+embeddedTransactions = [
+  tx
+];
+merkleHash = facade.constructor.hashEmbeddedTransactions(embeddedTransactions);
+
+// アグリゲートTx作成
+aggregateTx = facade.transactionFactory.create({
+  type: 'aggregate_complete_transaction_v2',
+  signerPublicKey: aliceKey.publicKey,  // 署名者公開鍵
+  deadline: facade.network.fromDatetime(Date.now()).addHours(2).timestamp, //Deadline:有効期限
+  transactionsHash: merkleHash,
+  transactions: embeddedTransactions
+});
+
+// 連署により追加される連署情報のサイズを追加して最終的なTxサイズを算出する
+requiredCosignatures = 1; // 必要な連署者の数を指定
+calculatedCosignatures = requiredCosignatures > aggregateTx.cosignatures.length ? requiredCosignatures : aggregateTx.cosignatures.length;
+sizePerCosignature = 8 + 32 + 64;
+calculatedSize = aggregateTx.size - aggregateTx.cosignatures.length * sizePerCosignature + calculatedCosignatures * sizePerCosignature;
+aggregateTx.fee = new symbolSdk.symbol.Amount(BigInt(calculatedSize * 100)); //手数料
+
+// 作成者による署名
+sig = facade.signTransaction(aliceKey, aggregateTx);
+jsonPayload = facade.transactionFactory.constructor.attachSignature(aggregateTx, sig);
+
+// 記録先アカウントによる連署
+coSig = facade.cosignTransaction(bobKey, aggregateTx, false);
+aggregateTx.cosignatures.push(coSig);
+
+// アナウンス
+await fetch(
+  new URL('/transactions', NODE),
+  {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({"payload": symbolSdk.utils.uint8ToHex(aggregateTx.serialize())}),
+  }
+)
+.then((res) => res.json())
+.then((json) => {
+  return json;
+});
+```
+
+bobの秘密鍵が分からない場合はこの後の章で説明する
+アグリゲートボンデッドトランザクション、あるいはオフライン署名を使用する必要があります。
+
+## 7.2 モザイクに登録
+
+ターゲットとなるモザイクに対して、Key値・ソースアカウントの複合キーでValue値を登録します。
+登録・更新にはモザイクを作成したアカウントの署名が必要です。
+
+#### v2
+
+```js
+mosaicId = new sym.MosaicId("1275B0B7511D9161");
+mosaicInfo = await mosaicRepo.getMosaic(mosaicId).toPromise();
+
+key = sym.KeyGenerator.generateUInt64Key('key_mosaic');
+value = 'test';
+
+tx = await metaService.createMosaicMetadataTransaction(
+  undefined,
+  networkType,
+  mosaicInfo.ownerAddress, //モザイク作成者アドレス
+  mosaicId,
+  key,value, //Key-Value値
+  alice.address
+).toPromise();
+
+aggregateTx = sym.AggregateTransaction.createComplete(
+    sym.Deadline.create(epochAdjustment),
+    [tx.toAggregate(alice.publicAccount)],
+    networkType,[]
+).setMaxFeeForAggregate(100, 0);
+
+signedTx = alice.sign(aggregateTx,generationHash);
+await txRepo.announce(signedTx).toPromise();
+```
+
+#### v3
+
+```js
+// ターゲットと作成者アドレスの設定
+targetMosaic = 0x1275B0B7511D9161n;  // メタデータ記録先モザイク
+mosaicInfo = await fetch(
+new URL('/mosaics/' + targetMosaic.toString(16).toUpperCase(), NODE),
+  {
+    method: 'GET',
+    headers: { 'Content-Type': 'application/json' },
+  }
+)
+.then((res) => res.json())
+.then((json) => {
+  return json;
+});
+sourceAddress = new symbolSdk.symbol.Address(symbolSdk.utils.hexToUint8(mosaicInfo.mosaic.ownerAddress));  // モザイク作成者アドレス
+
+// キーと値の設定
+key = "key_mosaic";
+value = "test";
+
+// キー生成(v2 準拠)
+hasher = sha3_256.create();
+hasher.update((new TextEncoder()).encode(key));
+digest = hasher.digest();
+lower = [...digest.subarray(0, 4)];
+lower.reverse();
+lowerValue = BigInt("0x" + symbolSdk.utils.uint8ToHex(lower));
+higher = [...digest.subarray(4, 8)];
+higher.reverse();
+higherValue = BigInt("0x" + symbolSdk.utils.uint8ToHex(higher)) | 0x80000000n;
+keyId = lowerValue + higherValue * 0x100000000n;
+valueData = (new TextEncoder()).encode(value);
+
+// 同じキーのメタデータが登録されているか確認
+query = new URLSearchParams({
+  "targetId": targetMosaic.toString(16).toUpperCase(),
+  "sourceAddress": sourceAddress,
+  "scopedMetadataKey": keyId.toString(16).toUpperCase(),
+  "metadataType": 1
+});
+metadataInfo = await fetch(
+  new URL('/metadata?' + query.toString(), NODE),
+  {
+    method: 'GET',
+    headers: { 'Content-Type': 'application/json' },
+  }
+)
+.then((res) => res.json())
+.then((json) => {
+  return json.data;
+});
+// 登録済の場合は差分データを作成する
+sizeDelta = valueData.length;
+if (metadataInfo.length > 0) {
+  sizeDelta -= metadataInfo[0].metadataEntry.valueSize;
+  originData = symbolSdk.utils.hexToUint8(metadataInfo[0].metadataEntry.value);
+  diffData = new Uint8Array(Math.max(originData.length, valueData.length));
+  for (idx = 0; idx < diffData.length; idx++) {
+    diffData[idx] = (originData[idx] == undefined ? 0 : originData[idx]) ^ (valueData[idx] == undefined ? 0 : valueData[idx]);
+  }
+  valueData = diffData;
+}
+
+// モザイクメタデータ登録Tx作成
+tx = facade.transactionFactory.createEmbedded({
+  type: 'mosaic_metadata_transaction_v1',      // Txタイプ:モザイクメタデータ登録Tx
+  signerPublicKey: aliceKey.publicKey,  // 署名者公開鍵
+  targetMosaicId: targetMosaic,
+  targetAddress: sourceAddress,
+  scopedMetadataKey: keyId,
+  valueSizeDelta: sizeDelta,
+  value: valueData
+});
+
+// マークルハッシュの算出
+embeddedTransactions = [
+  tx
+];
+merkleHash = facade.constructor.hashEmbeddedTransactions(embeddedTransactions);
+
+// アグリゲートTx作成
+aggregateTx = facade.transactionFactory.create({
+  type: 'aggregate_complete_transaction_v2',
+  signerPublicKey: aliceKey.publicKey,  // 署名者公開鍵
+  deadline: facade.network.fromDatetime(Date.now()).addHours(2).timestamp, //Deadline:有効期限
+  transactionsHash: merkleHash,
+  transactions: embeddedTransactions
+});
+
+// 連署により追加される連署情報のサイズを追加して最終的なTxサイズを算出する
+requiredCosignatures = 0; // 必要な連署者の数を指定
+calculatedCosignatures = requiredCosignatures > aggregateTx.cosignatures.length ? requiredCosignatures : aggregateTx.cosignatures.length;
+sizePerCosignature = 8 + 32 + 64;
+calculatedSize = aggregateTx.size - aggregateTx.cosignatures.length * sizePerCosignature + calculatedCosignatures * sizePerCosignature;
+aggregateTx.fee = new symbolSdk.symbol.Amount(BigInt(calculatedSize * 100)); //手数料
+
+// 署名とアナウンス
+sig = facade.signTransaction(aliceKey, aggregateTx);
+jsonPayload = facade.transactionFactory.constructor.attachSignature(aggregateTx, sig);
+await fetch(
+  new URL('/transactions', NODE),
+  {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: jsonPayload,
+  }
+)
+.then((res) => res.json())
+.then((json) => {
+  return json;
+});
+```
+
+## 7.3 ネームスペースに登録
+
+ネームスペースに対して、Key-Value値を登録します。
+登録・更新にはネームスペースを作成したアカウントの署名が必要です。
+
+#### v2
+
+```js
+nsRepo = repo.createNamespaceRepository();
+namespaceId = new sym.NamespaceId("xembook");
+namespaceInfo = await nsRepo.getNamespace(namespaceId).toPromise();
+
+key = sym.KeyGenerator.generateUInt64Key('key_namespace');
+value = 'test';
+
+tx = await metaService.createNamespaceMetadataTransaction(
+    undefined,networkType,
+    namespaceInfo.ownerAddress, //ネームスペースの作成者アドレス
+    namespaceId,
+    key,value, //Key-Value値
+    alice.address //メタデータの登録者
+).toPromise();
+
+aggregateTx = sym.AggregateTransaction.createComplete(
+    sym.Deadline.create(epochAdjustment),
+    [tx.toAggregate(alice.publicAccount)],
+    networkType,[]
+).setMaxFeeForAggregate(100, 0);
+
+signedTx = alice.sign(aggregateTx,generationHash);
+await txRepo.announce(signedTx).toPromise();
+```
+
+#### v3
+
+```js
+// ターゲットと作成者アドレスの設定
+targetNamespace = symbolSdk.symbol.generateNamespaceId("xembook");  // メタデータ記録先ネームスペース
+namespaceInfo = await fetch(
+  new URL('/namespaces/' + targetNamespace.toString(16).toUpperCase(), NODE),
+  {
+    method: 'GET',
+    headers: { 'Content-Type': 'application/json' },
+  }
+)
+.then((res) => res.json())
+.then((json) => {
+  return json;
+});
+sourceAddress = new symbolSdk.symbol.Address(symbolSdk.utils.hexToUint8(namespaceInfo.namespace.ownerAddress));  // ネームスペース作成者アドレス
+
+// キーと値の設定
+key = "key_namespace";
+value = "test";
+
+// キー生成(v2 準拠)
+hasher = sha3_256.create();
+hasher.update((new TextEncoder()).encode(key));
+digest = hasher.digest();
+lower = [...digest.subarray(0, 4)];
+lower.reverse();
+lowerValue = BigInt("0x" + symbolSdk.utils.uint8ToHex(lower));
+higher = [...digest.subarray(4, 8)];
+higher.reverse();
+higherValue = BigInt("0x" + symbolSdk.utils.uint8ToHex(higher)) | 0x80000000n;
+keyId = lowerValue + higherValue * 0x100000000n;
+valueData = (new TextEncoder()).encode(value);
+
+// 同じキーのメタデータが登録されているか確認
+query = new URLSearchParams({
+  "targetId": targetNamespace.toString(16).toUpperCase(),
+  "sourceAddress": sourceAddress,
+  "scopedMetadataKey": keyId.toString(16).toUpperCase(),
+  "metadataType": 2
+});
+metadataInfo = await fetch(
+  new URL('/metadata?' + query.toString(), NODE),
+  {
+    method: 'GET',
+    headers: { 'Content-Type': 'application/json' },
+  }
+)
+.then((res) => res.json())
+.then((json) => {
+  return json.data;
+});
+// 登録済の場合は差分データを作成する
+sizeDelta = valueData.length;
+if (metadataInfo.length > 0) {
+  sizeDelta -= metadataInfo[0].metadataEntry.valueSize;
+  originData = symbolSdk.utils.hexToUint8(metadataInfo[0].metadataEntry.value);
+  diffData = new Uint8Array(Math.max(originData.length, valueData.length));
+  for (idx = 0; idx < diffData.length; idx++) {
+    diffData[idx] = (originData[idx] == undefined ? 0 : originData[idx]) ^ (valueData[idx] == undefined ? 0 : valueData[idx]);
+  }
+  valueData = diffData;
+}
+
+// ネームスペースメタデータ登録Tx作成
+tx = facade.transactionFactory.createEmbedded({
+  type: 'namespace_metadata_transaction_v1',      // Txタイプ:ネームスペースメタデータ登録Tx
+  signerPublicKey: aliceKey.publicKey,  // 署名者公開鍵
+  targetNamespaceId: targetNamespace,
+  targetAddress: sourceAddress,
+  scopedMetadataKey: keyId,
+  valueSizeDelta: sizeDelta,
+  value: valueData
+});
+
+// マークルハッシュの算出
+embeddedTransactions = [
+  tx
+];
+merkleHash = facade.constructor.hashEmbeddedTransactions(embeddedTransactions);
+
+// アグリゲートTx作成
+aggregateTx = facade.transactionFactory.create({
+  type: 'aggregate_complete_transaction_v2',
+  signerPublicKey: aliceKey.publicKey,  // 署名者公開鍵
+  deadline: facade.network.fromDatetime(Date.now()).addHours(2).timestamp, //Deadline:有効期限
+  transactionsHash: merkleHash,
+  transactions: embeddedTransactions
+});
+
+// 連署により追加される連署情報のサイズを追加して最終的なTxサイズを算出する
+requiredCosignatures = 0; // 必要な連署者の数を指定
+calculatedCosignatures = requiredCosignatures > aggregateTx.cosignatures.length ? requiredCosignatures : aggregateTx.cosignatures.length;
+sizePerCosignature = 8 + 32 + 64;
+calculatedSize = aggregateTx.size - aggregateTx.cosignatures.length * sizePerCosignature + calculatedCosignatures * sizePerCosignature;
+aggregateTx.fee = new symbolSdk.symbol.Amount(BigInt(calculatedSize * 100)); //手数料
+
+// 署名とアナウンス
+sig = facade.signTransaction(aliceKey, aggregateTx);
+jsonPayload = facade.transactionFactory.constructor.attachSignature(aggregateTx, sig);
+await fetch(
+  new URL('/transactions', NODE),
+  {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: jsonPayload,
+  }
+)
+.then((res) => res.json())
+.then((json) => {
+  return json;
+});
+```
+
+## 7.4 確認
+登録したメタデータを確認します。
+
+#### v2
+
+```js
+res = await metaRepo.search({
+  targetAddress:alice.address,
+  sourceAddress:alice.address}
+).toPromise();
+console.log(res);
+```
+###### 出力例
+```js
+data: Array(3)
+  0: Metadata
+    id: "62471DD2BF42F221DFD309D9"
+    metadataEntry: MetadataEntry
+      compositeHash: "617B0F9208753A1080F93C1CEE1A35ED740603CE7CFC21FBAE3859B7707A9063"
+      metadataType: 0
+      scopedMetadataKey: UInt64 {lower: 92350423, higher: 2540877595}
+      sourceAddress: Address {address: 'TBIL6D6RURP45YQRWV6Q7YVWIIPLQGLZQFHWFEQ', networkType: 152}
+      targetAddress: Address {address: 'TBIL6D6RURP45YQRWV6Q7YVWIIPLQGLZQFHWFEQ', networkType: 152}
+      targetId: undefined
+      value: "test"
+  1: Metadata
+    id: "62471F87BF42F221DFD30CC8"
+    metadataEntry: MetadataEntry
+      compositeHash: "D9E2019D7BD5BA58245320392A68B51752E35A35DA349B08E141DCE99AC3655A"
+      metadataType: 1
+      scopedMetadataKey: UInt64 {lower: 1789141730, higher: 3475078673}
+      sourceAddress: Address {address: 'TBIL6D6RURP45YQRWV6Q7YVWIIPLQGLZQFHWFEQ', networkType: 152}
+      targetAddress: Address {address: 'TBIL6D6RURP45YQRWV6Q7YVWIIPLQGLZQFHWFEQ', networkType: 152}
+      targetId: MosaicId
+      id: Id {lower: 1360892257, higher: 309702839}
+      value: "test"
+  3: Metadata
+    id: "62616372BF42F221DF00A88C"
+    metadataEntry: MetadataEntry
+      compositeHash: "D8E597C7B491BF7F9990367C1798B5C993E1D893222F6FC199F98915339D92D5"
+      metadataType: 2
+      scopedMetadataKey: UInt64 {lower: 141807833, higher: 2339015223}
+      sourceAddress: Address {address: 'TBIL6D6RURP45YQRWV6Q7YVWIIPLQGLZQFHWFEQ', networkType: 152}
+      targetAddress: Address {address: 'TBIL6D6RURP45YQRWV6Q7YVWIIPLQGLZQFHWFEQ', networkType: 152}
+      targetId: NamespaceId
+      id: Id {lower: 646738821, higher: 2754876907}
+      value: "test"
+```
+
+#### v3
+
+```js
+query = new URLSearchParams({
+  "targetAddress": aliceAddress,
+  "sourceAddress": aliceAddress,
+});
+res = await fetch(
+  new URL('/metadata?' + query.toString(), NODE),
+  {
+    method: 'GET',
+    headers: { 'Content-Type': 'application/json' },
+  }
+)
+.then((res) => res.json())
+.then((json) => {
+  return json;
+});
+console.log(res);
+```
+###### 出力例
+```js
+> {data: Array(3), pagination: {…}}
+  data: Array(3)
+  > 0: 
+      id: "64B918B76FFE587B6D3625C9"
+    > metadataEntry: 
+        compositeHash: "D2C53CF2F4601F9BD367C2BB4B15CD250D6E21EF59BE99B9D368C25B8A0CF1E1"
+        metadataType: 0
+        scopedMetadataKey: "9772B71B058127D7"
+        sourceAddress: "982B2AA2295B5C23528ADDEE7F29F6521944E9F2340428AB"
+        targetAddress: "982B2AA2295B5C23528ADDEE7F29F6521944E9F2340428AB"
+        targetId: "0000000000000000"
+        value: "74657374"
+        valueSize: 4
+        version: 1
+  > 1: 
+      id: "64B9191C6FFE587B6D36266A"
+    > metadataEntry: 
+        compositeHash: "6B95280F23224CA0A8D02C586C8E0E5043DC339EA6F3EC9EB3CBEBB12D8C5971"
+        metadataType: 1
+        scopedMetadataKey: "CF217E116AA422E2"
+        sourceAddress: "982B2AA2295B5C23528ADDEE7F29F6521944E9F2340428AB"
+        targetAddress: "982B2AA2295B5C23528ADDEE7F29F6521944E9F2340428AB"
+        targetId: "3D86CF283C1C547D"
+        value: "74657374"
+        valueSize: 4
+        version: 1
+  > 2: 
+      id: "64B919576FFE587B6D3626D5"
+    > metadataEntry: 
+        compositeHash: "C92EF86FA799EF32364164584BCFB66A0A874C70C7A8495FA869A8C2E936B99A"
+        metadataType: 2
+        scopedMetadataKey: "8B6A8A370873D0D9"
+        sourceAddress: "982B2AA2295B5C23528ADDEE7F29F6521944E9F2340428AB"
+        targetAddress: "982B2AA2295B5C23528ADDEE7F29F6521944E9F2340428AB"
+        targetId: "D9D35A75833F4C53"
+        value: "74657374"
+        valueSize: 4
+        version: 1
+```
+
+metadataTypeは以下の通りです。
+```js
+sym.MetadataType
+{0: 'Account', 1: 'Mosaic', 2: 'Namespace'}
+```
+
+### 注意事項
+メタデータはキー値で素早く情報にアクセスできるというメリットがある一方で更新可能であることに注意しておく必要があります。
+更新には、発行者アカウントと登録先アカウントの署名が必要のため、それらのアカウントの管理状態が信用できる場合のみ使用するようにしてください。
+
+
+## 7.5 現場で使えるヒント
+
+### 有資格証明
+
+モザイクの章で所有証明、ネームスペースの章でドメインリンクの説明をしました。
+実社会で信頼性の高いドメインからリンクされたアカウントが発行したメタデータの付与を受けることで
+そのドメイン内での有資格情報の所有を証明することができます。
+
+#### DID
+
+分散型アイデンティティと呼ばれます。
+エコシステムは発行者、所有者、検証者に分かれ、例えば大学が発行した卒業証書を学生が所有し、
+企業は学生から提示された証明書を大学が公表している公開鍵をもとに検証します。
+このやりとりにプラットフォームに依存する情報はありません。
+メタデータを活用することで、大学は学生の所有するアカウントにメタデータを発行することができ、
+企業は大学の公開鍵と学生のモザイク(アカウント)所有証明でメタデータに記載された卒業証明を検証することができます。
+
+
