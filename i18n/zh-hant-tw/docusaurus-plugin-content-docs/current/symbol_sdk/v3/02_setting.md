@@ -11,22 +11,19 @@ sidebar_position: 2
 JavaScriptを使用します。
 
 ### SDK
-symbol-sdk-typescript-javascript v2.0.3  
-https://github.com/symbol/symbol-sdk-typescript-javascript
-
-上記SDKをbrowserify化したものをブラウザの開発者コンソールに読み込ませて使用します。  
-https://github.com/xembook/nem2-browserify
-
-##### 注意
-現在 symbol-sdk v3.0.0がアルファ版としてリリースされており、v 2.0.3はdeprecatedです。  
-v3ではrxjsに依存した多くの機能が削除されるため、REST APIへの直接アクセスが推奨されます。  
+`symbol-sdk@2` が deprecated となりました。このセクションでは `symbol-sdk@3` での使用方法を紹介します。
+`symbol-sdk@3` は Node との REST API 接続の実装が削除されました。`Catapult REST Endpoints` を参照して直接実装をして下さい。
  
-### リファレンス
-Symbol SDK for TypeScript and JavaScript  
-https://symbol.github.io/symbol-sdk-typescript-javascript/1.0.3/
+Symbol SDK v3 Referenve
+https://symbol-blockchain-community.github.io/symbol-sdk-v3-reference/
 
-Catapult REST Endpoints (1.0.3)  
-https://symbol.github.io/symbol-openapi/v1.0.3/
+Catapult REST Endpoints (1.0.4)  
+https://symbol.github.io/symbol-openapi/v1.0.4/
+
+なお npm package を使用可能な場合は、コミュニティによって開発されたサポートツールがあります。
+
+@symbol-blockchain-community/symbol-rest-client
+https://www.npmjs.com/package/@symbol-blockchain-community/symbol-rest-client
 
 ## 2.2 サンプルソースコード
 
@@ -73,8 +70,12 @@ document.getElementsByTagName('head')[0].appendChild(script);
 
 #### v3
 
+`SDK_VERSION` は最新のバージョンを使用して下さい。
+
 ```js
-const symbolSdk = (await import('https://www.unpkg.com/symbol-sdk@latest/dist/bundle.web.js')).default;
+// @see https://www.npmjs.com/package/symbol-sdk?activeTab=versions
+const SDK_VERSION = '3.1.0';
+const symbolSdk = (await import(`https://www.unpkg.com/symbol-sdk@${SDK_VERSION}/dist/bundle.web.js`)).default;
 
 // Buffer を読み込んでおく
 (script = document.createElement('script')).src = 'https://bundle.run/buffer@6.0.3';
