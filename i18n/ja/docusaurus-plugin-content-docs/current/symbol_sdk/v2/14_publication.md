@@ -15,9 +15,9 @@
 | 電子版        | ¥1,000 |
 | 電子版 + 紙版 | ¥1,000 |
 
-著者： [XEMBook](https://twitter.com/xembook)<br>
-編集： [NPO法人NEM技術普及推進会NEMTUS](https://twitter.com/NemtusOfficial)<br>
-表紙： [MTN](https://twitter.com/MTN_syndicate)<br>
+著者： [XEMBook](https://twitter.com/xembook)<br/>
+編集： [NPO法人NEM技術普及推進会NEMTUS](https://twitter.com/NemtusOfficial)<br/>
+表紙： [MTN](https://twitter.com/MTN_syndicate)<br/>
 
 ## 今日から現場で使える速習SymbolブロックチェーンC#版
 
@@ -32,6 +32,6 @@
 | 電子版        | ¥1,000 |
 | 電子版 + 紙版 | ¥1,000 |
 
-著者： [XEMBook](https://twitter.com/xembook), [toshi](https://twitter.com/toshiya_ma)<br>
-編集： [NPO法人NEM技術普及推進会NEMTUS](https://twitter.com/NemtusOfficial)<br>
-表紙： [MTN](https://twitter.com/MTN_syndicate)<br>
+著者： [XEMBook](https://twitter.com/xembook), [toshi](https://twitter.com/toshiya_ma)<br/>
+編集： [NPO法人NEM技術普及推進会NEMTUS](https://twitter.com/NemtusOfficial)<br/>
+表紙： [MTN](https://twitter.com/MTN_syndicate)<br/>

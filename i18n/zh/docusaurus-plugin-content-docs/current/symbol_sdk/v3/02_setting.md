@@ -15,15 +15,15 @@ JavaScript を使用します。
 `symbol-sdk@2` が deprecated となりました。このセクションでは `symbol-sdk@3` での使用方法を紹介します。
 `symbol-sdk@3` は Node との REST API 接続の実装が削除されました。`Catapult REST Endpoints` を参照して直接実装をして下さい。
 
-Symbol SDK v3 Referenve<br>
+Symbol SDK v3 Referenve<br/>
 https://symbol-blockchain-community.github.io/symbol-sdk-v3-reference/
 
-Catapult REST Endpoints (1.0.4)<br>
+Catapult REST Endpoints (1.0.4)<br/>
 https://symbol.github.io/symbol-openapi/v1.0.4/
 
 なお npm package を使用可能な場合は、コミュニティによって開発されたサポートツールがあります。
 
-@symbol-blockchain-community/symbol-rest-client<br>
+@symbol-blockchain-community/symbol-rest-client<br/>
 https://www.npmjs.com/package/@symbol-blockchain-community/symbol-rest-client
 
 ## 2.2 サンプルソースコード
