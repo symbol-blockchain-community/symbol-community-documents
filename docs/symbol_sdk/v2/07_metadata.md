@@ -8,11 +8,13 @@ Key-Value format data can be registered for an account mosaic namespace. The max
 We make the assumption that both mosaic, namespace and account are created by Alice in this chapter.
 
 Before running the sample scripts in this chapter, please load the following libraries:
+
 ```js
 metaRepo = repo.createMetadataRepository();
 mosaicRepo = repo.createMosaicRepository();
 metaService = new sym.MetadataTransactionService(metaRepo);
 ```
+
 ## 7.1 Register for account
 
 Register a Key-Value for the account.
@@ -21,21 +23,25 @@ Register a Key-Value for the account.
 key = sym.KeyGenerator.generateUInt64Key("key_account");
 value = "test";
 
-tx = await metaService.createAccountMetadataTransaction(
+tx = await metaService
+  .createAccountMetadataTransaction(
     undefined,
     networkType,
     alice.address, //Metadata registration destination address
-    key,value, //Key-Value
-    alice.address //Metadata creator address
-).toPromise();
+    key,
+    value, //Key-Value
+    alice.address, //Metadata creator address
+  )
+  .toPromise();
 
 aggregateTx = sym.AggregateTransaction.createComplete(
   sym.Deadline.create(epochAdjustment),
   [tx.toAggregate(alice.publicAccount)],
-  networkType,[]
+  networkType,
+  [],
 ).setMaxFeeForAggregate(100, 0);
 
-signedTx = alice.sign(aggregateTx,generationHash);
+signedTx = alice.sign(aggregateTx, generationHash);
 await txRepo.announce(signedTx).toPromise();
 ```
 
@@ -45,22 +51,28 @@ Even if the registration destination account and the sender account are the same
 When registering metadata to different accounts, use "signTransactionWithCosignatories" to sign it.
 
 ```js
-tx = await metaService.createAccountMetadataTransaction(
+tx = await metaService
+  .createAccountMetadataTransaction(
     undefined,
     networkType,
     bob.address, //Metadata registration destination address
-    key,value, //Key-Value
-    alice.address //Metadata creator address
-).toPromise();
+    key,
+    value, //Key-Value
+    alice.address, //Metadata creator address
+  )
+  .toPromise();
 
 aggregateTx = sym.AggregateTransaction.createComplete(
   sym.Deadline.create(epochAdjustment),
   [tx.toAggregate(alice.publicAccount)],
-  networkType,[]
+  networkType,
+  [],
 ).setMaxFeeForAggregate(100, 1); // Number of co-signer to second argument: 1
 
 signedTx = aggregateTx.signTransactionWithCosignatories(
-  alice,[bob],generationHash,// Co-signer to second argument
+  alice,
+  [bob],
+  generationHash, // Co-signer to second argument
 );
 await txRepo.announce(signedTx).toPromise();
 ```
@@ -76,25 +88,29 @@ The signature of the account that created the mosaic is required for registering
 mosaicId = new sym.MosaicId("1275B0B7511D9161");
 mosaicInfo = await mosaicRepo.getMosaic(mosaicId).toPromise();
 
-key = sym.KeyGenerator.generateUInt64Key('key_mosaic');
-value = 'test';
+key = sym.KeyGenerator.generateUInt64Key("key_mosaic");
+value = "test";
 
-tx = await metaService.createMosaicMetadataTransaction(
-  undefined,
-  networkType,
-  mosaicInfo.ownerAddress, //Mosaic creator address
-  mosaicId,
-  key,value, //Key-Value
-  alice.address
-).toPromise();
+tx = await metaService
+  .createMosaicMetadataTransaction(
+    undefined,
+    networkType,
+    mosaicInfo.ownerAddress, //Mosaic creator address
+    mosaicId,
+    key,
+    value, //Key-Value
+    alice.address,
+  )
+  .toPromise();
 
 aggregateTx = sym.AggregateTransaction.createComplete(
-    sym.Deadline.create(epochAdjustment),
-    [tx.toAggregate(alice.publicAccount)],
-    networkType,[]
+  sym.Deadline.create(epochAdjustment),
+  [tx.toAggregate(alice.publicAccount)],
+  networkType,
+  [],
 ).setMaxFeeForAggregate(100, 0);
 
-signedTx = alice.sign(aggregateTx,generationHash);
+signedTx = alice.sign(aggregateTx, generationHash);
 await txRepo.announce(signedTx).toPromise();
 ```
 
@@ -108,38 +124,48 @@ nsRepo = repo.createNamespaceRepository();
 namespaceId = new sym.NamespaceId("xembook");
 namespaceInfo = await nsRepo.getNamespace(namespaceId).toPromise();
 
-key = sym.KeyGenerator.generateUInt64Key('key_namespace');
-value = 'test';
+key = sym.KeyGenerator.generateUInt64Key("key_namespace");
+value = "test";
 
-tx = await metaService.createNamespaceMetadataTransaction(
-    undefined,networkType,
+tx = await metaService
+  .createNamespaceMetadataTransaction(
+    undefined,
+    networkType,
     namespaceInfo.ownerAddress, //Namespace creator address
     namespaceId,
-    key,value, //Key-Value
-    alice.address //Metadata registrant
-).toPromise();
+    key,
+    value, //Key-Value
+    alice.address, //Metadata registrant
+  )
+  .toPromise();
 
 aggregateTx = sym.AggregateTransaction.createComplete(
-    sym.Deadline.create(epochAdjustment),
-    [tx.toAggregate(alice.publicAccount)],
-    networkType,[]
+  sym.Deadline.create(epochAdjustment),
+  [tx.toAggregate(alice.publicAccount)],
+  networkType,
+  [],
 ).setMaxFeeForAggregate(100, 0);
 
-signedTx = alice.sign(aggregateTx,generationHash);
+signedTx = alice.sign(aggregateTx, generationHash);
 await txRepo.announce(signedTx).toPromise();
 ```
 
 ## 7.4 Confirmation
+
 Check the registered metadata.
 
 ```js
-res = await metaRepo.search({
-  targetAddress:alice.address,
-  sourceAddress:alice.address}
-).toPromise();
+res = await metaRepo
+  .search({
+    targetAddress: alice.address,
+    sourceAddress: alice.address,
+  })
+  .toPromise();
 console.log(res);
 ```
+
 ###### Sample output
+
 ```js
 data: Array(3)
   0: Metadata
@@ -175,16 +201,18 @@ data: Array(3)
       id: Id {lower: 646738821, higher: 2754876907}
       value: "test"
 ```
+
 The metadataType is as follows.
+
 ```js
 sym.MetadataType
 {0: 'Account', 1: 'Mosaic', 2: 'Namespace'}
 ```
 
 ### Note
+
 While metadata has the advantage of providing quick access to information by Key-Value, it should be noted that it needs updating.
 Updating requires the signatures of the issuer account and the account to which it is registered, so it should only be used if both accounts can be trusted.
-
 
 ## 7.5 Tips for use
 

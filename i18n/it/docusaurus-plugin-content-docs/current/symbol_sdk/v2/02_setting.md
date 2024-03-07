@@ -18,8 +18,8 @@ https://github.com/xembook/nem2-browserify
 
 Al momento della scrittura di questo documento la versione corrente
 dell'SDK symbol-sdk v3.0.0 è rilasciata in versione alpha,
-la versione  2.0.3 è deprecata. La versione 3 ha eliminato molte delle dipendenze 
-con rxjs perciò è preferibile fare chiamate dirette alle API REST. 
+la versione 2.0.3 è deprecata. La versione 3 ha eliminato molte delle dipendenze
+con rxjs perciò è preferibile fare chiamate dirette alle API REST.
 
 ### Riferimenti alla documentazione
 
@@ -40,10 +40,10 @@ Nello sviluppo di applicazioni, assicurarsi di utilizzare dichiarazioni const a 
 
 ### Controllo del valore in uscita
 
-Console.log() restituisce il contenuto della variabile. Provare le funzioni di output 
+Console.log() restituisce il contenuto della variabile. Provare le funzioni di output
 a propria discrezione. L'output compare dopo '>' non includerlo dall'esempio.
 
-### Modo sincrono e asincrono 
+### Modo sincrono e asincrono
 
 Alcuni sviluppatori abituati con altri linguaggi potrebbero trovarsi scomodi
 a scrivere processi asincroni, quindi a meno che non ci sia una ragione particolare,

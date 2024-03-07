@@ -1,4 +1,5 @@
 # 4.交易
+
 在区块链上更新数据是通过向网络宣布交易来完成的。
 
 ## 4.1 交易生命周期
@@ -34,59 +35,70 @@
 ### 将交易转移给Bob
 
 创建要发送到的 Bob 地址。
+
 ```js
 bob = sym.Account.generateNewAccount(networkType);
 console.log(bob.address);
 ```
+
 ```js
 > Address {address: 'TDWBA6L3CZ6VTZAZPAISL3RWM5VKMHM6J6IM3LY', networkType: 152}
 ```
 
 创建交易。
+
 ```js
 tx = sym.TransferTransaction.create(
-    sym.Deadline.create(epochAdjustment), //Deadline:Expiry date
-    sym.Address.createFromRawAddress("TDWBA6L3CZ6VTZAZPAISL3RWM5VKMHM6J6IM3LY"), 
-    [],
-    sym.PlainMessage.create("Hello Symbol!"), //Message
-    networkType //Testnet/Mainnet classification
+  sym.Deadline.create(epochAdjustment), //Deadline:Expiry date
+  sym.Address.createFromRawAddress("TDWBA6L3CZ6VTZAZPAISL3RWM5VKMHM6J6IM3LY"),
+  [],
+  sym.PlainMessage.create("Hello Symbol!"), //Message
+  networkType, //Testnet/Mainnet classification
 ).setMaxFee(100); //Fees
 ```
 
 每个设置解释如下。
 
 #### 到期日
+
 2 小时是 SDK 的默认设置。
 最多可以指定 6 小时。
+
 ```js
-sym.Deadline.create(epochAdjustment,6)
+sym.Deadline.create(epochAdjustment, 6);
 ```
 
 #### 信息
+
 在信息字段中，最多可以将 1023 个字节附加到交易。
 二进制数据也可以作为原始数据发送。
 
 ##### 空消息
+
 ```js
-sym.EmptyMessage
+sym.EmptyMessage;
 ```
 
 ##### 纯信息
+
 ```js
-sym.PlainMessage.create("Hello Symbol!")
+sym.PlainMessage.create("Hello Symbol!");
 ```
 
 ##### 加密信息
+
 ```js
-sym.EncryptedMessage('294C8979156C0D941270BAC191F7C689E93371EDBC36ADD8B920CF494012A97BA2D1A3759F9A6D55D5957E9D');
+sym.EncryptedMessage(
+  "294C8979156C0D941270BAC191F7C689E93371EDBC36ADD8B920CF494012A97BA2D1A3759F9A6D55D5957E9D",
+);
 ```
 
 当您使用加密消息时，会附加一个标志（标记）到消息上，表示“指定的消息已加密”。探索器和钱包将使用该标志作为参考，以隐藏它或不解密该消息。加密本身不是由该方法实现的。
 
-
 ##### 原始数据
+
 ```js
-sym.RawMessage.create(uint8Arrays[i])
+sym.RawMessage.create(uint8Arrays[i]);
 ```
 
 #### 最高费用
@@ -102,6 +114,7 @@ sym.RawMessage.create(uint8Arrays[i])
 有两种指定方式：feeMultiplier = 100 或 maxFee = 17600。
 
 ##### 指定费用乘数为100
+
 ```js
 tx = sym.TransferTransaction.create(
   ,,,,
@@ -110,6 +123,7 @@ tx = sym.TransferTransaction.create(
 ```
 
 ##### 指定为最大费用 = 17600
+
 ```js
 tx = sym.TransferTransaction.create(
   ,,,,
@@ -125,16 +139,19 @@ tx = sym.TransferTransaction.create(
 使用私钥签署您创建的交易并将其公布给任何节点。
 
 ### 签名
+
 ```js
-signedTx = alice.sign(tx,generationHash);
+signedTx = alice.sign(tx, generationHash);
 console.log(signedTx);
 ```
+
 ###### 示例演示
+
 ```js
 > SignedTransaction
     hash: "3BD00B0AF24DE70C7F1763B3FD64983C9668A370CB96258768B715B117D703C2"
     networkType: 152
-    payload:        
+    payload:
 "AE00000000000000CFC7A36C17060A937AFE1191BC7D77E33D81F3CC48DF9A0FFE892858DFC08C9911221543D687813ECE3D36836458D2569084298C09223F9899DF6ABD41028D0AD4933FC1E4C56F9DF9314E9E0533173E1AB727BDB2A04B59F048124E93BEFBD20000000001985441F843000000000000879E76C702000000986F4982FE77894ABC3EBFDC16DFD4A5C2C7BC05BFD44ECE0E000000000000000048656C6C6F2053796D626F6C21"
     signerPublicKey: "D4933FC1E4C56F9DF9314E9E0533173E1AB727BDB2A04B59F048124E93BEFBD2"
     type: 16724
@@ -143,20 +160,22 @@ console.log(signedTx);
 需要使用帐户和生成的哈希值对交易进行签名。
 
 生成哈希
+
 - 测试网
-    - 7FCCD304802016BEBBCD342A332F91FF1F3BB5E902988B352697BE245F48E836
+  - 7FCCD304802016BEBBCD342A332F91FF1F3BB5E902988B352697BE245F48E836
 - 主网
-    - 57F7DA205008026C776CB6AED843393F04CD458E0AA2D9F1D5F31A402072B2D6
+  - 57F7DA205008026C776CB6AED843393F04CD458E0AA2D9F1D5F31A402072B2D6
 
 生成的哈希值唯一标识区块链网络。
 通过交织网络的各个哈希值来创建已签署的交易，以便它们不能使用相同的私钥在其他网络中使用。
 
-
 ### 广播
+
 ```js
 res = await txRepo.announce(signedTx).toPromise();
 console.log(res);
 ```
+
 ```js
 > TransactionAnnounceResponse {message: 'packet 9 was pushed to the network via /transactions'}
 ```
@@ -165,14 +184,13 @@ console.log(res);
 然而，这仅仅意味着交易的格式没有异常。
 为了最大化节点的响应速度，Symbol会在验证交易内容之前返回接收到的结果并断开连接。回应值仅仅是此信息的收据。如果格式出现错误，则消息回应如下：
 
-
 ##### 如果广播失败，回应的样本输出如下：
+
 ```js
 Uncaught Error: {"statusCode":409,"statusMessage":"Unknown Error","body":"{\"code\":\"InvalidArgument\",\"message\":\"payload has an invalid format\"}"}
 ```
 
 ## 4.4 确认
-
 
 ### 状态确认
 
@@ -180,10 +198,14 @@ Uncaught Error: {"statusCode":409,"statusMessage":"Unknown Error","body":"{\"cod
 
 ```js
 tsRepo = repo.createTransactionStatusRepository();
-transactionStatus = await tsRepo.getTransactionStatus(signedTx.hash).toPromise();
+transactionStatus = await tsRepo
+  .getTransactionStatus(signedTx.hash)
+  .toPromise();
 console.log(transactionStatus);
 ```
+
 ###### 示例演示
+
 ```js
 > TransactionStatus
     group: "confirmed"
@@ -207,6 +229,7 @@ console.log(transactionStatus);
 ```
 
 如果该交易未被接受，则输出将显示以下的ResourceNotFound错误。
+
 ```js
 Uncaught Error: {"statusCode":404,"statusMessage":"Unknown Error","body":"{\"code\":\"ResourceNotFound\",\"message\":\"no resource exists with id '18AEBC9866CD1C15270F18738D577CB1BD4B2DF3EFB28F270B528E3FE583F42D'\"}"}
 ```
@@ -218,11 +241,13 @@ Uncaught Error: {"statusCode":404,"statusMessage":"Unknown Error","body":"{\"cod
 批准该块的交易大约需要 30 秒。
 
 #### 通过探索器进行检查。
+
 使用可以通过signedTx.hash检索的哈希值在探索器中搜索。
 
 ```js
 console.log(signedTx.hash);
 ```
+
 ```js
 > "661360E61C37E156B0BE18E52C9F3ED1022DCE846A4609D72DF9FA8A5B667747"
 ```
@@ -235,10 +260,14 @@ console.log(signedTx.hash);
 #### 检查SDK
 
 ```js
-txInfo = await txRepo.getTransaction(signedTx.hash,sym.TransactionGroup.Confirmed).toPromise();
+txInfo = await txRepo
+  .getTransaction(signedTx.hash, sym.TransactionGroup.Confirmed)
+  .toPromise();
 console.log(txInfo);
 ```
+
 ###### 示例演示
+
 ```js
 > TransferTransaction
     deadline: Deadline {adjustedValue: 12883929118}
@@ -259,6 +288,7 @@ console.log(txInfo);
     type: 16724
     version: 1
 ```
+
 ##### 注意事项
 
 即使在区块中确认了一笔交易，如果发生回滚，该交易的确认仍有可能被撤销。
@@ -266,34 +296,41 @@ console.log(txInfo);
 此外，等待由投票节点执行的敲定区块，确保记录的数据是确定的。
 
 ##### 示例脚本
+
 在广播交易之后，查看以下脚本以跟踪链的状态非常有用。
+
 ```js
 hash = signedTx.hash;
 tsRepo = repo.createTransactionStatusRepository();
 transactionStatus = await tsRepo.getTransactionStatus(hash).toPromise();
 console.log(transactionStatus);
-txInfo = await txRepo.getTransaction(hash,sym.TransactionGroup.Confirmed).toPromise();
+txInfo = await txRepo
+  .getTransaction(hash, sym.TransactionGroup.Confirmed)
+  .toPromise();
 console.log(txInfo);
 ```
 
 ## 4.5 交易纪录
 
 获取 Alice 发送和接收的交易历史列表。
+
 ```js
-result = await txRepo.search(
-  {
-    group:sym.TransactionGroup.Confirmed,
-    embedded:true,
-    address:alice.address
-  }
-).toPromise();
+result = await txRepo
+  .search({
+    group: sym.TransactionGroup.Confirmed,
+    embedded: true,
+    address: alice.address,
+  })
+  .toPromise();
 
 txes = result.data;
-txes.forEach(tx => {
+txes.forEach((tx) => {
   console.log(tx);
-})
+});
 ```
+
 ###### 示例演示
+
 ```js
 > TransferTransaction
     type: 16724
@@ -321,14 +358,17 @@ txes.forEach(tx => {
 ```
 
 交易类型如下。
+
 ```js
 {0: 'RESERVED', 16705: 'AGGREGATE_COMPLETE', 16707: 'VOTING_KEY_LINK', 16708: 'ACCOUNT_METADATA', 16712: 'HASH_LOCK', 16716: 'ACCOUNT_KEY_LINK', 16717: 'MOSAIC_DEFINITION', 16718: 'NAMESPACE_REGISTRATION', 16720: 'ACCOUNT_ADDRESS_RESTRICTION', 16721: 'MOSAIC_GLOBAL_RESTRICTION', 16722: 'SECRET_LOCK', 16724: 'TRANSFER', 16725: 'MULTISIG_ACCOUNT_MODIFICATION', 16961: 'AGGREGATE_BONDED', 16963: 'VRF_KEY_LINK', 16964: 'MOSAIC_METADATA', 16972: 'NODE_KEY_LINK', 16973: 'MOSAIC_SUPPLY_CHANGE', 16974: 'ADDRESS_ALIAS', 16976: 'ACCOUNT_MOSAIC_RESTRICTION', 16977: 'MOSAIC_ADDRESS_RESTRICTION', 16978: 'SECRET_PROOF', 17220: 'NAMESPACE_METADATA', 17229: 'MOSAIC_SUPPLY_REVOCATION', 17230: 'MOSAIC_ALIAS', 17232: 'ACCOUNT_OPERATION_RESTRICTION'
 ```
 
 消息类型如下。
+
 ```js
 {0: 'PlainMessage', 1: 'EncryptedMessage', 254: 'PersistentHarvestingDelegationMessage', -1: 'RawMessage'}
 ```
+
 ## 4.6 聚合交易
 
 聚合事务可以将多个事务合并为一个。
@@ -343,32 +383,32 @@ bob = sym.Account.generateNewAccount(networkType);
 carol = sym.Account.generateNewAccount(networkType);
 
 innerTx1 = sym.TransferTransaction.create(
-    undefined, //Deadline
-    bob.address,  //Destination of the transaction
-    [],
-    sym.PlainMessage.create("tx1"),
-    networkType
+  undefined, //Deadline
+  bob.address, //Destination of the transaction
+  [],
+  sym.PlainMessage.create("tx1"),
+  networkType,
 );
 
 innerTx2 = sym.TransferTransaction.create(
-    undefined, //Deadline
-    carol.address,  //Destination of the transaction
-    [],
-    sym.PlainMessage.create("tx2"),
-    networkType
+  undefined, //Deadline
+  carol.address, //Destination of the transaction
+  [],
+  sym.PlainMessage.create("tx2"),
+  networkType,
 );
 
 aggregateTx = sym.AggregateTransaction.createComplete(
-    sym.Deadline.create(epochAdjustment),
-    [
-      innerTx1.toAggregate(alice.publicAccount), //Publickey of the sender account
-      innerTx2.toAggregate(alice.publicAccount)  //Publickey of the sender account
-    ],
-    networkType,
-    [],
-    sym.UInt64.fromUint(1000000)
+  sym.Deadline.create(epochAdjustment),
+  [
+    innerTx1.toAggregate(alice.publicAccount), //Publickey of the sender account
+    innerTx2.toAggregate(alice.publicAccount), //Publickey of the sender account
+  ],
+  networkType,
+  [],
+  sym.UInt64.fromUint(1000000),
 );
-signedTx = alice.sign(aggregateTx,generationHash);
+signedTx = alice.sign(aggregateTx, generationHash);
 await txRepo.announce(signedTx).toPromise();
 ```
 
@@ -392,12 +432,12 @@ await txRepo.announce(signedTx).toPromise();
 区块链也可以用作证明某个事实的知识证明，而这个事实此时还没有被任何人知道。
 本节描述了两种模式，其中已经证明存在的数据可以放在交易中。
 
-
 #### 数字数据哈希值（SHA256）输出方式
 
 文件的存在可以通过在区块链中记录其摘要值来证明。
 
 各操作系统中文件使用SHA256计算哈希值的方法如下。
+
 ```sh
 #Windows
 certutil -hashfile WINfilepath SHA256
@@ -412,11 +452,12 @@ sha256sum Linuxfilepath
 由于交易的有效载荷只能包含 1023 个字节。大数据被拆分并打包到有效负载中以进行聚合交易。
 
 ```js
-bigdata = 'C00200000000000093B0B985101C1BDD1BC2BF30D72F35E34265B3F381ECA464733E147A4F0A6B9353547E2E08189EF37E50D271BEB5F09B81CE5816BB34A153D2268520AF630A0A0E5C72B0D5946C1EFEE7E5317C5985F106B739BB0BC07E4F9A288417B3CD6D26000000000198414140770200000000002A769FB40000000076B455CFAE2CCDA9C282BF8556D3E9C9C0DE18B0CBE6660ACCF86EB54AC51B33B001000000000000DB000000000000000E5C72B0D5946C1EFEE7E5317C5985F106B739BB0BC07E4F9A288417B3CD6D26000000000198544198205C1A4CE06C45B3A896B1B2360E03633B9F36BF7F22338B000000000000000066653465353435393833444430383935303645394533424446434235313637433046394232384135344536463032413837364535303734423641303337414643414233303344383841303630353343353345354235413835323835443639434132364235343233343032364244444331443133343139464435353438323930334242453038423832304100000000006800000000000000B2D4FD84B2B63A96AA37C35FC6E0A2341CEC1FD19C8FFC8D93CCCA2B028D1E9D000000000198444198205C1A4CE06C45B3A896B1B2360E03633B9F36BF7F2233BC089179EBBE01A81400140035383435344434373631364336433635373237396800000000000000B2D4FD84B2B63A96AA37C35FC6E0A2341CEC1FD19C8FFC8D93CCCA2B028D1E9D000000000198444198205C1A4CE06C45B3A896B1B2360E03633B9F36BF7F223345ECB996EDDB9BEB1400140035383435344434373631364336433635373237390000000000000000B2D4FD84B2B63A96AA37C35FC6E0A2341CEC1FD19C8FFC8D93CCCA2B028D1E9D5A71EBA9C924EFA146897BE6C9BB3DACEFA26A07D687AC4A83C9B03087640E2D1DDAE952E9DDBC33312E2C8D021B4CC0435852C0756B1EBD983FCE221A981D02';
+bigdata =
+  "C00200000000000093B0B985101C1BDD1BC2BF30D72F35E34265B3F381ECA464733E147A4F0A6B9353547E2E08189EF37E50D271BEB5F09B81CE5816BB34A153D2268520AF630A0A0E5C72B0D5946C1EFEE7E5317C5985F106B739BB0BC07E4F9A288417B3CD6D26000000000198414140770200000000002A769FB40000000076B455CFAE2CCDA9C282BF8556D3E9C9C0DE18B0CBE6660ACCF86EB54AC51B33B001000000000000DB000000000000000E5C72B0D5946C1EFEE7E5317C5985F106B739BB0BC07E4F9A288417B3CD6D26000000000198544198205C1A4CE06C45B3A896B1B2360E03633B9F36BF7F22338B000000000000000066653465353435393833444430383935303645394533424446434235313637433046394232384135344536463032413837364535303734423641303337414643414233303344383841303630353343353345354235413835323835443639434132364235343233343032364244444331443133343139464435353438323930334242453038423832304100000000006800000000000000B2D4FD84B2B63A96AA37C35FC6E0A2341CEC1FD19C8FFC8D93CCCA2B028D1E9D000000000198444198205C1A4CE06C45B3A896B1B2360E03633B9F36BF7F2233BC089179EBBE01A81400140035383435344434373631364336433635373237396800000000000000B2D4FD84B2B63A96AA37C35FC6E0A2341CEC1FD19C8FFC8D93CCCA2B028D1E9D000000000198444198205C1A4CE06C45B3A896B1B2360E03633B9F36BF7F223345ECB996EDDB9BEB1400140035383435344434373631364336433635373237390000000000000000B2D4FD84B2B63A96AA37C35FC6E0A2341CEC1FD19C8FFC8D93CCCA2B028D1E9D5A71EBA9C924EFA146897BE6C9BB3DACEFA26A07D687AC4A83C9B03087640E2D1DDAE952E9DDBC33312E2C8D021B4CC0435852C0756B1EBD983FCE221A981D02";
 
 let payloads = [];
 for (let i = 0; i < bigdata.length / 1023; i++) {
-    payloads.push(bigdata.substr(i * 1023, 1023));
+  payloads.push(bigdata.substr(i * 1023, 1023));
 }
 console.log(payloads);
 ```

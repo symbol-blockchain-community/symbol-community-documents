@@ -3,17 +3,17 @@ sidebar_position: 9
 ---
 
 # 9. Multisignature
-Symbol accounts can be converted to multisig.
 
+Symbol accounts can be converted to multisig.
 
 ### Points
 
 Multisig accounts can have up to 25 co-signatories. An account can be cosigner of up to 25 multisig accounts. Multisig accounts can be hierarchical and composed of up to 3 levels. This chapter explains single-level multisig.
 
 ## 9.0 Preparing an account
+
 Create the accounts used in the sample source code in this chapter and output each secret key.
 Note that the Bob multisig account in this chapter will be unusable if Carol's secret key is lost.
-
 
 ```js
 bob = sym.Account.generateNewAccount(networkType);
@@ -33,13 +33,21 @@ console.log(carol5.privateKey);
 When using a testnet, the equivalent of the network fee from the faucet should be available in the bob and carol1 accounts.
 
 - Faucet
-    - https://testnet.symbol.tools/
+  - https://testnet.symbol.tools/
 
 ##### Output URL
 
 ```js
-console.log("https://testnet.symbol.tools/?recipient=" + bob.address.plain() +"&amount=20");
-console.log("https://testnet.symbol.tools/?recipient=" + carol1.address.plain() +"&amount=20");
+console.log(
+  "https://testnet.symbol.tools/?recipient=" +
+    bob.address.plain() +
+    "&amount=20",
+);
+console.log(
+  "https://testnet.symbol.tools/?recipient=" +
+    carol1.address.plain() +
+    "&amount=20",
+);
 ```
 
 ## 9.1 Multisig registration
@@ -49,26 +57,26 @@ Creating a multisig account requires the consent signature (opt-in) of the accou
 
 ```js
 multisigTx = sym.MultisigAccountModificationTransaction.create(
-    undefined, 
-    3, //minApproval:Minimum number of signatories required for approval
-    3, //minRemoval:Minimum number of signatories required for expulsion
-    [
-        carol1.address,carol2.address,carol3.address,carol4.address
-    ], //Additional target address list
-    [],//Reemoved address list
-    networkType
+  undefined,
+  3, //minApproval:Minimum number of signatories required for approval
+  3, //minRemoval:Minimum number of signatories required for expulsion
+  [carol1.address, carol2.address, carol3.address, carol4.address], //Additional target address list
+  [], //Reemoved address list
+  networkType,
 );
 aggregateTx = sym.AggregateTransaction.createComplete(
-    sym.Deadline.create(epochAdjustment),
-    [//The public key of the multisig account
-      multisigTx.toAggregate(bob.publicAccount),
-    ],
-    networkType,[]
+  sym.Deadline.create(epochAdjustment),
+  [
+    //The public key of the multisig account
+    multisigTx.toAggregate(bob.publicAccount),
+  ],
+  networkType,
+  [],
 ).setMaxFeeForAggregate(100, 4); //Number of co-signatories to the second argument:4
-signedTx =  aggregateTx.signTransactionWithCosignatories(
-    bob, //Multisig account
-    [carol1,carol2,carol3,carol4], //Accounts specified as being added or removed
-    generationHash,
+signedTx = aggregateTx.signTransactionWithCosignatories(
+  bob, //Multisig account
+  [carol1, carol2, carol3, carol4], //Accounts specified as being added or removed
+  generationHash,
 );
 await txRepo.announce(signedTx).toPromise();
 ```
@@ -76,14 +84,17 @@ await txRepo.announce(signedTx).toPromise();
 ## 9.2 Confirmation
 
 ### Confirmation of multisig account
+
 ```js
 msigRepo = repo.createMultisigRepository();
 multisigInfo = await msigRepo.getMultisigAccountInfo(bob.address).toPromise();
 console.log(multisigInfo);
 ```
+
 ###### Sample output
+
 ```js
-> MultisigAccountInfo 
+> MultisigAccountInfo
     accountAddress: Address {address: 'TCOMA5VG67TZH4X55HGZOXOFP7S232CYEQMOS7Q', networkType: 152}
   > cosignatoryAddresses: Array(4)
         0: Address {address: 'TBAFGZOCB7OHZCCYYV64F2IFZL7SOOXNDHFS5NY', networkType: 152}
@@ -97,14 +108,18 @@ console.log(multisigInfo);
 
 It shows that cosignatoryAddresses are registered as co-signatories. Also, minApproval:3 shows that the number of signatures required for a transaction to execute is 3. minRemoval: 3 shows that the number of signatories required to remove a cosignatory is 3.
 
-
 ### Confirmation of co-signatory accounts
+
 ```js
 msigRepo = repo.createMultisigRepository();
-multisigInfo = await msigRepo.getMultisigAccountInfo(carol1.address).toPromise();
+multisigInfo = await msigRepo
+  .getMultisigAccountInfo(carol1.address)
+  .toPromise();
 console.log(multisigInfo);
 ```
+
 ###### Sample output
+
 ```
 > MultisigAccountInfo
     accountAddress: Address {address: 'TCV67BMTD2JMDQOJUDQHBFJHQPG4DAKVKST3YJI', networkType: 152}
@@ -127,23 +142,30 @@ In the case of Aggregate Complete Transaction, the transaction is created after 
 
 ```js
 tx = sym.TransferTransaction.create(
-    undefined,
-    alice.address, 
-    [new sym.Mosaic(new sym.NamespaceId("symbol.xym"),sym.UInt64.fromUint(1000000))],
-    sym.PlainMessage.create('test'),
-    networkType
+  undefined,
+  alice.address,
+  [
+    new sym.Mosaic(
+      new sym.NamespaceId("symbol.xym"),
+      sym.UInt64.fromUint(1000000),
+    ),
+  ],
+  sym.PlainMessage.create("test"),
+  networkType,
 );
 aggregateTx = sym.AggregateTransaction.createComplete(
-    sym.Deadline.create(epochAdjustment),
-     [//The public key of the multisig account
-       tx.toAggregate(bob.publicAccount)
-     ],
-    networkType,[],
+  sym.Deadline.create(epochAdjustment),
+  [
+    //The public key of the multisig account
+    tx.toAggregate(bob.publicAccount),
+  ],
+  networkType,
+  [],
 ).setMaxFeeForAggregate(100, 2); //Number of co-signatories to the second argument:2
-signedTx =  aggregateTx.signTransactionWithCosignatories(
-    carol1, //Transaction creator
-    [carol2,carol3],　//Cosignatories
-    generationHash,
+signedTx = aggregateTx.signTransactionWithCosignatories(
+  carol1, //Transaction creator
+  [carol2, carol3], //Cosignatories
+  generationHash,
 );
 await txRepo.announce(signedTx).toPromise();
 ```
@@ -154,26 +176,36 @@ Aggregate bonded transactions can be announced without specifying co-signatories
 
 ```js
 tx = sym.TransferTransaction.create(
-    undefined,
-    alice.address, //Transfer to Alice
-    [new sym.Mosaic(new sym.NamespaceId("symbol.xym"),sym.UInt64.fromUint(1000000))], //1XYM
-    sym.PlainMessage.create('test'),
-    networkType
+  undefined,
+  alice.address, //Transfer to Alice
+  [
+    new sym.Mosaic(
+      new sym.NamespaceId("symbol.xym"),
+      sym.UInt64.fromUint(1000000),
+    ),
+  ], //1XYM
+  sym.PlainMessage.create("test"),
+  networkType,
 );
 aggregateTx = sym.AggregateTransaction.createBonded(
-    sym.Deadline.create(epochAdjustment),
-     [ //The public key of the multisig account
-       tx.toAggregate(bob.publicAccount)
-     ],
-    networkType,[],
+  sym.Deadline.create(epochAdjustment),
+  [
+    //The public key of the multisig account
+    tx.toAggregate(bob.publicAccount),
+  ],
+  networkType,
+  [],
 ).setMaxFeeForAggregate(100, 0); //Number of co-signatories to the second argument:0
 signedAggregateTx = carol1.sign(aggregateTx, generationHash);
 hashLockTx = sym.HashLockTransaction.create(
   sym.Deadline.create(epochAdjustment),
-	new sym.Mosaic(new sym.NamespaceId("symbol.xym"),sym.UInt64.fromUint(10 * 1000000)), //Fixed value:10XYM
-	sym.UInt64.fromUint(480),
-	signedAggregateTx,
-	networkType
+  new sym.Mosaic(
+    new sym.NamespaceId("symbol.xym"),
+    sym.UInt64.fromUint(10 * 1000000),
+  ), //Fixed value:10XYM
+  sym.UInt64.fromUint(480),
+  signedAggregateTx,
+  networkType,
 ).setMaxFee(100);
 signedLockTx = carol1.sign(hashLockTx, generationHash);
 //Announce Hashlock TX
@@ -184,18 +216,22 @@ await txRepo.announce(signedLockTx).toPromise();
 //Announces bonded TX after confirming approval of hashlocks
 await txRepo.announceAggregateBonded(signedAggregateTx).toPromise();
 ```
-When a bonded transaction is known by a node, it will be a partial signature state and will be signed with a multisig account, using the co-signature introduced in chapter 8. Locking. It can also be confirmed by a wallet that supports co-signatures.
 
+When a bonded transaction is known by a node, it will be a partial signature state and will be signed with a multisig account, using the co-signature introduced in chapter 8. Locking. It can also be confirmed by a wallet that supports co-signatures.
 
 ## 9.4 Confirmation of multisig transfer
 
 Check the results of a multisig transfer transaction.
 
 ```js
-txInfo = await txRepo.getTransaction(signedTx.hash,sym.TransactionGroup.Confirmed).toPromise();
+txInfo = await txRepo
+  .getTransaction(signedTx.hash, sym.TransactionGroup.Confirmed)
+  .toPromise();
 console.log(txInfo);
 ```
+
 ###### Sample output
+
 ```js
 > AggregateTransaction
   > cosignatures: Array(2)
@@ -232,7 +268,7 @@ console.log(txInfo);
   > signer: PublicAccount
         address: Address {address: 'TCV67BMTD2JMDQOJUDQHBFJHQPG4DAKVKST3YJI', networkType: 152}
         publicKey: "FF9595FDCD983F46FF9AE0F7D86D94E9B164E385BD125202CF16528F53298656"
-  > transactionInfo: 
+  > transactionInfo:
         hash: "AA99F8F4000F989E6F135228829DB66AEB3B3C4B1F06BA77D373D042EAA4C8DA"
         height: UInt64 {lower: 322376, higher: 0}
         id: "62600A8C0A21EB5CD28679A3"
@@ -241,20 +277,20 @@ console.log(txInfo);
 ```
 
 - Multisig account
-    - Bob
-        - AggregateTransaction.innerTransactions[0].signer.address
-            - TCOMA5VG67TZH4X55HGZOXOFP7S232CYEQMOS7Q
+  - Bob
+    - AggregateTransaction.innerTransactions[0].signer.address
+      - TCOMA5VG67TZH4X55HGZOXOFP7S232CYEQMOS7Q
 - Creator's account
-    - Carol1
-        - AggregateTransaction.signer.address
-            - TCV67BMTD2JMDQOJUDQHBFJHQPG4DAKVKST3YJI
+  - Carol1
+    - AggregateTransaction.signer.address
+      - TCV67BMTD2JMDQOJUDQHBFJHQPG4DAKVKST3YJI
 - Co-signer account
-    - Carol2
-        - AggregateTransaction.cosignatures[0].signer.address
-            - TB3XP4GQK6XH2SSA2E2U6UWCESNACK566DS4COY
-    - Carol3
-        - AggregateTransaction.cosignatures[1].signer.address
-            - TBAFGZOCB7OHZCCYYV64F2IFZL7SOOXNDHFS5NY
+  - Carol2
+    - AggregateTransaction.cosignatures[0].signer.address
+      - TB3XP4GQK6XH2SSA2E2U6UWCESNACK566DS4COY
+  - Carol3
+    - AggregateTransaction.cosignatures[1].signer.address
+      - TBAFGZOCB7OHZCCYYV64F2IFZL7SOOXNDHFS5NY
 
 ## 9.5 Modifying a multisig account min approval
 
@@ -264,24 +300,26 @@ To reduce the number of co-signatories, specify the address to remove and adjust
 
 ```js
 multisigTx = sym.MultisigAccountModificationTransaction.create(
-    undefined, 
-    -1, //Minimum incremental number of signatories required for approval
-    -1, //Minimum incremental number of signatories required for remove
-    [], //Additional target address
-    [carol3.address],//Address to removing
-    networkType
+  undefined,
+  -1, //Minimum incremental number of signatories required for approval
+  -1, //Minimum incremental number of signatories required for remove
+  [], //Additional target address
+  [carol3.address], //Address to removing
+  networkType,
 );
 aggregateTx = sym.AggregateTransaction.createComplete(
-    sym.Deadline.create(epochAdjustment),
-    [ //Specify the public key of the multisig account which configuration you want to change
-      multisigTx.toAggregate(bob.publicAccount),
-    ],
-    networkType,[]    
+  sym.Deadline.create(epochAdjustment),
+  [
+    //Specify the public key of the multisig account which configuration you want to change
+    multisigTx.toAggregate(bob.publicAccount),
+  ],
+  networkType,
+  [],
 ).setMaxFeeForAggregate(100, 1); //Number of co-signatories to the second argument:1
-signedTx =  aggregateTx.signTransactionWithCosignatories(
-    carol1,
-    [carol2],
-    generationHash,
+signedTx = aggregateTx.signTransactionWithCosignatories(
+  carol1,
+  [carol2],
+  generationHash,
 );
 await txRepo.announce(signedTx).toPromise();
 ```
@@ -293,24 +331,26 @@ The co-signature of the new additionally designated account is always required.
 
 ```js
 multisigTx = sym.MultisigAccountModificationTransaction.create(
-    undefined, 
-    0, //Minimum incremental number of signatories required for approval
-    0, //Minimum incremental number of signatories required for remove
-    [carol5.address], //Additional target address
-    [carol4.address], //Address to removing
-    networkType
+  undefined,
+  0, //Minimum incremental number of signatories required for approval
+  0, //Minimum incremental number of signatories required for remove
+  [carol5.address], //Additional target address
+  [carol4.address], //Address to removing
+  networkType,
 );
 aggregateTx = sym.AggregateTransaction.createComplete(
-    sym.Deadline.create(epochAdjustment),
-    [ //Specify the public key of the multisig account which configuration you want to change
-      multisigTx.toAggregate(bob.publicAccount),
-    ],
-    networkType,[]    
+  sym.Deadline.create(epochAdjustment),
+  [
+    //Specify the public key of the multisig account which configuration you want to change
+    multisigTx.toAggregate(bob.publicAccount),
+  ],
+  networkType,
+  [],
 ).setMaxFeeForAggregate(100, 2); //Number of co-signatories to the second argument:
-signedTx =  aggregateTx.signTransactionWithCosignatories(
-    carol1, //Transaction creator
-    [carol2,carol5], //Cosignatory + Consent account
-    generationHash,
+signedTx = aggregateTx.signTransactionWithCosignatories(
+  carol1, //Transaction creator
+  [carol2, carol5], //Cosignatory + Consent account
+  generationHash,
 );
 await txRepo.announce(signedTx).toPromise();
 ```

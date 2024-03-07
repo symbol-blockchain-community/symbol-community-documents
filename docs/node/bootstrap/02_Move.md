@@ -2,10 +2,11 @@ This page is a machine translation of the English text.
 Please contact faunsu https://twitter.com/faunsu19000 or symbol-community.com/community for language proofreading of articles.
 
 ## table of contents
-* overview
-* Data backup for relocation in the old environment
-* Building Symbol-boostrap environment in new environment
-* Link
+
+- overview
+- Data backup for relocation in the old environment
+- Building Symbol-boostrap environment in new environment
+- Link
 
 ## overview
 
@@ -21,10 +22,10 @@ The procedure for moving a server running Symbol-bootstrap is described below. W
 Take a backup of the following data
 
 - Back up the Symbol account that operates the node
-     - `~/custom-preset.yml`
-     - `~/symbol-bootstrap/target/addresses.yml`
+  - `~/custom-preset.yml`
+  - `~/symbol-bootstrap/target/addresses.yml`
 - Backing up the delegator information of the old node (implemented immediately before relocation work)
-     - `~/symbol-bootstrap/target/nodes/node/data/harvesters.dat`
+  - `~/symbol-bootstrap/target/nodes/node/data/harvesters.dat`
 
 ## Building Symbol-boostrap environment in new environment
 
@@ -53,7 +54,7 @@ Please follow the steps below to complete the setup in the new environment.
 
 It takes more than a day to synchronize all blocks, so leave it for a while after completing the procedure in the previous section. You can check the synchronized block height by the following method.
 
-``` bash
+```bash
 # execute the following command in the server
 curl http://localhost:3000/chain/info
 ```
@@ -62,7 +63,7 @@ curl http://localhost:3000/chain/info
 
 I will stop to work once. The operation is as follows.
 
-``` bash
+```bash
 symbol-bootstrap stop
 ```
 
@@ -70,20 +71,20 @@ symbol-bootstrap stop
 
 Move the files backed up in the old environment to the new environment. In principle, the file path of the transfer source and transfer destination is the same, and the following files are targeted
 
-``~/custom-preset.yml`` (You may have changed the file name yourself)
+`~/custom-preset.yml` (You may have changed the file name yourself)
 
-``~/symbol-bootstrap/target/nodes/node/data/harvesters.dat``
+`~/symbol-bootstrap/target/nodes/node/data/harvesters.dat`
 
 Once the file is in place, let's apply the changes
 
-``` bash
+```bash
 symbol-bootstrap config -p mainnet -a dual -c custom-preset.yml --upgrade
 symbol-bootstrap compose --upgrade
 ```
 
 If there are no errors in the above, let's rewrite her A record in DNS to the IP address of the new environment at this time. After rewriting, start symbol-bootstrap in the new environment as follows
 
-``` bash
+```bash
 symbol-bootstrap run -d
 symbol-bootstrap healthCheck
 ```

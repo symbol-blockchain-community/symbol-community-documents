@@ -1,4 +1,4 @@
-### Ora facciamo pratica con la catena di blocchi Symbol iniziando con un programmino di prova 
+### Ora facciamo pratica con la catena di blocchi Symbol iniziando con un programmino di prova
 
 # Impariamo Symbol facilmente
 
@@ -7,8 +7,9 @@
 ### XEMBook, quasarblue
 
 ## Prefazione
+
 Questa traduzione è a beneficio di tutti i lettori italiani
-con l'aiuto della comunità giapponese 
+con l'aiuto della comunità giapponese
 
 ## Sommario
 

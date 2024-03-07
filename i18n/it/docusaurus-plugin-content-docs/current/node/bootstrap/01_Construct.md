@@ -2,10 +2,12 @@ This page is a machine translation of the English text.
 Please contact faunsu https://twitter.com/faunsu19000 or symbol-community.com/community for language proofreading of articles.
 
 ## table of contents
-*About the Symbol node
-* Node features and server basic specs
-* Symbol Node construction procedure
-*Tips
+
+\*About the Symbol node
+
+- Node features and server basic specs
+- Symbol Node construction procedure
+  \*Tips
 
 ## About the Symbol node
 
@@ -16,6 +18,7 @@ Blockchain nodes record transaction data in chronological order, and past conten
 There are three types of Symbol nodes: I will explain in order.
 
 -Peer Node
+
 - API Nodes
 - Voting Nodes
 
@@ -32,7 +35,7 @@ API nodes are also responsible for collecting co-signatures for aggregate bond t
 
 ![symbol-build-node-api-node](https://cms.symbol-community.com/uploads/symbol_build_node_api_node_4deaa356b7.png)
 
-* A single node can run both Peer Node and API Node at the same time. In that case, it is expressed as Dual Node.
+- A single node can run both Peer Node and API Node at the same time. In that case, it is expressed as Dual Node.
 
 ### Voting Nodes
 
@@ -58,7 +61,6 @@ Here are the mandatory requirements:
 | RAM           | 8GB           | 16GB          | 16GB          |
 | Disk Size     | 500 GB        | 750 GB        |
 | Disk IOPS     | 1500 IOPS SSD | 1500 IOPS SSD | 1500 IOPS SSD |
-
 
 The following table lists the recommended requirements. Using them will give you a smoother experience and provide some degree of future proofing.
 
@@ -89,7 +91,7 @@ Be sure to implement the following security measures before building a node. If 
 
 Connect to the server and first create an operating account on the server.
 
-``` bash
+```bash
 adduser symbol
 usermod -aG sudo symbol
 su - symbol
@@ -99,7 +101,7 @@ su - symbol
 
 Execute the following script to build the environment.
 
-``` bash
+```bash
 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/ymuichiro/symbol-node-builder/main/scripts/install.sh)"
 ```
 
@@ -114,11 +116,10 @@ Normally, the following work is required, but the above script will automaticall
 
 Start Symbol-bootstrap with the following command.
 
-``` bash
+```bash
 cd ~/symbol-bootstrap
 symbol-bootstrap wizard
 ```
-
 
 1. Network selection Select which network to build the node on.
 
@@ -130,7 +131,6 @@ Select a network: (Use arrow keys)
      Custom Network Node ('custom-network-preset.yml' file and 'nemesis-seed' folder are required)
 ```
 
-
 2. Select a node type Select a node type
 
 ```
@@ -141,7 +141,6 @@ Select an assembly: (Use arrow keys)
    Demo Node. A dual node that includes a Faucet and Explorer.
 ```
 
-
 3. Offline is recommended because it handles the private key. Since VPS etc. cannot be used if it is not connected to the Internet, press Y to proceed.
 
 ```
@@ -149,14 +148,12 @@ Select an assembly: (Use arrow keys)
 you disconnect from the network before continuing. Say YES if you are offline or if you don't care. (Y/n)
 ```
 
-
 4. Enter the password to use with Symbol bootstrap.
 
 ```
 Enter the password used to encrypt and decrypt custom presets, addresses.yml, and preset.yml files.
 password, private keys will be encrypted.
 ```
-
 
 5. Four accounts are required for harvesting settings. Specify the main account among them. Create a new one or enter the private key of an existing account.
 
@@ -167,13 +164,11 @@ password, private keys will be encrypted.
     Enter the 64 HEX private key of the Main account (or press enter to select the option again).
 ```
 
-
 6. If you entered the private key in 5, the account address will be displayed. Select y if there is no difference.
 
 ```
 ? Is this the expected address TCDNP********************55KCQ to used as Main account? (y/N)
 ```
-
 
 7. Specify Transport account as well as main.
 
@@ -183,7 +178,6 @@ password, private keys will be encrypted.
    Entering a private key
 ```
 
-
 8. VRF accounts are similar.
 
 ```
@@ -192,7 +186,6 @@ password, private keys will be encrypted.
     Entering a private key
 ```
 
-
 9. Remote accounts are similar.
 
 ```
@@ -200,7 +193,6 @@ password, private keys will be encrypted.
 ❯ Generating a new account
    Entering a private key
 ```
-
 
 10. Configure HTTP settings. If you select the second Automatic ~ , you can set HTTPS automatically.
 
@@ -212,7 +204,6 @@ Your REST Gateway should be running on HTTPS (which is a secure protocol) so tha
     None
 ```
 
-
 11. Enter the host name. Specify an IP address or domain.
 
 ```
@@ -220,13 +211,11 @@ Your REST Gateway should be running on HTTPS (which is a secure protocol) so tha
 required when you are running on HTTPS!
 ```
 
-
 12. Enter your friendly name.
 
 ```
 Enter the friendly name of your node.
 ```
-
 
 13. Select how many of the 4 types of accounts (keys) to encrypt.
 
@@ -237,7 +226,6 @@ Enter the friendly name of your node.
 keys are encrypted.
     ENCRYPT: All keys are encrypted, only password would be asked
 ```
-
 
 15. Register or select a voting node. You can't be a voting node if you don't own 3 million xym.
 
@@ -252,19 +240,17 @@ assembly: dual
 preset: mainnet
 privateKeySecurityMode: PROMPT_MAIN_TRANSPORT
 nodes:
-     -
-         host: example.org
-         maxUnlockedAccounts: 30
-         benefitAddress: ${your-symbol-address}
-         voting: false
-         friendlyName: ${your-name}
-         mainPrivateKey: ${your-node-main-privatekey}
-         vrfPrivateKey: ${your-node-vrf-privatekey}
-         remotePrivateKey: ${your-node-remote-privatekey}
-         transportPrivateKey: ${your-node-transport-privatekey}
+  - host: example.org
+    maxUnlockedAccounts: 30
+    benefitAddress: ${your-symbol-address}
+    voting: false
+    friendlyName: ${your-name}
+    mainPrivateKey: ${your-node-main-privatekey}
+    vrfPrivateKey: ${your-node-vrf-privatekey}
+    remotePrivateKey: ${your-node-remote-privatekey}
+    transportPrivateKey: ${your-node-transport-privatekey}
 httpsProxies:
-     -
-         excludeDockerService: false
+  - excludeDockerService: false
 ```
 
 **host** … Enter the IP address or domain assigned to the node.
@@ -276,7 +262,7 @@ httpsProxies:
 
 Execute the following command to load `~/custom-preset.yml` and start symbol-bootstrap.
 
-``` bash
+```bash
 cd ~/symbol-bootstrap
 symbol-bootstrap config -p mainnet -a dual -c custom-preset.yml
 symbol-bootstrap start -d
@@ -289,7 +275,7 @@ Below is a list of start and stop commands by symbol-bootstrap.
 `symbol-bootstrap run -d` Specify it for the second and subsequent boots.
 `symbol-bootstrap stop` Specify when to pause. It can be restarted with the run command.
 
-* If `-d` is specified, it will be possible to start it in the backend. Add `-d` in principle except when symbol-bootstrap gives an error and you have to debug.
+- If `-d` is specified, it will be possible to start it in the backend. Add `-d` in principle except when symbol-bootstrap gives an error and you have to debug.
 
 This work completes the new construction of symbol-bootstrap. As of March 2023, a new symbol-bootstrap will be started and it will take about 1.5 to 2 days for all blocks to sync. When recruiting delegators, do so when all blocks are synchronized.
 
@@ -330,10 +316,10 @@ You can specify it without charge. If you own your own server and can configure 
 **Installation method**
 
 - Place the config file in the following path of the node
-     - `http://xxx.xxx.xxx.xxx:80/nodeSetting.json`
+  - `http://xxx.xxx.xxx.xxx:80/nodeSetting.json`
 - symbol-bootstrap is up and running, also listening on port 80, 443. Therefore, it is necessary to perform the following or equivalent operation.
-     - Edit `~/symbol-bootstrap/target/docker/docker-compose.yml` and rewrite the volume information so that `nodeSetting.json` is mounted on his path in nginx
-     - Rebuild the container with `symbol-bootstrap compose` etc. and start the node
+  - Edit `~/symbol-bootstrap/target/docker/docker-compose.yml` and rewrite the volume information so that `nodeSetting.json` is mounted on his path in nginx
+  - Rebuild the container with `symbol-bootstrap compose` etc. and start the node
 
 * This procedure will overwrite the `docker-compose.yml` file when updating symbol-bootstrap or updating preset, so it is necessary to re-register each time.
 
@@ -349,7 +335,7 @@ References are posted below
 
 `custom-preset.yml` may be changed while operating symbol-bootstrap. In that case, after updating the file, it is necessary to execute as follows to reflect the change.
 
-``` bash
+```bash
 symbol-bootstrap stop
 symbol-bootstrap config -p mainnet -a dual -c custom-preset.yml --upgrade
 symbol-bootstrap compose --upgrade
@@ -364,7 +350,7 @@ When a node goes down for some reason, there are several ways to check the cause
 
 By omitting the `-d` option when starting symbol-bootstrap, you can start while checking the log. You can view the log by executing the following.
 
-``` bash
+```bash
 symbol-bootstrap run
 ```
 
@@ -373,7 +359,7 @@ symbol-bootstrap run
 Step 1 outputs logs of all containers as a problem.
 The amount is huge because it is You can check which container has the problem by running the following command.
 
-``` bash
+```bash
 symbol-bootstrap stop
 symbol-bootstrap run -d
 docker ps -a
@@ -381,7 +367,7 @@ docker ps -a
 
 In addition, if it is normal, the output will be as follows. Described as a sample.
 
-``` bash
+```bash
 symbol@xxxxxxxxxxxxxxxxxxx:~$ docker ps -a
 CONTAINER ID IMAGE COMMAND CREATED STATUS PORTS NAMES
 8d44313c93d6 steveltn/https-portal:1.19 "/init" 40 hours ago Up 40 hours 0.0.0.0:80->80/tcp, :::80->80/tcp, 0.0.0.0:3001->443/tcp, :::3001->443/tcp https-proxy
@@ -393,7 +379,7 @@ CONTAINER ID IMAGE COMMAND CREATED STATUS PORTS NAMES
 
 If there is a container with a STATUS of Exec(0) then an error has occurred. If you want to check the log only for the corresponding container, execute as follows. ${CONTAINER ID} specifies the ID of the container output by Exec(0).
 
-``` bash
+```bash
 docker logs ${CONTAINER ID}
 ```
 

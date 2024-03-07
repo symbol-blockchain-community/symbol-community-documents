@@ -12,7 +12,7 @@ console.log(carol.address);
 console.log(
   "https://testnet.symbol.tools/?recipient=" +
     carol.address.plain() +
-    "&amount=100"
+    "&amount=100",
 );
 ```
 
@@ -29,7 +29,7 @@ tx =
     sym.AddressRestrictionFlag.BlockIncomingAddress, //flag delle restrizioni per gli indirizzi
     [bob.address], //Indirizzo che compie l'operazione
     [], //Indirizzo su cui applicare l'operazione di cancellazione
-    networkType
+    networkType,
   ).setMaxFee(100);
 signedTx = carol.sign(tx, generationHash);
 await txRepo.announce(signedTx).toPromise();
@@ -58,7 +58,7 @@ tx =
     sym.MosaicRestrictionFlag.BlockMosaic, //flag che specifica restrizioni su Mosaic
     [mosaicId], //Mosaic di interesse
     [], //Mosaic per operazioni di cancellazione
-    networkType
+    networkType,
   ).setMaxFee(100);
 signedTx = carol.sign(tx, generationHash);
 await txRepo.announce(signedTx).toPromise();
@@ -85,7 +85,7 @@ tx =
     sym.OperationRestrictionFlag.AllowOutgoingTransactionType,
     [sym.TransactionType.ACCOUNT_OPERATION_RESTRICTION], //transazione in oggetto
     [], //transazione per l'operazione di cancellazione
-    networkType
+    networkType,
   ).setMaxFee(100);
 signedTx = carol.sign(tx, generationHash);
 await txRepo.announce(signedTx).toPromise();
@@ -112,7 +112,6 @@ Non ci sono restrizioni per le ricevute di transazioni. Le operazioni previste s
 
 17232: `ACCOUNT_OPERATION_RESTRICTION` restriction is not permitted.
 Significa che quando si usa `AllowOutgoingTransactionType`, si deve specificare `ACCOUNT_OPERATION_RESTRICTION`, inoltre se si usa `BlockOutgoingTransactionType`, non si può specificare `ACCOUNT_OPERATION_RESTRICTION`.
-
 
 ### Convalida
 
@@ -142,7 +141,7 @@ console.log(res);
           0: Address {address: 'TCW2ZW7LVJMS4LWUQ7W6NROASRE2G2QKSBVCIQY', networkType: 152}
 ```
 
-## 11.2 Restrizioni globali sul Mosaic 
+## 11.2 Restrizioni globali sul Mosaic
 
 Le restrizioni globali si applicano ai trasferimenti di Mosaic.  
 Si imposta un valore numerico nei metadati di ogni Indirizzo interessato.  
@@ -155,7 +154,7 @@ nsRepo = repo.createNamespaceRepository();
 resMosaicRepo = repo.createRestrictionMosaicRepository();
 mosaicResService = new sym.MosaicRestrictionTransactionService(
   resMosaicRepo,
-  nsRepo
+  nsRepo,
 );
 ```
 
@@ -176,8 +175,8 @@ mosaicDefTx = sym.MosaicDefinitionTransaction.create(
   sym.MosaicId.createFromNonce(nonce, carol.address),
   sym.MosaicFlags.create(supplyMutable, transferable, restrictable, revokable),
   0, //divisibility
-  sym.UInt64.fromUint(0), //periodo di validità 
-  networkType
+  sym.UInt64.fromUint(0), //periodo di validità
+  networkType,
 );
 
 //Modifica della quantità di monete del Mosaic
@@ -186,7 +185,7 @@ mosaicChangeTx = sym.MosaicSupplyChangeTransaction.create(
   mosaicDefTx.mosaicId,
   sym.MosaicSupplyChangeAction.Increase,
   sym.UInt64.fromUint(1000000),
-  networkType
+  networkType,
 );
 
 //Impostazione delle restrizioni globali sul Mosaic
@@ -198,7 +197,7 @@ mosaicGlobalResTx = await mosaicResService
     mosaicDefTx.mosaicId,
     key,
     "1",
-    sym.MosaicRestrictionType.EQ
+    sym.MosaicRestrictionType.EQ,
   )
   .toPromise();
 
@@ -210,7 +209,7 @@ aggregateTx = sym.AggregateTransaction.createComplete(
     mosaicGlobalResTx.toAggregate(carol.publicAccount),
   ],
   networkType,
-  []
+  [],
 ).setMaxFeeForAggregate(100, 0);
 
 signedTx = carol.sign(aggregateTx, generationHash);
@@ -223,14 +222,14 @@ await txRepo.announce(signedTx).toPromise();
 {0: 'NONE', 1: 'EQ', 2: 'NE', 3: 'LT', 4: 'LE', 5: 'GT', 6: 'GE'}
 ```
 
-| Operatore | Abbr. | significato              |
-| --------- | ----- | ------------------------ |
-| =        | EQ     | uguaglianza              |
-| !=       | NE     | disuguaglianza           |
-| <        | LT     | minore                   |
-| <=       | LE     | minore o uguale          |
-| >        | GT     | maggiore                 |
-| <=       | GE     | maggiore o uguale        | 
+| Operatore | Abbr. | significato       |
+| --------- | ----- | ----------------- |
+| =         | EQ    | uguaglianza       |
+| !=        | NE    | disuguaglianza    |
+| <         | LT    | minore            |
+| <=        | LE    | minore o uguale   |
+| >         | GT    | maggiore          |
+| <=        | GE    | maggiore o uguale |
 
 ### Applicare le restrizioni dei Mosaic agli Indirizzi
 
@@ -248,7 +247,7 @@ carolMosaicAddressResTx = sym.MosaicAddressRestrictionTransaction.create(
   carol.address, // Indirizzo
   sym.UInt64.fromUint(1), // nuovo valore della restrizione
   networkType,
-  sym.UInt64.fromHex("FFFFFFFFFFFFFFFF") // vecchio valore della restrizione
+  sym.UInt64.fromHex("FFFFFFFFFFFFFFFF"), // vecchio valore della restrizione
 ).setMaxFee(100);
 signedTx = carol.sign(carolMosaicAddressResTx, generationHash);
 await txRepo.announce(signedTx).toPromise();
@@ -262,7 +261,7 @@ bobMosaicAddressResTx = sym.MosaicAddressRestrictionTransaction.create(
   bob.address, // Indirizzo
   sym.UInt64.fromUint(1), // nuovo valore della restrizione
   networkType,
-  sym.UInt64.fromHex("FFFFFFFFFFFFFFFF") //vecchio valore della restrizione
+  sym.UInt64.fromHex("FFFFFFFFFFFFFFFF"), //vecchio valore della restrizione
 ).setMaxFee(100);
 signedTx = carol.sign(bobMosaicAddressResTx, generationHash);
 await txRepo.announce(signedTx).toPromise();
@@ -318,7 +317,7 @@ trTx = sym.TransferTransaction.create(
   bob.address,
   [new sym.Mosaic(mosaicDefTx.mosaicId, sym.UInt64.fromUint(1))],
   sym.PlainMessage.create(""),
-  networkType
+  networkType,
 ).setMaxFee(100);
 signedTx = carol.sign(trTx, generationHash);
 await txRepo.announce(signedTx).toPromise();
@@ -330,7 +329,7 @@ trTx = sym.TransferTransaction.create(
   dave.address,
   [new sym.Mosaic(mosaicDefTx.mosaicId, sym.UInt64.fromUint(1))],
   sym.PlainMessage.create(""),
-  networkType
+  networkType,
 ).setMaxFee(100);
 signedTx = carol.sign(trTx, generationHash);
 await txRepo.announce(signedTx).toPromise();
@@ -347,7 +346,7 @@ Il fallimento darà origine al seguente errore:
 Un caso d'uso delle funzionalità di "Restrizioni sugli Indirizzi" e di "Restrizioni globali sui Mosaic", è il controllo
 delle proprietà degli Indirizzi e Mosaic della blockchain Symbol. La loro flessibilità consente di impiegarle per risolvere situazioni d'uso della blockchain nel modo reale. Adempimenti normativi di legge, per esempio, potrebbero limitare o impedire gli scambi di un certo Mosaic emesso da una certa società. Potrebbe essere richiesco per questioni di sicurezza di impostare per certi Indirizzi il rifiuto di transazioni in entrata provenienti da utenti considerati "spam" o malevoli.
 
-### Indirizzi "burn" 
+### Indirizzi "burn"
 
 Se impostiamo in un Indirizzo la restrizione "AllowIncomingAddress" per limitare fondi che esso può ricevere e ne trasferiamo tutte le monete XYM lasciando il saldo a zero, l'operatività dell'Indirizzo diventerà difficile anche se si è in possesso della chiave privata. (Caso estremo, possibile solo se un nodo della rete blockchain Symbol è in esecuzione con la commissione minima valorizzata a 0.)
 

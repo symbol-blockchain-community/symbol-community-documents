@@ -2,10 +2,11 @@ This page is a machine translation of the English text.
 Please contact faunsu https://twitter.com/faunsu19000 or symbol-community.com/community for language proofreading of articles.
 
 ## 目录
+
 *关于符号节点
 *节点功能和服务器基本规格
-* 符号节点构建过程
-*尖端
+
+- 符号节点构建过程 \*尖端
 
 ## 关于符号节点
 
@@ -16,6 +17,7 @@ Please contact faunsu https://twitter.com/faunsu19000 or symbol-community.com/co
 Symbol节点分为三种：我会按顺序解释。
 
 -对等节点
+
 - API 节点
 - 投票节点
 
@@ -32,7 +34,7 @@ API 节点还负责收集聚合债券交易的共同签名，这些交易仅在�
 
 ![symbol-build-node-api-node](https://cms.symbol-community.com/uploads/symbol_build_node_api_node_4deaa356b7.png)
 
-* 单个节点可以同时运行 Peer Node 和 API Node。 在这种情况下，它表示为双节点。
+- 单个节点可以同时运行 Peer Node 和 API Node。 在这种情况下，它表示为双节点。
 
 ### 投票节点
 
@@ -58,7 +60,6 @@ Symbol Blockchain 中的投票节点是可选的。 新建网络时，可在网�
 | 内存      | 8GB                | 16GB               | 16GB               |
 | 磁盘大小  | 500 GB             | 750 GB             |
 | 磁盘 IOPS | 1500 IOPS 固态硬盘 | 1500 IOPS 固态硬盘 | 1500 IOPS 固态硬盘 |
-
 
 下表列出了建议的要求。 使用它们会给您带来更流畅的体验，并提供一定程度的未来证明。
 
@@ -89,7 +90,7 @@ Symbol Blockchain 中的投票节点是可选的。 新建网络时，可在网�
 
 连接到服务器，首先在服务器上创建一个操作账号。
 
-``` 狂欢
+```狂欢
 添加用户符号
 usermod -aG sudo 符号
 su - 符号
@@ -99,7 +100,7 @@ su - 符号
 
 执行以下脚本搭建环境。
 
-``` 狂欢
+```狂欢
 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/ymuichiro/symbol-node-builder/main/scripts/install.sh)"
 ```
 
@@ -114,12 +115,11 @@ su - 符号
 
 使用以下命令启动 Symbol-bootstrap。
 
-``` 狂欢
+```狂欢
 光盘〜/
 符号引导程序
 符号引导向导
 ```
-
 
 1. 网络选择 选择在哪个网络上构建节点。
 
@@ -131,7 +131,6 @@ su - 符号
       自定义网络节点（需要“custom-network-preset.yml”文件和“nemesis-seed”文件夹）
 ```
 
-
 2.选择节点类型选择节点类型
 
 ```
@@ -142,7 +141,6 @@ su - 符号
     演示节点。 双节点，包括水龙头和资源管理器。
 ```
 
-
 3.建议离线，因为它处理私钥。 如果未连接到 Internet，则无法使用 VPS 等，因此请按 Y 继续。
 
 ```
@@ -150,14 +148,12 @@ su - 符号
 在继续之前断开网络连接。 如果您离线或不在乎，请说“是”。 （是/否）
 ```
 
-
 4. 输入用于 Symbol bootstrap 的密码。
 
 ```
 输入用于加密和解密自定义预设、addresses.yml 和 preset.yml 文件的密码。
 密码，私钥将被加密。
 ```
-
 
 5.收割设置需要四个账号。 指定其中的主账户。 创建一个新帐户或输入现有帐户的私钥。
 
@@ -168,13 +164,11 @@ su - 符号
      输入主账户的 64 HEX 私钥（或按回车键再次选择该选项）。
 ```
 
-
 6.如果在5中输入了私钥，会显示账户地址。 如果没有区别，请选择 y。
 
 ```
 ？ 这是用作主帐户的预期地址 TCDNP********************55KCQ 吗？ （是/否）
 ```
-
 
 7. 指定传输帐户以及主要帐户。
 
@@ -184,7 +178,6 @@ su - 符号
     输入私钥
 ```
 
-
 8. VRF账户类似。
 
 ```
@@ -193,7 +186,6 @@ su - 符号
      输入私钥
 ```
 
-
 9. 远程账户类似。
 
 ```
@@ -201,7 +193,6 @@ su - 符号
 ❯ 生成一个新帐户
     输入私钥
 ```
-
 
 10. 配置 HTTP 设置。 如果选择第二个 Automatic ~ ，则可以自动设置 HTTPS。
 
@@ -213,7 +204,6 @@ su - 符号
      没有任何
 ```
 
-
 11. 输入主机名。 指定 IP 地址或域。
 
 ```
@@ -221,13 +211,11 @@ su - 符号
 在 HTTPS 上运行时需要！
 ```
 
-
 12. 输入您的友好名称。
 
 ```
 输入节点的友好名称。
 ```
-
 
 13. 从 4 种类型的帐户（密钥）中选择要加密的数量。
 
@@ -238,7 +226,6 @@ su - 符号
 密钥已加密。
      ENCRYPT：所有密钥都已加密，只需要输入密码
 ```
-
 
 15. 注册或选择一个投票节点。 如果你没有 300 万个 xym，你就不能成为投票节点。
 
@@ -277,7 +264,7 @@ https代理：
 
 执行以下命令加载 ~/custom-preset.yml 并启动 symbol-bootstrap。
 
-``` 狂欢
+```狂欢
 cd ~/符号引导程序
 symbol-bootstrap config -p mainnet -a dual -c custom-preset.yml
 符号引导启动 -d
@@ -291,7 +278,7 @@ d` 仅在首次启动时指定。
 `symbol-bootstrap run -d` 为第二次和后续引导指定它。
 `symbol-bootstrap stop` 指定何时暂停。 可以用run命令重启。
 
-* 如果指定了 `-d`，就可以在后端启动它。 原则上加上`-d`，除非symbol-bootstrap报错，必须debug。
+- 如果指定了 `-d`，就可以在后端启动它。 原则上加上`-d`，除非symbol-bootstrap报错，必须debug。
 
 这项工作完成了 symbol-bootstrap 的新构建。 截至 2023 年 3 月，将启动新的符号引导程序，所有区块同步大约需要 1.5 到 2 天。 招募委托人时，请在所有区块同步时进行。
 
@@ -331,11 +318,8 @@ d` 仅在首次启动时指定。
 
 **安装方法**
 
-- 将配置文件放在节点的以下路径中
-      -`http://xxx.xxx.xxx.xxx:80/nodeSetting.json`
-- symbol-bootstrap 已启动并正在运行，同时也在侦听端口 80、443。因此，有必要执行以下或等效操作。
-      - 编辑`~/symbol-bootstrap/target/docker/docker-compose.yml`并重写volume信息，使`nodeSetting.json`挂载在他在nginx中的路径上
-      - 使用 `symbol-bootstrap compose` 等重建容器并启动节点
+- 将配置文件放在节点的以下路径中 -`http://xxx.xxx.xxx.xxx:80/nodeSetting.json`
+- symbol-bootstrap 已启动并正在运行，同时也在侦听端口 80、443。因此，有必要执行以下或等效操作。- 编辑`~/symbol-bootstrap/target/docker/docker-compose.yml`并重写volume信息，使`nodeSetting.json`挂载在他在nginx中的路径上 - 使用 `symbol-bootstrap compose` 等重建容器并启动节点
 
 * 此程序在更新symbol-bootstrap或更新preset时会覆盖`docker-compose.yml`文件，所以每次都需要重新注册。
 
@@ -351,7 +335,7 @@ d` 仅在首次启动时指定。
 
 `custom-preset.yml` 可以在运行 symbol-bootstrap 时更改。 在这种情况下，更新文件后，需要执行如下操作以反映更改。
 
-``` 狂欢
+```狂欢
 符号引导停止
 symbol-bootstrap config -p mainnet -a dual -c custom-preset.yml --upgrade
 符号引导程序撰写--升级
@@ -366,7 +350,7 @@ symbol-bootstrap config -p mainnet -a dual -c custom-preset.yml --upgrade
 
 通过在启动 symbol-bootstrap 时省略 `-d` 选项，您可以在检查日志时启动。 您可以通过执行以下命令来查看日志。
 
-``` 狂欢
+```狂欢
 符号引导运行
 ```
 
@@ -375,7 +359,7 @@ symbol-bootstrap config -p mainnet -a dual -c custom-preset.yml --upgrade
 第1步输出所有容器的日志作为问题。
 数量巨大，因为它是您可以通过运行以下命令来检查哪个容器有问题。
 
-``` 狂欢
+```狂欢
 符号引导停止
 符号引导程序运行-d
 泊坞窗 ps -a
@@ -383,7 +367,7 @@ symbol-bootstrap config -p mainnet -a dual -c custom-preset.yml --upgrade
 
 另外，如果正常的话，输出结果如下。 描述为样本。
 
-``` 狂欢
+```狂欢
 符号@xxxxxxxxxxxxxxxxxxx:~$ docker ps -a
 容器 ID 图像命令创建状态端口名称
 8d44313c93d6 steveltn/https-portal:1.19 "/init" 40 小时前 上升 40 小时 0.0.0.0:80->80/tcp, :::80->80/tcp, 0.0.0.0:3001->443/tcp, :::3001->443/tcp https-代理
@@ -395,7 +379,7 @@ symbol-bootstrap config -p mainnet -a dual -c custom-preset.yml --upgrade
 
 如果容器的状态为 Exec(0)，则发生错误。 如果只想查看对应容器的日志，执行如下。 ${CONTAINER ID} 指定 Exec(0) 输出的容器 ID。
 
-``` 狂欢
+```狂欢
 docker 日志 ${CONTAINER ID}
 ```
 

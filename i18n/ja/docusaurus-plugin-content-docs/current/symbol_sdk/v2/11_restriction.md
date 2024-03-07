@@ -12,7 +12,7 @@ console.log(carol.address);
 console.log(
   "https://testnet.symbol.tools/?recipient=" +
     carol.address.plain() +
-    "&amount=100"
+    "&amount=100",
 );
 ```
 
@@ -29,7 +29,7 @@ tx =
     sym.AddressRestrictionFlag.BlockIncomingAddress, //アドレス制限フラグ
     [bob.address], //設定アドレス
     [], //解除アドレス
-    networkType
+    networkType,
   ).setMaxFee(100);
 signedTx = carol.sign(tx, generationHash);
 await txRepo.announce(signedTx).toPromise();
@@ -58,7 +58,7 @@ tx =
     sym.MosaicRestrictionFlag.BlockMosaic, //モザイク制限フラグ
     [mosaicId], //設定モザイク
     [], //解除モザイク
-    networkType
+    networkType,
   ).setMaxFee(100);
 signedTx = carol.sign(tx, generationHash);
 await txRepo.announce(signedTx).toPromise();
@@ -85,7 +85,7 @@ tx =
     sym.OperationRestrictionFlag.AllowOutgoingTransactionType,
     [sym.TransactionType.ACCOUNT_OPERATION_RESTRICTION], //設定トランザクション
     [], //解除トランザクション
-    networkType
+    networkType,
   ).setMaxFee(100);
 signedTx = carol.sign(tx, generationHash);
 await txRepo.announce(signedTx).toPromise();
@@ -155,7 +155,7 @@ nsRepo = repo.createNamespaceRepository();
 resMosaicRepo = repo.createRestrictionMosaicRepository();
 mosaicResService = new sym.MosaicRestrictionTransactionService(
   resMosaicRepo,
-  nsRepo
+  nsRepo,
 );
 ```
 
@@ -177,7 +177,7 @@ mosaicDefTx = sym.MosaicDefinitionTransaction.create(
   sym.MosaicFlags.create(supplyMutable, transferable, restrictable, revokable),
   0, //divisibility
   sym.UInt64.fromUint(0), //duration
-  networkType
+  networkType,
 );
 
 //モザイク変更
@@ -186,7 +186,7 @@ mosaicChangeTx = sym.MosaicSupplyChangeTransaction.create(
   mosaicDefTx.mosaicId,
   sym.MosaicSupplyChangeAction.Increase,
   sym.UInt64.fromUint(1000000),
-  networkType
+  networkType,
 );
 
 //グローバルモザイク制限
@@ -198,7 +198,7 @@ mosaicGlobalResTx = await mosaicResService
     mosaicDefTx.mosaicId,
     key,
     "1",
-    sym.MosaicRestrictionType.EQ
+    sym.MosaicRestrictionType.EQ,
   )
   .toPromise();
 
@@ -210,7 +210,7 @@ aggregateTx = sym.AggregateTransaction.createComplete(
     mosaicGlobalResTx.toAggregate(carol.publicAccount),
   ],
   networkType,
-  []
+  [],
 ).setMaxFeeForAggregate(100, 0);
 
 signedTx = carol.sign(aggregateTx, generationHash);
@@ -248,7 +248,7 @@ carolMosaicAddressResTx = sym.MosaicAddressRestrictionTransaction.create(
   carol.address, // address
   sym.UInt64.fromUint(1), // newRestrictionValue
   networkType,
-  sym.UInt64.fromHex("FFFFFFFFFFFFFFFF") //previousRestrictionValue
+  sym.UInt64.fromHex("FFFFFFFFFFFFFFFF"), //previousRestrictionValue
 ).setMaxFee(100);
 signedTx = carol.sign(carolMosaicAddressResTx, generationHash);
 await txRepo.announce(signedTx).toPromise();
@@ -262,7 +262,7 @@ bobMosaicAddressResTx = sym.MosaicAddressRestrictionTransaction.create(
   bob.address, // address
   sym.UInt64.fromUint(1), // newRestrictionValue
   networkType,
-  sym.UInt64.fromHex("FFFFFFFFFFFFFFFF") //previousRestrictionValue
+  sym.UInt64.fromHex("FFFFFFFFFFFFFFFF"), //previousRestrictionValue
 ).setMaxFee(100);
 signedTx = carol.sign(bobMosaicAddressResTx, generationHash);
 await txRepo.announce(signedTx).toPromise();
@@ -318,7 +318,7 @@ trTx = sym.TransferTransaction.create(
   bob.address,
   [new sym.Mosaic(mosaicDefTx.mosaicId, sym.UInt64.fromUint(1))],
   sym.PlainMessage.create(""),
-  networkType
+  networkType,
 ).setMaxFee(100);
 signedTx = carol.sign(trTx, generationHash);
 await txRepo.announce(signedTx).toPromise();
@@ -330,7 +330,7 @@ trTx = sym.TransferTransaction.create(
   dave.address,
   [new sym.Mosaic(mosaicDefTx.mosaicId, sym.UInt64.fromUint(1))],
   sym.PlainMessage.create(""),
-  networkType
+  networkType,
 ).setMaxFee(100);
 signedTx = carol.sign(trTx, generationHash);
 await txRepo.announce(signedTx).toPromise();

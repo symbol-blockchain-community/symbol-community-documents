@@ -4,12 +4,11 @@ sidebar_position: 8
 
 # 8.Lock
 
-The Symbol blockchain has two types of LockTransactions: Hash Lock Transaction and Secret Lock Transaction.  
+The Symbol blockchain has two types of LockTransactions: Hash Lock Transaction and Secret Lock Transaction.
 
 ## 8.1 Hash Lock
 
-Hash Lock Transactions enable a transaction to be be announced later. The transaction is stored in every node's partial cache with a hash value until the transaction is announced. The transaction is locked and not processed on the API node until it is signed by all cosignatories. It does not lock the tokens owned by the account but a 10 XYM deposit is paid by the initiator of the transaction. The locked funds will be refunded to the initiating account when the Hash Lock transaction is fully signed.  The maximum validity period of a Hash Lock Transaction is approximately 48 hours, if the transaction is not completed within this time period then the 10 XYM deposit is lost.
-
+Hash Lock Transactions enable a transaction to be be announced later. The transaction is stored in every node's partial cache with a hash value until the transaction is announced. The transaction is locked and not processed on the API node until it is signed by all cosignatories. It does not lock the tokens owned by the account but a 10 XYM deposit is paid by the initiator of the transaction. The locked funds will be refunded to the initiating account when the Hash Lock transaction is fully signed. The maximum validity period of a Hash Lock Transaction is approximately 48 hours, if the transaction is not completed within this time period then the 10 XYM deposit is lost.
 
 ### Creation of an Aggregate Bonded Transaction.
 
@@ -17,37 +16,38 @@ Hash Lock Transactions enable a transaction to be be announced later. The transa
 bob = sym.Account.generateNewAccount(networkType);
 
 tx1 = sym.TransferTransaction.create(
-    undefined,
-    bob.address,  //Send to Bob
-    [ //1XYM
-      new sym.Mosaic(
-        new sym.NamespaceId("symbol.xym"),
-        sym.UInt64.fromUint(1000000)
-      )
-    ],
-    sym.EmptyMessage, //mptyMessage
-    networkType
+  undefined,
+  bob.address, //Send to Bob
+  [
+    //1XYM
+    new sym.Mosaic(
+      new sym.NamespaceId("symbol.xym"),
+      sym.UInt64.fromUint(1000000),
+    ),
+  ],
+  sym.EmptyMessage, //mptyMessage
+  networkType,
 );
 
 tx2 = sym.TransferTransaction.create(
-    undefined,
-    alice.address,  //Send to Alice
-    [],
-    sym.PlainMessage.create('thank you!'), //Message
-    networkType
+  undefined,
+  alice.address, //Send to Alice
+  [],
+  sym.PlainMessage.create("thank you!"), //Message
+  networkType,
 );
 
 aggregateArray = [
-    tx1.toAggregate(alice.publicAccount), //Sent from Alice
-    tx2.toAggregate(bob.publicAccount), //Sent from  Bob
-]
+  tx1.toAggregate(alice.publicAccount), //Sent from Alice
+  tx2.toAggregate(bob.publicAccount), //Sent from  Bob
+];
 
 //Aggregate Bonded Transaction
 aggregateTx = sym.AggregateTransaction.createBonded(
-    sym.Deadline.create(epochAdjustment),
-    aggregateArray,
-    networkType,
-    [],
+  sym.Deadline.create(epochAdjustment),
+  aggregateArray,
+  networkType,
+  [],
 ).setMaxFeeForAggregate(100, 1);
 
 //Signature
@@ -59,14 +59,18 @@ Specify the public key of the sender's account when two transactions, tx1 and tx
 For example, it is possible to send an NFT from Alice to Bob in tx1 and then from Bob to Carol in tx2, but changing the order of the Aggregate Transaction to tx2,tx1 will result in an error. In addition, if there is even one inconsistent transaction in the Aggregate transaction, the entire Aggregate transaction will fail and will not be approved into the chain.
 
 ### Creation, signing and announcement of Hash Lock Transaction
+
 ```js
 //Creation of Hash Lock TX
 hashLockTx = sym.HashLockTransaction.create(
   sym.Deadline.create(epochAdjustment),
-    new sym.Mosaic(new sym.NamespaceId("symbol.xym"),sym.UInt64.fromUint(10 * 1000000)), //10xym by default
-    sym.UInt64.fromUint(480), // Lock expiry date
-    signedAggregateTx,// Register this hash value
-    networkType
+  new sym.Mosaic(
+    new sym.NamespaceId("symbol.xym"),
+    sym.UInt64.fromUint(10 * 1000000),
+  ), //10xym by default
+  sym.UInt64.fromUint(480), // Lock expiry date
+  signedAggregateTx, // Register this hash value
+  networkType,
 ).setMaxFee(100);
 
 //Signature
@@ -79,24 +83,27 @@ await txRepo.announce(signedLockTx).toPromise();
 ### Announcement of Aggregate Bonded Transaction
 
 After checking with e.g. Explorer, announce the Bonded Transaction to the network.
+
 ```js
 await txRepo.announceAggregateBonded(signedAggregateTx).toPromise();
 ```
 
-
 ### Co-signature
+
 Co-sign the locked transaction from the specified account (Bob).
 
 ```js
-txInfo = await txRepo.getTransaction(signedAggregateTx.hash,sym.TransactionGroup.Partial).toPromise();
+txInfo = await txRepo
+  .getTransaction(signedAggregateTx.hash, sym.TransactionGroup.Partial)
+  .toPromise();
 cosignatureTx = sym.CosignatureTransaction.create(txInfo);
 signedCosTx = bob.signCosignatureTransaction(cosignatureTx);
 await txRepo.announceAggregateBondedCosignature(signedCosTx).toPromise();
 ```
 
 ### Note
-Hash Lock Transactions can be created and announced by anyone, not just the account that initially creates and signs the transaction. But make sure that the Aggregate Transaction includes a transaction for whom the account is the signer. Dummy transactions with no mosaic transmission and no message are valid.
 
+Hash Lock Transactions can be created and announced by anyone, not just the account that initially creates and signs the transaction. But make sure that the Aggregate Transaction includes a transaction for whom the account is the signer. Dummy transactions with no mosaic transmission and no message are valid.
 
 ## 8.2 Secret Lock・Secret Proof
 
@@ -112,7 +119,11 @@ bob = sym.Account.generateNewAccount(networkType);
 console.log(bob.address);
 
 //FAUCET URL outlet
-console.log("https://testnet.symbol.tools/?recipient=" + bob.address.plain() +"&amount=10");
+console.log(
+  "https://testnet.symbol.tools/?recipient=" +
+    bob.address.plain() +
+    "&amount=10",
+);
 ```
 
 ### Secret Lock
@@ -120,42 +131,45 @@ console.log("https://testnet.symbol.tools/?recipient=" + bob.address.plain() +"&
 Create a common pass for locking and unlocking.
 
 ```js
-sha3_256 = require('/node_modules/js-sha3').sha3_256;
+sha3_256 = require("/node_modules/js-sha3").sha3_256;
 
 random = sym.Crypto.randomBytes(20);
 hash = sha3_256.create();
 secret = hash.update(random).hex(); //Lock keyword
-proof = random.toString('hex'); //Unlock keyword
+proof = random.toString("hex"); //Unlock keyword
 console.log("secret:" + secret);
 console.log("proof:" + proof);
 ```
 
 ###### Sample output
+
 ```js
 > secret:f260bfb53478f163ee61ee3e5fb7cfcaf7f0b663bc9dd4c537b958d4ce00e240
   proof:7944496ac0f572173c2549baf9ac18f893aab6d0
 ```
 
 Creating, signing and announcing transaction
+
 ```js
 lockTx = sym.SecretLockTransaction.create(
-    sym.Deadline.create(epochAdjustment),
-    new sym.Mosaic(
-      new sym.NamespaceId("symbol.xym"),
-      sym.UInt64.fromUint(1000000) //1XYM
-    ), //Mosaic to lock
-    sym.UInt64.fromUint(480), //Locking period (number of blocks)
-    sym.LockHashAlgorithm.Op_Sha3_256, //Algorithm used for lock keyword generation
-    secret, //Lock keyword
-    bob.address, //Forwarding address to unlock:Bob
-    networkType
+  sym.Deadline.create(epochAdjustment),
+  new sym.Mosaic(
+    new sym.NamespaceId("symbol.xym"),
+    sym.UInt64.fromUint(1000000), //1XYM
+  ), //Mosaic to lock
+  sym.UInt64.fromUint(480), //Locking period (number of blocks)
+  sym.LockHashAlgorithm.Op_Sha3_256, //Algorithm used for lock keyword generation
+  secret, //Lock keyword
+  bob.address, //Forwarding address to unlock:Bob
+  networkType,
 ).setMaxFee(100);
 
-signedLockTx = alice.sign(lockTx,generationHash);
+signedLockTx = alice.sign(lockTx, generationHash);
 await txRepo.announce(signedLockTx).toPromise();
 ```
 
 The LockHashAlgorithm is as follows
+
 ```js
 {0: 'Op_Sha3_256', 1: 'Op_Hash_160', 2: 'Op_Hash_256'}
 ```
@@ -165,12 +179,15 @@ At the time of locking, the unlock destination is specified by Bob, thus the des
 The maximum lock period is 365 days (counting number of blocks in days).
 
 Check the approved transactions.
+
 ```js
 slRepo = repo.createSecretLockRepository();
-res = await slRepo.search({secret:secret}).toPromise();
+res = await slRepo.search({ secret: secret }).toPromise();
 console.log(res.data[0]);
 ```
+
 ###### Sample output
+
 ```js
 > SecretLockInfo
     amount: UInt64 {lower: 1000000, higher: 0}
@@ -185,35 +202,39 @@ console.log(res.data[0]);
     status: 0
     version: 1
 ```
+
 It shows that Alice who locked the transaction is recorded in ownerAddress and the Bob is recorded in recipientAddress.
 The information about the secret is published and Bob informs the network of the corresponding proof.
-
 
 ### Secret Proof
 
 Unlock the transaction using the secret proof. Bob must have obtained the secret proof in advance.
 
-
 ```js
 proofTx = sym.SecretProofTransaction.create(
-    sym.Deadline.create(epochAdjustment),
-    sym.LockHashAlgorithm.Op_Sha3_256, //Algorithm used for lock keyword generation
-    secret, //Lock keyword
-    bob.address, //Deactivated accounts (receiving accounts)
-    proof, //Unlock keyword
-    networkType
+  sym.Deadline.create(epochAdjustment),
+  sym.LockHashAlgorithm.Op_Sha3_256, //Algorithm used for lock keyword generation
+  secret, //Lock keyword
+  bob.address, //Deactivated accounts (receiving accounts)
+  proof, //Unlock keyword
+  networkType,
 ).setMaxFee(100);
 
-signedProofTx = bob.sign(proofTx,generationHash);
+signedProofTx = bob.sign(proofTx, generationHash);
 await txRepo.announce(signedProofTx).toPromise();
 ```
 
 Confirm the approval result.
+
 ```js
-txInfo = await txRepo.getTransaction(signedProofTx.hash,sym.TransactionGroup.Confirmed).toPromise();
+txInfo = await txRepo
+  .getTransaction(signedProofTx.hash, sym.TransactionGroup.Confirmed)
+  .toPromise();
 console.log(txInfo);
 ```
+
 ###### Sample output
+
 ```js
 > SecretProofTransaction
   > deadline: Deadline {adjustedValue: 12669305546}
@@ -236,17 +257,20 @@ console.log(txInfo);
 
 The SecretProofTransaction does not contain information about the amount of any mosaics received. Check the amount in the receipt created when the block is generated. Search for receipts addressed to Bob with receipt type:LockHash_Completed.
 
-
 ```js
 receiptRepo = repo.createReceiptRepository();
 
-receiptInfo = await receiptRepo.searchReceipts({
-    receiptType:sym.ReceiptTypeLockHash_Completed,
-    targetAddress:bob.address
-}).toPromise();
+receiptInfo = await receiptRepo
+  .searchReceipts({
+    receiptType: sym.ReceiptTypeLockHash_Completed,
+    targetAddress: bob.address,
+  })
+  .toPromise();
 console.log(receiptInfo.data);
 ```
+
 ###### Sample output
+
 ```js
 > data: Array(1)
   >  0: TransactionStatement
@@ -271,7 +295,6 @@ ReceiptTypes are as follows:
 
 ## 8.3 Tips for use
 
-
 ### Paying the transaction fee instead
 
 Generally blockchains require transaction fees for sending transactions. Therefore, users who want to use blockchains need to obtain the native currency of the chain to pay fees (e.g. Symbol's native currency XYM) from the exchange in advance. If the user is a company, the way it is managed might be an issue from an operational point of view. If using Aggregate Transactions, service providers can cover hash lock and transaction fees on behalf of users.
@@ -282,4 +305,5 @@ Secret locks are refunded to the account that created the transaction after a sp
 When the service provider charges the cost of the lock for the Secret Lock account, the amount of tokens owned by the user for the lock will increase after the expiry date has passed. On the other hand, announcing a secret proof transaction before the deadline has passed is treated as a cancellation as the transaction is completed and the funds are returned to the service provider.
 
 ### Atomic swaps
-Secret locks can be used to exchange  mosaics (tokens) with other chains. Please note that other chains refer to this as a hash time lock contract (HTLC)  not to be mistaken for a Symbol Hash Lock.
+
+Secret locks can be used to exchange mosaics (tokens) with other chains. Please note that other chains refer to this as a hash time lock contract (HTLC) not to be mistaken for a Symbol Hash Lock.

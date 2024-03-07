@@ -1,11 +1,10 @@
 # 8.锁定
 
-区块链有两种锁定交易：哈希锁定交易和秘密锁定交易。  
+区块链有两种锁定交易：哈希锁定交易和秘密锁定交易。
 
 ## 8.1 哈希锁 Hash Lock
 
 哈希锁定交易可以让交易在稍后公布。交易会以哈希值的形式存储在每个节点的部分快取中，直到交易被公布。交易被锁定，在 API 节点上不进行处理，直到它被所有共同签署者签署。它不会锁定帐户所拥有的代币，但交易发起者需要支付10 XYM的押金。当哈希锁定交易完全签署时，被锁定的资金将退还给发起交易的帐户。哈希锁定交易的最大有效期为约48小时，如果交易在此期限内未完成，则10 XYM押金将会丢失。
-
 
 ### 创建聚合绑定交易。
 
@@ -13,57 +12,61 @@
 bob = sym.Account.generateNewAccount(networkType);
 
 tx1 = sym.TransferTransaction.create(
-    undefined,
-    bob.address,  //Send to Bob
-    [ //1XYM
-      new sym.Mosaic(
-        new sym.NamespaceId("symbol.xym"),
-        sym.UInt64.fromUint(1000000)
-      )
-    ],
-    sym.EmptyMessage, //mptyMessage
-    networkType
+  undefined,
+  bob.address, //Send to Bob
+  [
+    //1XYM
+    new sym.Mosaic(
+      new sym.NamespaceId("symbol.xym"),
+      sym.UInt64.fromUint(1000000),
+    ),
+  ],
+  sym.EmptyMessage, //mptyMessage
+  networkType,
 );
 
 tx2 = sym.TransferTransaction.create(
-    undefined,
-    alice.address,  //Send to Alice
-    [],
-    sym.PlainMessage.create('thank you!'), //Message
-    networkType
+  undefined,
+  alice.address, //Send to Alice
+  [],
+  sym.PlainMessage.create("thank you!"), //Message
+  networkType,
 );
 
 aggregateArray = [
-    tx1.toAggregate(alice.publicAccount), //Sent from Alice
-    tx2.toAggregate(bob.publicAccount), //Sent from  Bob
-]
+  tx1.toAggregate(alice.publicAccount), //Sent from Alice
+  tx2.toAggregate(bob.publicAccount), //Sent from  Bob
+];
 
 //Aggregate Bonded Transaction
 aggregateTx = sym.AggregateTransaction.createBonded(
-    sym.Deadline.create(epochAdjustment),
-    aggregateArray,
-    networkType,
-    [],
+  sym.Deadline.create(epochAdjustment),
+  aggregateArray,
+  networkType,
+  [],
 ).setMaxFeeForAggregate(100, 1);
 
 //Signature
 signedAggregateTx = alice.sign(aggregateTx, generationHash);
 ```
 
-
 当两笔交易 tx1 和 tx2 排列在 AggregateArray 中时，指定发送方账户的公钥。参考账户章节通过API提前获取公钥。在区块批准期间，按此顺序验证排列的交易的完整性。
 
 例如，可以在交易1中从 Alice 发送一个 NFT 给 Bob，然后在交易2中从 Bob 发送给 Carol，但如果更改汇总交易的顺序为交易2、交易1，将导致错误。此外，如果汇总交易中有任何不一致的交易，整个汇总交易将失败，并且不会被批准进入区块链。
 
 ### 哈希锁交易的创建、签署和公告
+
 ```js
 //Creation of Hash Lock TX
 hashLockTx = sym.HashLockTransaction.create(
   sym.Deadline.create(epochAdjustment),
-    new sym.Mosaic(new sym.NamespaceId("symbol.xym"),sym.UInt64.fromUint(10 * 1000000)), //10xym by default
-    sym.UInt64.fromUint(480), // Lock expiry date
-    signedAggregateTx,// Register this hash value
-    networkType
+  new sym.Mosaic(
+    new sym.NamespaceId("symbol.xym"),
+    sym.UInt64.fromUint(10 * 1000000),
+  ), //10xym by default
+  sym.UInt64.fromUint(480), // Lock expiry date
+  signedAggregateTx, // Register this hash value
+  networkType,
 ).setMaxFee(100);
 
 //Signature
@@ -76,24 +79,27 @@ await txRepo.announce(signedLockTx).toPromise();
 ### 聚合绑定交易的公告
 
 与例如检查后 Explorer，向网络宣布保税交易。
+
 ```js
 await txRepo.announceAggregateBonded(signedAggregateTx).toPromise();
 ```
 
-
 ### 联署
+
 从指定账户 (Bob) 共同签署锁定的交易。
 
 ```js
-txInfo = await txRepo.getTransaction(signedAggregateTx.hash,sym.TransactionGroup.Partial).toPromise();
+txInfo = await txRepo
+  .getTransaction(signedAggregateTx.hash, sym.TransactionGroup.Partial)
+  .toPromise();
 cosignatureTx = sym.CosignatureTransaction.create(txInfo);
 signedCosTx = bob.signCosignatureTransaction(cosignatureTx);
 await txRepo.announceAggregateBondedCosignature(signedCosTx).toPromise();
 ```
 
 ### 参考资料
-哈希锁交易可以由任何人创建和公布，而不仅仅是最初创建和签署交易的帐户。但要确保聚合交易包括该账户是签名者的交易。没有马赛克传输和没有消息的虚拟交易是有效的。
 
+哈希锁交易可以由任何人创建和公布，而不仅仅是最初创建和签署交易的帐户。但要确保聚合交易包括该账户是签名者的交易。没有马赛克传输和没有消息的虚拟交易是有效的。
 
 ## 8.2 秘密锁・秘密证明
 
@@ -109,7 +115,11 @@ bob = sym.Account.generateNewAccount(networkType);
 console.log(bob.address);
 
 //FAUCET URL outlet
-console.log("https://testnet.symbol.tools/?recipient=" + bob.address.plain() +"&amount=10");
+console.log(
+  "https://testnet.symbol.tools/?recipient=" +
+    bob.address.plain() +
+    "&amount=10",
+);
 ```
 
 ### 秘密锁
@@ -117,42 +127,45 @@ console.log("https://testnet.symbol.tools/?recipient=" + bob.address.plain() +"&
 创建用于锁定和解锁的通用通行证。
 
 ```js
-sha3_256 = require('/node_modules/js-sha3').sha3_256;
+sha3_256 = require("/node_modules/js-sha3").sha3_256;
 
 random = sym.Crypto.randomBytes(20);
 hash = sha3_256.create();
 secret = hash.update(random).hex(); //Lock keyword
-proof = random.toString('hex'); //Unlock keyword
+proof = random.toString("hex"); //Unlock keyword
 console.log("secret:" + secret);
 console.log("proof:" + proof);
 ```
 
 ###### 市例演示
+
 ```js
 > secret:f260bfb53478f163ee61ee3e5fb7cfcaf7f0b663bc9dd4c537b958d4ce00e240
   proof:7944496ac0f572173c2549baf9ac18f893aab6d0
 ```
 
 创建、签署和宣布交易
+
 ```js
 lockTx = sym.SecretLockTransaction.create(
-    sym.Deadline.create(epochAdjustment),
-    new sym.Mosaic(
-      new sym.NamespaceId("symbol.xym"),
-      sym.UInt64.fromUint(1000000) //1XYM
-    ), //Mosaic to lock
-    sym.UInt64.fromUint(480), //Locking period (number of blocks)
-    sym.LockHashAlgorithm.Op_Sha3_256, //Algorithm used for lock keyword generation
-    secret, //Lock keyword
-    bob.address, //Forwarding address to unlock:Bob
-    networkType
+  sym.Deadline.create(epochAdjustment),
+  new sym.Mosaic(
+    new sym.NamespaceId("symbol.xym"),
+    sym.UInt64.fromUint(1000000), //1XYM
+  ), //Mosaic to lock
+  sym.UInt64.fromUint(480), //Locking period (number of blocks)
+  sym.LockHashAlgorithm.Op_Sha3_256, //Algorithm used for lock keyword generation
+  secret, //Lock keyword
+  bob.address, //Forwarding address to unlock:Bob
+  networkType,
 ).setMaxFee(100);
 
-signedLockTx = alice.sign(lockTx,generationHash);
+signedLockTx = alice.sign(lockTx, generationHash);
 await txRepo.announce(signedLockTx).toPromise();
 ```
 
 锁定哈希算法如下
+
 ```js
 {0: 'Op_Sha3_256', 1: 'Op_Hash_160', 2: 'Op_Hash_256'}
 ```
@@ -162,12 +175,15 @@ await txRepo.announce(signedLockTx).toPromise();
 最长锁定期为 365 天（以天为单位计算区块数）。
 
 检查已批准的交易。
+
 ```js
 slRepo = repo.createSecretLockRepository();
-res = await slRepo.search({secret:secret}).toPromise();
+res = await slRepo.search({ secret: secret }).toPromise();
 console.log(res.data[0]);
 ```
+
 ###### 市例演示
+
 ```js
 > SecretLockInfo
     amount: UInt64 {lower: 1000000, higher: 0}
@@ -182,35 +198,39 @@ console.log(res.data[0]);
     status: 0
     version: 1
 ```
+
 这表明锁定交易的 Alice 被记录在 ownerAddress 中，而 Bob 被记录在 recipientAddress 中。
 有关秘密的信息被公布，Bob 将相应的证明通知网络。
-
 
 ### 秘密证明
 
 使用秘密证明解锁交易。 Bob一定是提前拿到了秘密证明。
 
-
 ```js
 proofTx = sym.SecretProofTransaction.create(
-    sym.Deadline.create(epochAdjustment),
-    sym.LockHashAlgorithm.Op_Sha3_256, //Algorithm used for lock keyword generation
-    secret, //Lock keyword
-    bob.address, //Deactivated accounts (receiving accounts)
-    proof, //Unlock keyword
-    networkType
+  sym.Deadline.create(epochAdjustment),
+  sym.LockHashAlgorithm.Op_Sha3_256, //Algorithm used for lock keyword generation
+  secret, //Lock keyword
+  bob.address, //Deactivated accounts (receiving accounts)
+  proof, //Unlock keyword
+  networkType,
 ).setMaxFee(100);
 
-signedProofTx = bob.sign(proofTx,generationHash);
+signedProofTx = bob.sign(proofTx, generationHash);
 await txRepo.announce(signedProofTx).toPromise();
 ```
 
 确认审批结果。
+
 ```js
-txInfo = await txRepo.getTransaction(signedProofTx.hash,sym.TransactionGroup.Confirmed).toPromise();
+txInfo = await txRepo
+  .getTransaction(signedProofTx.hash, sym.TransactionGroup.Confirmed)
+  .toPromise();
 console.log(txInfo);
 ```
+
 ###### 市例演示
+
 ```js
 > SecretProofTransaction
   > deadline: Deadline {adjustedValue: 12669305546}
@@ -233,17 +253,20 @@ console.log(txInfo);
 
 秘密证明交易不包含任何接收到的代币数量的信息。请在区块生成时创建的收据中检查数量。搜索收据地址为 Bob，收据类型为 LockHash_Completed。
 
-
 ```js
 receiptRepo = repo.createReceiptRepository();
 
-receiptInfo = await receiptRepo.searchReceipts({
-    receiptType:sym.ReceiptTypeLockHash_Completed,
-    targetAddress:bob.address
-}).toPromise();
+receiptInfo = await receiptRepo
+  .searchReceipts({
+    receiptType: sym.ReceiptTypeLockHash_Completed,
+    targetAddress: bob.address,
+  })
+  .toPromise();
 console.log(receiptInfo.data);
 ```
+
 ###### 市例演示
+
 ```js
 > data: Array(1)
   >  0: TransactionStatement
@@ -268,7 +291,6 @@ console.log(receiptInfo.data);
 
 ## 8.3 使用提示
 
-
 ### 支付交易费用
 
 一般而言，区块链要求在发送交易时支付交易费用。因此，想要使用区块链的使用者需要事先从交易所获取该链的本地货币（例如 Symbol 的本地货币 XYM）来支付费用。如果使用者是一家公司，从运营角度来看，这样的管理方式可能会成为一个问题。使用聚合交易，服务提供商可以代表使用者支付秘密锁定和交易费用。
@@ -279,4 +301,5 @@ console.log(receiptInfo.data);
 当服务提供商为 Secret Lock 账户收取锁的费用时，用户拥有的锁的代币数量将在到期日后增加。另一方面，在截止日期之前宣布秘密证明交易将被视为取消，因为交易已完成并且资金将退还给服务提供商。
 
 ### 原子互换
+
 秘密锁定可以用于与其他链进行代币交换。请注意，其他链将其称为哈希时间锁定合约（HTLC），不要与 Symbol 的哈希锁定混淆。

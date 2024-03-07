@@ -41,12 +41,12 @@ console.log(carol5.privateKey);
 console.log(
   "https://testnet.symbol.tools/?recipient=" +
     bob.address.plain() +
-    "&amount=20"
+    "&amount=20",
 );
 console.log(
   "https://testnet.symbol.tools/?recipient=" +
     carol1.address.plain() +
-    "&amount=20"
+    "&amount=20",
 );
 ```
 
@@ -62,7 +62,7 @@ multisigTx = sym.MultisigAccountModificationTransaction.create(
   3, //minRemoval:除名のために必要な最小署名者数増分
   [carol1.address, carol2.address, carol3.address, carol4.address], //追加対象アドレスリスト
   [], //除名対象アドレスリスト
-  networkType
+  networkType,
 );
 
 aggregateTx = sym.AggregateTransaction.createComplete(
@@ -72,13 +72,13 @@ aggregateTx = sym.AggregateTransaction.createComplete(
     multisigTx.toAggregate(bob.publicAccount),
   ],
   networkType,
-  []
+  [],
 ).setMaxFeeForAggregate(100, 4); // 第二引数に連署者の数:4
 
 signedTx = aggregateTx.signTransactionWithCosignatories(
   bob, //マルチシグ化したいアカウント
   [carol1, carol2, carol3, carol4], //追加・除外対象として指定したアカウント
-  generationHash
+  generationHash,
 );
 await txRepo.announce(signedTx).toPromise();
 ```
@@ -153,11 +153,11 @@ tx = sym.TransferTransaction.create(
   [
     new sym.Mosaic(
       new sym.NamespaceId("symbol.xym"),
-      sym.UInt64.fromUint(1000000)
+      sym.UInt64.fromUint(1000000),
     ),
   ],
   sym.PlainMessage.create("test"),
-  networkType
+  networkType,
 );
 
 aggregateTx = sym.AggregateTransaction.createComplete(
@@ -167,13 +167,13 @@ aggregateTx = sym.AggregateTransaction.createComplete(
     tx.toAggregate(bob.publicAccount),
   ],
   networkType,
-  []
+  [],
 ).setMaxFeeForAggregate(100, 2); // 第二引数に連署者の数:2
 
 signedTx = aggregateTx.signTransactionWithCosignatories(
   carol1, //起案者
   [carol2, carol3], //連署者
-  generationHash
+  generationHash,
 );
 await txRepo.announce(signedTx).toPromise();
 ```
@@ -190,11 +190,11 @@ tx = sym.TransferTransaction.create(
   [
     new sym.Mosaic(
       new sym.NamespaceId("symbol.xym"),
-      sym.UInt64.fromUint(1000000)
+      sym.UInt64.fromUint(1000000),
     ),
   ], //1XYM
   sym.PlainMessage.create("test"),
-  networkType
+  networkType,
 );
 
 aggregateTx = sym.AggregateTransaction.createBonded(
@@ -204,7 +204,7 @@ aggregateTx = sym.AggregateTransaction.createBonded(
     tx.toAggregate(bob.publicAccount),
   ],
   networkType,
-  []
+  [],
 ).setMaxFeeForAggregate(100, 2); // 第二引数に連署者の数:2
 
 signedAggregateTx = carol1.sign(aggregateTx, generationHash);
@@ -213,11 +213,11 @@ hashLockTx = sym.HashLockTransaction.create(
   sym.Deadline.create(epochAdjustment),
   new sym.Mosaic(
     new sym.NamespaceId("symbol.xym"),
-    sym.UInt64.fromUint(10 * 1000000)
+    sym.UInt64.fromUint(10 * 1000000),
   ), //固定値:10XYM
   sym.UInt64.fromUint(480),
   signedAggregateTx,
-  networkType
+  networkType,
 ).setMaxFee(100);
 
 signedLockTx = carol1.sign(hashLockTx, generationHash);
@@ -321,7 +321,7 @@ multisigTx = sym.MultisigAccountModificationTransaction.create(
   -1, //除名のために必要な最小署名者数増分
   [], //追加対象アドレス
   [carol3.address], //除名対象アドレス
-  networkType
+  networkType,
 );
 
 aggregateTx = sym.AggregateTransaction.createComplete(
@@ -331,13 +331,13 @@ aggregateTx = sym.AggregateTransaction.createComplete(
     multisigTx.toAggregate(bob.publicAccount),
   ],
   networkType,
-  []
+  [],
 ).setMaxFeeForAggregate(100, 2); // 第二引数に連署者の数:2
 
 signedTx = aggregateTx.signTransactionWithCosignatories(
   carol1,
   [carol2, carol4],
-  generationHash
+  generationHash,
 );
 await txRepo.announce(signedTx).toPromise();
 ```
@@ -354,7 +354,7 @@ multisigTx = sym.MultisigAccountModificationTransaction.create(
   0, //除名のために必要な最小署名者数増分
   [carol5.address], //追加対象アドレス
   [carol4.address], //除名対象アドレス
-  networkType
+  networkType,
 );
 
 aggregateTx = sym.AggregateTransaction.createComplete(
@@ -364,13 +364,13 @@ aggregateTx = sym.AggregateTransaction.createComplete(
     multisigTx.toAggregate(bob.publicAccount),
   ],
   networkType,
-  []
+  [],
 ).setMaxFeeForAggregate(100, 2); // 第二引数に連署者の数:2
 
 signedTx = aggregateTx.signTransactionWithCosignatories(
   carol1, //起案者
   [carol2, carol5], //連署者+承諾アカウント
-  generationHash
+  generationHash,
 );
 await txRepo.announce(signedTx).toPromise();
 ```

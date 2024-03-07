@@ -12,7 +12,7 @@ console.log(carol.address);
 console.log(
   "https://testnet.symbol.tools/?recipient=" +
     carol.address.plain() +
-    "&amount=100"
+    "&amount=100",
 );
 ```
 
@@ -29,7 +29,7 @@ tx =
     sym.AddressRestrictionFlag.BlockIncomingAddress, //Address restriction flag
     [bob.address], //Setup address
     [], //Cancellation address
-    networkType
+    networkType,
   ).setMaxFee(100);
 signedTx = carol.sign(tx, generationHash);
 await txRepo.announce(signedTx).toPromise();
@@ -58,7 +58,7 @@ tx =
     sym.MosaicRestrictionFlag.BlockMosaic, //Mosaic restriction flag
     [mosaicId], //Setup mosaic
     [], //Cancellation mosaic
-    networkType
+    networkType,
   ).setMaxFee(100);
 signedTx = carol.sign(tx, generationHash);
 await txRepo.announce(signedTx).toPromise();
@@ -85,7 +85,7 @@ tx =
     sym.OperationRestrictionFlag.AllowOutgoingTransactionType,
     [sym.TransactionType.ACCOUNT_OPERATION_RESTRICTION], //Setup transaction
     [], //Cancellation transaction
-    networkType
+    networkType,
   ).setMaxFee(100);
 signedTx = carol.sign(tx, generationHash);
 await txRepo.announce(signedTx).toPromise();
@@ -113,7 +113,6 @@ OperationRestrictionFlag(操作限制標誌) 設置如下。
 17232: 禁止使用ACCOUNT_OPERATION_RESTRICTION限制。
 這意味著如果指定了AllowOutgoingTransactionType，就必須包括ACCOUNT_OPERATION_RESTRICTION，
 而如果指定了BlockOutgoingTransactionType，就不能包括ACCOUNT_OPERATION_RESTRICTION。
-
 
 ### 確認
 
@@ -146,7 +145,7 @@ console.log(res);
 ## 11.2 馬賽克全局限制(Mosaic Global Restriction)
 
 代幣全局限制設置了轉移代幣的條件。
-為專用於馬賽克全局限制的數字元數據分配給每個帳戶。 
+為專用於馬賽克全局限制的數字元數據分配給每個帳戶。
 相關馬賽克只有進出賬號都滿足條件才能發送。
 
 首先，設置必要的資料庫。
@@ -156,7 +155,7 @@ nsRepo = repo.createNamespaceRepository();
 resMosaicRepo = repo.createRestrictionMosaicRepository();
 mosaicResService = new sym.MosaicRestrictionTransactionService(
   resMosaicRepo,
-  nsRepo
+  nsRepo,
 );
 ```
 
@@ -178,7 +177,7 @@ mosaicDefTx = sym.MosaicDefinitionTransaction.create(
   sym.MosaicFlags.create(supplyMutable, transferable, restrictable, revokable),
   0, //divisibility
   sym.UInt64.fromUint(0), //duration
-  networkType
+  networkType,
 );
 
 //Mosaic change
@@ -187,7 +186,7 @@ mosaicChangeTx = sym.MosaicSupplyChangeTransaction.create(
   mosaicDefTx.mosaicId,
   sym.MosaicSupplyChangeAction.Increase,
   sym.UInt64.fromUint(1000000),
-  networkType
+  networkType,
 );
 
 //Mosaic Global Restriction
@@ -199,7 +198,7 @@ mosaicGlobalResTx = await mosaicResService
     mosaicDefTx.mosaicId,
     key,
     "1",
-    sym.MosaicRestrictionType.EQ
+    sym.MosaicRestrictionType.EQ,
   )
   .toPromise();
 
@@ -211,7 +210,7 @@ aggregateTx = sym.AggregateTransaction.createComplete(
     mosaicGlobalResTx.toAggregate(carol.publicAccount),
   ],
   networkType,
-  []
+  [],
 ).setMaxFeeForAggregate(100, 0);
 
 signedTx = carol.sign(aggregateTx, generationHash);
@@ -224,19 +223,19 @@ MosaicRestrictionType (代幣限制類型)如下。
 {0: 'NONE', 1: 'EQ', 2: 'NE', 3: 'LT', 4: 'LE', 5: 'GT', 6: 'GE'}
 ```
 
-| Operator | Abbreviation | English                     |
-| ------ | ---- | ------------------------ |
-| =      | EQ   | equal to                 |
-| !=     | NE   | not equal to             |
-| <      | LT   | less than                |
-| <=     | LE   | less than or equal to    |
-| >      | GT   | greater than             |
-| <=     | GE   | greater than or equal to |
+| Operator | Abbreviation | English                  |
+| -------- | ------------ | ------------------------ |
+| =        | EQ           | equal to                 |
+| !=       | NE           | not equal to             |
+| <        | LT           | less than                |
+| <=       | LE           | less than or equal to    |
+| >        | GT           | greater than             |
+| <=       | GE           | greater than or equal to |
 
 ### 對帳戶應用馬賽克限制
 
 將針對 Mosaic 全局限制的資格信息添加到 Carol 和 Bob。
-對已經擁有的馬賽克沒有限制，因為這些限制適用於傳入和傳出交易。 
+對已經擁有的馬賽克沒有限制，因為這些限制適用於傳入和傳出交易。
 為了成功傳輸，發送方和接收方都必須滿足條件。  
 可以使用馬賽克創建者的私鑰對任何帳戶進行限制，無需簽名同意。
 
@@ -249,7 +248,7 @@ carolMosaicAddressResTx = sym.MosaicAddressRestrictionTransaction.create(
   carol.address, // address
   sym.UInt64.fromUint(1), // newRestrictionValue
   networkType,
-  sym.UInt64.fromHex("FFFFFFFFFFFFFFFF") //previousRestrictionValue
+  sym.UInt64.fromHex("FFFFFFFFFFFFFFFF"), //previousRestrictionValue
 ).setMaxFee(100);
 signedTx = carol.sign(carolMosaicAddressResTx, generationHash);
 await txRepo.announce(signedTx).toPromise();
@@ -263,7 +262,7 @@ bobMosaicAddressResTx = sym.MosaicAddressRestrictionTransaction.create(
   bob.address, // address
   sym.UInt64.fromUint(1), // newRestrictionValue
   networkType,
-  sym.UInt64.fromHex("FFFFFFFFFFFFFFFF") //previousRestrictionValue
+  sym.UInt64.fromHex("FFFFFFFFFFFFFFFF"), //previousRestrictionValue
 ).setMaxFee(100);
 signedTx = carol.sign(bobMosaicAddressResTx, generationHash);
 await txRepo.announce(signedTx).toPromise();
@@ -319,7 +318,7 @@ trTx = sym.TransferTransaction.create(
   bob.address,
   [new sym.Mosaic(mosaicDefTx.mosaicId, sym.UInt64.fromUint(1))],
   sym.PlainMessage.create(""),
-  networkType
+  networkType,
 ).setMaxFee(100);
 signedTx = carol.sign(trTx, generationHash);
 await txRepo.announce(signedTx).toPromise();
@@ -331,7 +330,7 @@ trTx = sym.TransferTransaction.create(
   dave.address,
   [new sym.Mosaic(mosaicDefTx.mosaicId, sym.UInt64.fromUint(1))],
   sym.PlainMessage.create(""),
-  networkType
+  networkType,
 ).setMaxFee(100);
 signedTx = carol.sign(trTx, generationHash);
 await txRepo.announce(signedTx).toPromise();
@@ -352,7 +351,9 @@ await txRepo.announce(signedTx).toPromise();
 通過使用“AllowIncomingAddress”來限制僅從指定地址接收資金，然後將整個 XYM 餘額發送到另一個帳戶，用戶可以顯式地創建一個難以單獨操作的帳戶，即使擁有私鑰也很難。 （請注意，可以通過授權最低費用為 0 的節點進行授權。）
 
 ### 馬賽克鎖
+
 如果發行的馬賽克設置為不可轉讓，而創建者禁止將馬賽克接收到其帳戶，那麼該馬賽克將被鎖定，無法從接收者的帳戶移動。
 
 ### 所有權證明
+
 所有權證明已在有關馬賽克的章節中解釋。通過利用馬賽克全局限制，可以創建一種只能由那些已經通過KYC過程的帳戶擁有和流通的馬賽克，從而創建一個獨特的經濟區域，只有擁有者可以參與。

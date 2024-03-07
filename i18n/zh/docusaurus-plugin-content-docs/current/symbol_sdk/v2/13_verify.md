@@ -39,7 +39,7 @@ height = 59639;
 tx = sym.TransactionMapping.createFromPayload(payload);
 hash = sym.Transaction.createTransactionHash(
   payload,
-  Buffer.from(generationHash, "hex")
+  Buffer.from(generationHash, "hex"),
 );
 console.log(hash);
 console.log(tx);
@@ -79,9 +79,9 @@ console.log(tx);
 res = alice.publicAccount.verifySignature(
   tx.getSigningBytes(
     [...Buffer.from(payload, "hex")],
-    [...Buffer.from(generationHash, "hex")]
+    [...Buffer.from(generationHash, "hex")],
   ),
-  "93B0B985101C1BDD1BC2BF30D72F35E34265B3F381ECA464733E147A4F0A6B9353547E2E08189EF37E50D271BEB5F09B81CE5816BB34A153D2268520AF630A0A"
+  "93B0B985101C1BDD1BC2BF30D72F35E34265B3F381ECA464733E147A4F0A6B9353547E2E08189EF37E50D271BEB5F09B81CE5816BB34A153D2268520AF630A0A",
 );
 console.log(res);
 ```
@@ -174,19 +174,22 @@ if (block.type === sym.BlockType.NormalBlock) {
   hasher.update(cat.GeneratorUtils.uintToBuffer(block.networkType, 1));
   hasher.update(cat.GeneratorUtils.uintToBuffer(block.type, 2));
   hasher.update(
-    cat.GeneratorUtils.uint64ToBuffer([block.height.lower, block.height.higher])
+    cat.GeneratorUtils.uint64ToBuffer([
+      block.height.lower,
+      block.height.higher,
+    ]),
   );
   hasher.update(
     cat.GeneratorUtils.uint64ToBuffer([
       block.timestamp.lower,
       block.timestamp.higher,
-    ])
+    ]),
   );
   hasher.update(
     cat.GeneratorUtils.uint64ToBuffer([
       block.difficulty.lower,
       block.difficulty.higher,
-    ])
+    ]),
   );
   hasher.update(Buffer.from(block.proofGamma, "hex"));
   hasher.update(Buffer.from(block.proofVerificationHash, "hex"));
@@ -196,7 +199,7 @@ if (block.type === sym.BlockType.NormalBlock) {
   hasher.update(Buffer.from(block.blockReceiptsHash, "hex"));
   hasher.update(Buffer.from(block.stateHash, "hex"));
   hasher.update(
-    sym.RawAddress.stringToAddress(block.beneficiaryAddress.address)
+    sym.RawAddress.stringToAddress(block.beneficiaryAddress.address),
   );
   hasher.update(cat.GeneratorUtils.uintToBuffer(block.feeMultiplier, 4));
   hash = hasher.hex().toUpperCase();
@@ -228,19 +231,22 @@ if (block.type === sym.BlockType.ImportanceBlock) {
   hasher.update(cat.GeneratorUtils.uintToBuffer(block.networkType, 1));
   hasher.update(cat.GeneratorUtils.uintToBuffer(block.type, 2));
   hasher.update(
-    cat.GeneratorUtils.uint64ToBuffer([block.height.lower, block.height.higher])
+    cat.GeneratorUtils.uint64ToBuffer([
+      block.height.lower,
+      block.height.higher,
+    ]),
   );
   hasher.update(
     cat.GeneratorUtils.uint64ToBuffer([
       block.timestamp.lower,
       block.timestamp.higher,
-    ])
+    ]),
   );
   hasher.update(
     cat.GeneratorUtils.uint64ToBuffer([
       block.difficulty.lower,
       block.difficulty.higher,
-    ])
+    ]),
   );
   hasher.update(Buffer.from(block.proofGamma, "hex"));
   hasher.update(Buffer.from(block.proofVerificationHash, "hex"));
@@ -250,23 +256,23 @@ if (block.type === sym.BlockType.ImportanceBlock) {
   hasher.update(Buffer.from(block.blockReceiptsHash, "hex"));
   hasher.update(Buffer.from(block.stateHash, "hex"));
   hasher.update(
-    sym.RawAddress.stringToAddress(block.beneficiaryAddress.address)
+    sym.RawAddress.stringToAddress(block.beneficiaryAddress.address),
   );
   hasher.update(cat.GeneratorUtils.uintToBuffer(block.feeMultiplier, 4));
   hasher.update(
-    cat.GeneratorUtils.uintToBuffer(block.votingEligibleAccountsCount, 4)
+    cat.GeneratorUtils.uintToBuffer(block.votingEligibleAccountsCount, 4),
   );
   hasher.update(
     cat.GeneratorUtils.uint64ToBuffer([
       block.harvestingEligibleAccountsCount.lower,
       block.harvestingEligibleAccountsCount.higher,
-    ])
+    ]),
   );
   hasher.update(
     cat.GeneratorUtils.uint64ToBuffer([
       block.totalVotingBalance.lower,
       block.totalVotingBalance.higher,
-    ])
+    ]),
   );
   hasher.update(Buffer.from(block.previousImportanceBlockHash, "hex"));
 
@@ -341,7 +347,7 @@ function getLeafHash(encodedPath, leafValue) {
 //Function for obtaining the hash value of a branch
 function getBranchHash(encodedPath, links) {
   const branchLinks = Array(16).fill(
-    sym.Convert.uint8ToHex(new Uint8Array(32))
+    sym.Convert.uint8ToHex(new Uint8Array(32)),
   );
   links.forEach((link) => {
     branchLinks[parseInt(`0x${link.bit}`, 16)] = link.link;
@@ -394,7 +400,7 @@ function checkState(stateProof, stateHash, pathHash, rootHash) {
 stateProofService = new sym.StateProofService(repo);
 
 aliceAddress = sym.Address.createFromRawAddress(
-  "TBIL6D6RURP45YQRWV6Q7YVWIIPLQGLZQFHWFEQ"
+  "TBIL6D6RURP45YQRWV6Q7YVWIIPLQGLZQFHWFEQ",
 );
 
 hasher = sha3_256.create();
@@ -425,16 +431,16 @@ checkState(stateProof, aliceStateHash, alicePathHash, rootHash);
 ```js
 srcAddress = Buffer.from(
   sym.Address.createFromRawAddress(
-    "TBIL6D6RURP45YQRWV6Q7YVWIIPLQGLZQFHWFEQ"
+    "TBIL6D6RURP45YQRWV6Q7YVWIIPLQGLZQFHWFEQ",
   ).encoded(),
-  "hex"
+  "hex",
 );
 
 targetAddress = Buffer.from(
   sym.Address.createFromRawAddress(
-    "TBIL6D6RURP45YQRWV6Q7YVWIIPLQGLZQFHWFEQ"
+    "TBIL6D6RURP45YQRWV6Q7YVWIIPLQGLZQFHWFEQ",
   ).encoded(),
-  "hex"
+  "hex",
 );
 
 hasher = sha3_256.create();
@@ -483,16 +489,16 @@ checkState(stateProof, stateHash, pathHash, rootHash);
 ```js
 srcAddress = Buffer.from(
   sym.Address.createFromRawAddress(
-    "TBIL6D6RURP45YQRWV6Q7YVWIIPLQGLZQFHWFEQ"
+    "TBIL6D6RURP45YQRWV6Q7YVWIIPLQGLZQFHWFEQ",
   ).encoded(),
-  "hex"
+  "hex",
 );
 
 targetAddress = Buffer.from(
   sym.Address.createFromRawAddress(
-    "TBIL6D6RURP45YQRWV6Q7YVWIIPLQGLZQFHWFEQ"
+    "TBIL6D6RURP45YQRWV6Q7YVWIIPLQGLZQFHWFEQ",
   ).encoded(),
-  "hex"
+  "hex",
 );
 
 //compositePathHash(Key value)
@@ -542,4 +548,3 @@ checkState(stateProof, stateHash, pathHash, rootHash);
 本章节所展示的验证方法表明，区块链中的所有信息都可以通过区块头的哈希值进行验证。区块链基于共享每个人都同意的区块头和可以重现它们的全节点的存在。然而，在想要利用区块链的每种情况下维护验证环境是具有挑战性的。
 
 如果最新的区块头不断由多个可信机构广播，这可以大大减少验证的需求。这样的基础设施将允许在区块链能力之外的地方，如人口密集的城市地区或无法适当部署基站的偏远地区，甚至在灾难期间的广域网络中断期间，获得可信信息的访问。
-

@@ -264,7 +264,7 @@ bondedHttp = txRepo
   .search({ address: bob.address, group: sym.TransactionGroup.Partial })
   .pipe(
     op.delay(2000),
-    op.mergeMap((page) => page.data)
+    op.mergeMap((page) => page.data),
   );
 //Completed transaction detection listeners for selected accounts
 const statusChanged = function (address, hash) {
@@ -278,7 +278,7 @@ const statusChanged = function (address, hash) {
       } else {
         return errorOrTransaction;
       }
-    })
+    }),
   );
 };
 //Cosignature execution
@@ -286,17 +286,17 @@ function exeAggregateBondedCosignature(tx) {
   txRepo
     .getTransactionsById(
       [tx.transactionInfo.hash],
-      sym.TransactionGroup.Partial
+      sym.TransactionGroup.Partial,
     )
     .pipe(
       //Only if the transaction is detected
-      op.filter((aggTx) => aggTx.length > 0)
+      op.filter((aggTx) => aggTx.length > 0),
     )
     .subscribe(async (aggTx) => {
       //If my account is designated as the signatory of the inner transaction
       if (
         aggTx[0].innerTransactions.find((inTx) =>
-          inTx.signer.equals(bob.publicAccount)
+          inTx.signer.equals(bob.publicAccount),
         ) != undefined
       ) {
         //Sign with Alice transaction
@@ -317,9 +317,9 @@ bondedSubscribe = function (observer) {
       //If not already signed
       op.filter((tx) => {
         return !tx.signedByAccount(
-          sym.PublicAccount.createFromPublicKey(bob.publicKey, networkType)
+          sym.PublicAccount.createFromPublicKey(bob.publicKey, networkType),
         );
-      })
+      }),
     )
     .subscribe((tx) => {
       console.log(tx);

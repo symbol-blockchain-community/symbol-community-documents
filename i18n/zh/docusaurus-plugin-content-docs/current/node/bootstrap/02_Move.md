@@ -2,10 +2,11 @@ This page is a machine translation of the English text.
 Please contact faunsu https://twitter.com/faunsu19000 or symbol-community.com/community for language proofreading of articles.
 
 ## 目录
-* 概述
-* 旧环境搬迁数据备份
-* 在新环境中构建 Symbol-boostrap 环境
-* 关联
+
+- 概述
+- 旧环境搬迁数据备份
+- 在新环境中构建 Symbol-boostrap 环境
+- 关联
 
 ## 概述
 
@@ -20,26 +21,14 @@ Please contact faunsu https://twitter.com/faunsu19000 or symbol-community.com/co
 
 备份以下数据
 
-- 备份操作节点的Symbol账户
-      -`~/custom-preset.yml`
-      -`~/symbol-bootstrap/target/addresses.yml`
-- 备份旧节点的委托人信息（在搬迁工作之前立即实施）
-      -`~/symbol-bootstrap/target/nodes/node/data/harvesters.dat`
+- 备份操作节点的Symbol账户 -`~/custom-preset.yml` -`~/symbol-bootstrap/target/addresses.yml`
+- 备份旧节点的委托人信息（在搬迁工作之前立即实施）-`~/symbol-bootstrap/target/nodes/node/data/harvesters.dat`
 
 ## 在新环境中构建 Symbol-boostrap 环境
 
 搬迁工作将按以下顺序进行。
 
-1.旧环境备份
-2. 建设新环境
-3.在新环境启动Symbol-Boostrap（账户信息是临时的）
-4.同步新环境中的所有区块
-5. 在新环境中暂停 Symbol-Boost
-6.将相关文件从旧环境移动到新环境
-7. 在新环境中读取`~/custom-preset.yml`
-8.启动符号引导到新环境
-9. 将DNS设置的A记录从旧环境改写到新环境
-10.停止旧环境
+1.旧环境备份2. 建设新环境3.在新环境启动Symbol-Boostrap（账户信息是临时的）4.同步新环境中的所有区块5. 在新环境中暂停 Symbol-Boost 6.将相关文件从旧环境移动到新环境7. 在新环境中读取`~/custom-preset.yml` 8.启动符号引导到新环境9. 将DNS设置的A记录从旧环境改写到新环境10.停止旧环境
 
 需要注意的是，如果DNS服务器也被搬迁，则将这项工作与节点搬迁工作分开。
 
@@ -53,7 +42,7 @@ Please contact faunsu https://twitter.com/faunsu19000 or symbol-community.com/co
 
 同步所有区块需要一天多的时间，完成上一节的流程后请稍等片刻，您可以通过以下方法查看已同步的区块高度。
 
-``` 狂欢
+```狂欢
 # 在服务器中执行以下命令
 卷曲 http://localhost:3000/chain/info
 ```
@@ -62,7 +51,7 @@ Please contact faunsu https://twitter.com/faunsu19000 or symbol-community.com/co
 
 我会停下来工作一次。
 
-``` 狂欢
+```狂欢
 符号引导停止
 ```
 
@@ -70,20 +59,20 @@ Please contact faunsu https://twitter.com/faunsu19000 or symbol-community.com/co
 
 将旧环境中备份的文件移动到新环境中。
 
-``~/custom-preset.yml``（您可能已经自己更改了文件名）
+`~/custom-preset.yml`（您可能已经自己更改了文件名）
 
-``~/symbol-bootstrap/target/nodes/node/data/harvesters.dat``
+`~/symbol-bootstrap/target/nodes/node/data/harvesters.dat`
 
 文件就位后，让我们应用更改
 
-``` 狂欢
+```狂欢
 symbol-bootstrap config -p mainnet -a dual -c custom-preset.yml --upgrade
 符号引导程序撰写--升级
 ```
 
 如果以上都没有错误的话，我们这时候就把她在DNS中的A记录改写成新环境的IP地址。
 
-``` 狂欢
+```狂欢
 符号引导程序运行-d
 符号引导健康检查
 ```

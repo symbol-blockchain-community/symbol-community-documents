@@ -1,7 +1,7 @@
 # 6. 命名空间
 
 命名空间是可租贷并与地址或马赛克关联的可读性高的文本字符串。
-名称最长可达64个字符（允许的字符只有 a 到 z、0 到 9、_ 和 -）。
+名称最长可达64个字符（允许的字符只有 a 到 z、0 到 9、\_ 和 -）。
 
 ## 6.1 费用计算
 
@@ -10,19 +10,20 @@
 
 在以下示例中，费用是针对根命名空间的 365 天租用计算的。
 
-
 ```js
 nwRepo = repo.createNetworkRepository();
 
 rentalFees = await nwRepo.getRentalFees().toPromise();
 rootNsperBlock = rentalFees.effectiveRootNamespaceRentalFeePerBlock.compact();
 rentalDays = 365;
-rentalBlock = rentalDays * 24 * 60 * 60 / 30;
+rentalBlock = (rentalDays * 24 * 60 * 60) / 30;
 rootNsRenatalFeeTotal = rentalBlock * rootNsperBlock;
 console.log("rentalBlock:" + rentalBlock);
 console.log("rootNsRenatalFeeTotal:" + rootNsRenatalFeeTotal);
 ```
+
 ###### 市例演示
+
 ```js
 > rentalBlock:1051200
 > rootNsRenatalFeeTotal:210240000 //Approximately 210XYM
@@ -34,10 +35,12 @@ console.log("rootNsRenatalFeeTotal:" + rootNsRenatalFeeTotal);
 可以使用以下的程式码来计算获取子命名空间的费用
 
 ```js
-childNamespaceRentalFee = rentalFees.effectiveChildNamespaceRentalFee.compact()
+childNamespaceRentalFee = rentalFees.effectiveChildNamespaceRentalFee.compact();
 console.log(childNamespaceRentalFee);
 ```
+
 ###### 市例演示
+
 ```js
 > 10000000 //10XYM
 ```
@@ -47,27 +50,28 @@ console.log(childNamespaceRentalFee);
 ## 6.2 租贷
 
 租用根命名空间。 （示例：xembook）
-```js
 
+```js
 tx = sym.NamespaceRegistrationTransaction.createRootNamespace(
-    sym.Deadline.create(epochAdjustment),
-    "xembook",
-    sym.UInt64.fromUint(86400),
-    networkType
+  sym.Deadline.create(epochAdjustment),
+  "xembook",
+  sym.UInt64.fromUint(86400),
+  networkType,
 ).setMaxFee(100);
-signedTx = alice.sign(tx,generationHash);
+signedTx = alice.sign(tx, generationHash);
 await txRepo.announce(signedTx).toPromise();
 ```
 
 租用一个子命名空间。 （示例：xembook.tomato）
+
 ```js
 subNamespaceTx = sym.NamespaceRegistrationTransaction.createSubNamespace(
-    sym.Deadline.create(epochAdjustment),
-    "tomato",  //Subnamespace to be created
-    "xembook", //Route namespace to be linked to
-    networkType,
+  sym.Deadline.create(epochAdjustment),
+  "tomato", //Subnamespace to be created
+  "xembook", //Route namespace to be linked to
+  networkType,
 ).setMaxFee(100);
-signedTx = alice.sign(subNamespaceTx,generationHash);
+signedTx = alice.sign(subNamespaceTx, generationHash);
 await txRepo.announce(signedTx).toPromise();
 ```
 
@@ -81,7 +85,6 @@ subNamespaceTx = sym.NamespaceRegistrationTransaction.createSubNamespace(
     ,
 )
 ```
-
 
 ### 到期日的计算
 
@@ -98,87 +101,96 @@ lastHeight = (await chainRepo.getChainInfo().toPromise()).height;
 lastBlock = await blockRepo.getBlockByHeight(lastHeight).toPromise();
 remainHeight = nsInfo.endHeight.compact() - lastHeight.compact();
 
-endDate = new Date(lastBlock.timestamp.compact() + remainHeight * 30000 + epochAdjustment * 1000)
+endDate = new Date(
+  lastBlock.timestamp.compact() + remainHeight * 30000 + epochAdjustment * 1000,
+);
 console.log(endDate);
 ```
 
 获取有关命名空间到期的信息，输出剩余区块数的日期和时间，该区块数等于当前区块高度减去命名空间创建高度，然后乘以30秒（平均区块生成间隔）。
 对于测试网，更新截止日期从到期日起大约推迟一天。而对于主网，这个值为30天，请注意。
 
-
 ###### 市例演示
+
 ```js
 > Tue Mar 29 2022 18:17:06 GMT+0900 (JST)
 ```
+
 ## 6.3 链接
 
 ### 链接到帐户
+
 ```js
 namespaceId = new sym.NamespaceId("xembook");
-address = sym.Address.createFromRawAddress("TBIL6D6RURP45YQRWV6Q7YVWIIPLQGLZQFHWFEQ");
+address = sym.Address.createFromRawAddress(
+  "TBIL6D6RURP45YQRWV6Q7YVWIIPLQGLZQFHWFEQ",
+);
 tx = sym.AliasTransaction.createForAddress(
-    sym.Deadline.create(epochAdjustment),
-    sym.AliasAction.Link,
-    namespaceId,
-    address,
-    networkType
+  sym.Deadline.create(epochAdjustment),
+  sym.AliasAction.Link,
+  namespaceId,
+  address,
+  networkType,
 ).setMaxFee(100);
-signedTx = alice.sign(tx,generationHash);
+signedTx = alice.sign(tx, generationHash);
 await txRepo.announce(signedTx).toPromise();
 ```
+
 链接地址不必归您所有。
 
 ### 链接到马赛克
+
 ```js
 namespaceId = new sym.NamespaceId("xembook.tomato");
 mosaicId = new sym.MosaicId("3A8416DB2D53xxxx");
 tx = sym.AliasTransaction.createForMosaic(
-    sym.Deadline.create(epochAdjustment),
-    sym.AliasAction.Link,
-    namespaceId,
-    mosaicId,
-    networkType
+  sym.Deadline.create(epochAdjustment),
+  sym.AliasAction.Link,
+  namespaceId,
+  mosaicId,
+  networkType,
 ).setMaxFee(100);
-signedTx = alice.sign(tx,generationHash);
+signedTx = alice.sign(tx, generationHash);
 await txRepo.announce(signedTx).toPromise();
 ```
 
 只有当马赛克与创建马赛克的地址相同时，才能链接马赛克。
 
-
 ## 6.4 未解析的帐户形式
 
 将目的地指定为未解析的帐户形式以在不识别地址的情况下签署和宣布交易。
 将在链上解析的帐户执行交易。
+
 ```js
 namespaceId = new sym.NamespaceId("xembook");
 tx = sym.TransferTransaction.create(
-    sym.Deadline.create(epochAdjustment),
-    namespaceId, //Unresolved Account:Unresolved Account Address
-    [],
-    sym.EmptyMessage,
-    networkType
+  sym.Deadline.create(epochAdjustment),
+  namespaceId, //Unresolved Account:Unresolved Account Address
+  [],
+  sym.EmptyMessage,
+  networkType,
 ).setMaxFee(100);
-signedTx = alice.sign(tx,generationHash);
+signedTx = alice.sign(tx, generationHash);
 await txRepo.announce(signedTx).toPromise();
 ```
+
 将发送马赛克指定为未解决的马赛克，以在不识别马赛克 ID 的情况下签署和宣布交易。
 
 ```js
 namespaceId = new sym.NamespaceId("xembook.tomato");
 tx = sym.TransferTransaction.create(
-    sym.Deadline.create(epochAdjustment),
-    address, 
-    [
-        new sym.Mosaic(
-          namespaceId,//Unresolved Mosaic:Unresolved Mosaic
-          sym.UInt64.fromUint(1) //Amount
-        )
-    ],
-    sym.EmptyMessage,
-    networkType
+  sym.Deadline.create(epochAdjustment),
+  address,
+  [
+    new sym.Mosaic(
+      namespaceId, //Unresolved Mosaic:Unresolved Mosaic
+      sym.UInt64.fromUint(1), //Amount
+    ),
+  ],
+  sym.EmptyMessage,
+  networkType,
 ).setMaxFee(100);
-signedTx = alice.sign(tx,generationHash);
+signedTx = alice.sign(tx, generationHash);
 await txRepo.announce(signedTx).toPromise();
 ```
 
@@ -187,6 +199,7 @@ await txRepo.announce(signedTx).toPromise();
 ```js
 namespaceId = new sym.NamespaceId("symbol.xym");
 ```
+
 ```js
 > NamespaceId {fullName: 'symbol.xym', id: Id}
     fullName: "symbol.xym"
@@ -198,13 +211,18 @@ id 以内部数字 Uint64（{lower: 1106554862, higher: 3880491450}）表示。
 ## 6.5 参考资料
 
 引用链接到地址的命名空间。
+
 ```js
 nsRepo = repo.createNamespaceRepository();
 
-namespaceInfo = await nsRepo.getNamespace(new sym.NamespaceId("xembook")).toPromise();
+namespaceInfo = await nsRepo
+  .getNamespace(new sym.NamespaceId("xembook"))
+  .toPromise();
 console.log(namespaceInfo);
 ```
+
 ###### 市例演示
+
 ```js
 NamespaceInfo
     active: true
@@ -223,23 +241,30 @@ NamespaceInfo
 ```
 
 别名类型如下。
+
 ```js
 {0: 'None', 1: 'Mosaic', 2: 'Address'}
 ```
 
 命名空间注册类型如下。
+
 ```js
 {0: 'RootNamespace', 1: 'SubNamespace'}
 ```
 
 引用链接到马赛克的命名空间。
+
 ```js
 nsRepo = repo.createNamespaceRepository();
 
-namespaceInfo = await nsRepo.getNamespace(new sym.NamespaceId("xembook.tomato")).toPromise();
+namespaceInfo = await nsRepo
+  .getNamespace(new sym.NamespaceId("xembook.tomato"))
+  .toPromise();
 console.log(namespaceInfo);
 ```
+
 ###### 市例演示
+
 ```js
 NamespaceInfo
   > active: true
@@ -261,33 +286,36 @@ NamespaceInfo
 ### 反向查找
 
 检查链接到该地址的所有命名空间。
+
 ```js
 nsRepo = repo.createNamespaceRepository();
 
-accountNames = await nsRepo.getAccountsNames(
-  [sym.Address.createFromRawAddress("TBIL6D6RURP45YQRWV6Q7YVWIIPLQGLZQFHWFEQ")]
-).toPromise();
+accountNames = await nsRepo
+  .getAccountsNames([
+    sym.Address.createFromRawAddress("TBIL6D6RURP45YQRWV6Q7YVWIIPLQGLZQFHWFEQ"),
+  ])
+  .toPromise();
 
-namespaceIds = accountNames[0].names.map(name=>{
+namespaceIds = accountNames[0].names.map((name) => {
   return name.namespaceId;
 });
 console.log(namespaceIds);
 ```
 
 检查链接到马赛克的所有命名空间。
+
 ```js
 nsRepo = repo.createNamespaceRepository();
 
-mosaicNames = await nsRepo.getMosaicsNames(
-  [new sym.MosaicId("72C0212E67A08BCE")]
-).toPromise();
+mosaicNames = await nsRepo
+  .getMosaicsNames([new sym.MosaicId("72C0212E67A08BCE")])
+  .toPromise();
 
-namespaceIds = mosaicNames[0].names.map(name=>{
+namespaceIds = mosaicNames[0].names.map((name) => {
   return name.namespaceId;
 });
 console.log(namespaceIds);
 ```
-
 
 ### 收据参考
 
@@ -295,9 +323,13 @@ console.log(namespaceIds);
 
 ```js
 receiptRepo = repo.createReceiptRepository();
-state = await receiptRepo.searchAddressResolutionStatements({height:179401}).toPromise();
+state = await receiptRepo
+  .searchAddressResolutionStatements({ height: 179401 })
+  .toPromise();
 ```
+
 ###### 市例演示
+
 ```js
 data: Array(1)
   0: ResolutionStatement
@@ -312,15 +344,16 @@ data: Array(1)
 ```
 
 分辨率类型如下。
+
 ```js
 {0: 'Address', 1: 'Mosaic'}
 ```
 
 #### 注意事项
+
 由于命名空间本身是租贷的，过去交易中使用的命名空间链接可能与当前命名空间的链接不同。
 
 如果您想知道您当时链接到哪个帐户，请务必参考您的收据，例如 参考历史数据时。
-
 
 ## 6.6 使用提示
 
@@ -330,9 +363,8 @@ data: Array(1)
 （有关法律效力，请征求专家意见。）
 当心黑客攻击外部域并更新您自己的Symbol名称空间持续时间。
 
-
 #### 关于获取命名空间的帐户的注意事项
+
 命名空间在指定期限内租贷。
 目前，获取命名空间的选项只有放弃或延长期限。
 如果在考虑操作转帐等情况下使用命名空间，建议使用多重签名帐户（第9章）来购买命名空间。
-

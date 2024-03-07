@@ -53,7 +53,7 @@ tx = sym.TransferTransaction.create(
   sym.Address.createFromRawAddress("TDWBA6L3CZ6VTZAZPAISL3RWM5VKMHM6J6IM3LY"),
   [],
   sym.PlainMessage.create("Hello Symbol!"), //メッセージ
-  networkType //テストネット・メインネット区分
+  networkType, //テストネット・メインネット区分
 ).setMaxFee(100); //手数料
 ```
 
@@ -89,7 +89,7 @@ sym.PlainMessage.create("Hello Symbol!");
 
 ```js
 sym.EncryptedMessage(
-  "294C8979156C0D941270BAC191F7C689E93371EDBC36ADD8B920CF494012A97BA2D1A3759F9A6D55D5957E9D"
+  "294C8979156C0D941270BAC191F7C689E93371EDBC36ADD8B920CF494012A97BA2D1A3759F9A6D55D5957E9D",
 );
 ```
 
@@ -391,7 +391,7 @@ innerTx1 = sym.TransferTransaction.create(
   bob.address, //送信先
   [],
   sym.PlainMessage.create("tx1"),
-  networkType
+  networkType,
 );
 
 innerTx2 = sym.TransferTransaction.create(
@@ -399,7 +399,7 @@ innerTx2 = sym.TransferTransaction.create(
   carol.address, //送信先
   [],
   sym.PlainMessage.create("tx2"),
-  networkType
+  networkType,
 );
 
 aggregateTx = sym.AggregateTransaction.createComplete(
@@ -410,7 +410,7 @@ aggregateTx = sym.AggregateTransaction.createComplete(
   ],
   networkType,
   [],
-  sym.UInt64.fromUint(1000000)
+  sym.UInt64.fromUint(1000000),
 );
 signedTx = alice.sign(aggregateTx, generationHash);
 await txRepo.announce(signedTx).toPromise();

@@ -1,8 +1,9 @@
 ## 目次
-* 概要
-* 旧環境での移設用データバックアップ
-* 新環境での Symbol-boostrap 環境構築
-* リンク
+
+- 概要
+- 旧環境での移設用データバックアップ
+- 新環境での Symbol-boostrap 環境構築
+- リンク
 
 ## 概要
 
@@ -18,10 +19,10 @@ Symbol-bootstrap 実行中のサーバーを移設する際の手順を以下に
 以下のデータのバックアップを取得します
 
 - ノードを運営するSymbolアカウントのバックアップ
-    - `~/custom-preset.yml`
-    - `~/symbol-bootstrap/target/addresses.yml`
+  - `~/custom-preset.yml`
+  - `~/symbol-bootstrap/target/addresses.yml`
 - 旧ノードの委任者情報のバックアップ（移設作業直前に実施する事）
-    - `~/symbol-bootstrap/target/nodes/node/data/harvesters.dat`
+  - `~/symbol-bootstrap/target/nodes/node/data/harvesters.dat`
 
 ## 新環境での Symbol-boostrap 環境構築
 
@@ -67,9 +68,9 @@ symbol-bootstrap stop
 
 旧環境にてバックアップを取ったファイルを新環境へ移設しましょう。移設元、移設先のファイルパスは原則同じで以下のファイルが対象です
 
-``~/custom-preset.yml``（ファイル名を自身で変更している場合があります）
+`~/custom-preset.yml`（ファイル名を自身で変更している場合があります）
 
-``~/symbol-bootstrap/target/nodes/node/data/harvesters.dat``
+`~/symbol-bootstrap/target/nodes/node/data/harvesters.dat`
 
 ファイルを設置したら、変更を適用しましょう
 

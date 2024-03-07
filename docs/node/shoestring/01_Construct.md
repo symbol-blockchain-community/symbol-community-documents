@@ -52,6 +52,7 @@ cp -p messages.po messages.po.org
 Add the following to line 6 of `messages.po`. I get an error with the following steps:
 
 **Before correction**
+
 ```messages.po
 # Translations for Shoestring.
 # Copyright (C) 2023 Symbol Contributors
@@ -65,6 +66,7 @@ msgid "transaction was successfully sent to the network"
 ```
 
 **Revised**
+
 ```messages.po
 # Translations for Shoestring.
 # Copyright (C) 2023 Symbol Contributors
@@ -94,6 +96,7 @@ python3 -m shoestring.wizard
 ## (b) Modification to complete wizard setup
 
 ### Setting the size of the terminal (unnecessary depending on the environment)
+
 If the screen is small and the following error occurs, please make the screen wider.
 
 ```
@@ -109,6 +112,7 @@ vi internal/PackageResolver.py
 ```
 
 **Fixes**
+
 ```PackageResolver.py
 for file in subdir.glob('*'):
 -shutil.move(file, destination_directory)
@@ -117,6 +121,7 @@ for file in subdir.glob('*'):
 ```
 
 ### Copy startup/templates directory to shoestring
+
 https://github.com/symbol/product/tree/dev/tools/shoestring/startup
 https://github.com/symbol/product/tree/dev/tools/shoestring/templates
 
@@ -137,7 +142,7 @@ wget https://raw.githubusercontent.com/symbol/product/dev/tools/shoestring/templ
 wget https://raw.githubusercontent.com/symbol/product/dev/tools/shoestring/templates/docker-compose-peer.yaml
 wget https://raw.githubusercontent.com/symbol/product/dev/tools/shoestring/templates/nginx.conf.erb
 ```
- 
+
 ## (c) Run wizard setup
 
 ### Create symbol directory
@@ -155,18 +160,19 @@ python3 -m shoestring.wizard
 ```
 
 ### Select `<setup>` on the welcome screen and return
+
 You can move the selection by tabbing
 
 ### Do the following in the Obligatory setting
 
 1. Configuration destination directory is the directory created in (1)
-   * If the above is in red, the directory was not created properly, so start over
+   - If the above is in red, the directory was not created properly, so start over
 2. CA PEM file path (main account)
-   * Should be in deficit at first
+   - Should be in deficit at first
 3. Move to the place where "ca.key.pem" and the initial value are displayed with the tab.
 4. Corrected to full path
-   * Example: /home/pasomi/ca.key.pem
-5. Tab to "* CA PEM file" in the third input field
+   - Example: /home/pasomi/ca.key.pem
+5. Tab to "\* CA PEM file" in the third input field
 6. Use the right arrow key (>) to move to the second "Generate random private key" (note that tabbing cannot be used) and press return.
 7. Then tab to the "Specify output location of private key PEM file above" field.
 8. Since the cursor is at `<Generate!>`, press return and it will display "Key generated and saved to file".
@@ -177,7 +183,9 @@ You can move the selection by tabbing
 13. Do not select anything for Havest settings and click `<Next>`.
 14. Without selecting any Voter settings, click `<Next>`
 15. Specify Node settings and `<Next>`
-   * Set only IP or domain name for now
+
+- Set only IP or domain name for now
+
 16. Leave CA name + node cert name as default `<Next>`
 17. If the writing configuraion looks okay, `<Finish>`
 

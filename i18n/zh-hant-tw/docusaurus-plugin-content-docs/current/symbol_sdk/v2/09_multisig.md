@@ -1,15 +1,15 @@
 # 9.多重簽名
-Symbol帳戶可以轉換為多重簽名。
 
+Symbol帳戶可以轉換為多重簽名。
 
 ### 積分
 
 多重簽名賬戶最多可以有 25 個共同簽署人。 一個帳戶最多可以是 25 個多重簽名帳戶的共同簽名者。 多重簽名賬戶可以是分層的，最多由 3 個級別組成。 本章介紹單級多重簽名。
 
 ## 9.0 準備一個帳戶
+
 創建本章示例源代碼中使用的帳戶並輸出每個密鑰。
 請注意，本章中的 Bob 多簽帳戶將無法使用，如果 Carol 的私鑰遺失。
-
 
 ```js
 bob = sym.Account.generateNewAccount(networkType);
@@ -29,13 +29,21 @@ console.log(carol5.privateKey);
 使用測試網時，應該在 bob 和 carol1 帳戶中提供相當於來自水龍頭的網絡費用。
 
 - 水龍頭
-    - https://testnet.symbol.tools/
+  - https://testnet.symbol.tools/
 
 ##### 輸出網址(URL)
 
 ```js
-console.log("https://testnet.symbol.tools/?recipient=" + bob.address.plain() +"&amount=20");
-console.log("https://testnet.symbol.tools/?recipient=" + carol1.address.plain() +"&amount=20");
+console.log(
+  "https://testnet.symbol.tools/?recipient=" +
+    bob.address.plain() +
+    "&amount=20",
+);
+console.log(
+  "https://testnet.symbol.tools/?recipient=" +
+    carol1.address.plain() +
+    "&amount=20",
+);
 ```
 
 ## 9.1 多重簽名註冊
@@ -45,26 +53,26 @@ Symbol 在設置多重簽名時不需要創建新帳戶。 相反，可以為現
 
 ```js
 multisigTx = sym.MultisigAccountModificationTransaction.create(
-    undefined, 
-    3, //minApproval:Minimum number of signatories required for approval
-    3, //minRemoval:Minimum number of signatories required for expulsion
-    [
-        carol1.address,carol2.address,carol3.address,carol4.address
-    ], //Additional target address list
-    [],//Reemoved address list
-    networkType
+  undefined,
+  3, //minApproval:Minimum number of signatories required for approval
+  3, //minRemoval:Minimum number of signatories required for expulsion
+  [carol1.address, carol2.address, carol3.address, carol4.address], //Additional target address list
+  [], //Reemoved address list
+  networkType,
 );
 aggregateTx = sym.AggregateTransaction.createComplete(
-    sym.Deadline.create(epochAdjustment),
-    [//The public key of the multisig account
-      multisigTx.toAggregate(bob.publicAccount),
-    ],
-    networkType,[]
+  sym.Deadline.create(epochAdjustment),
+  [
+    //The public key of the multisig account
+    multisigTx.toAggregate(bob.publicAccount),
+  ],
+  networkType,
+  [],
 ).setMaxFeeForAggregate(100, 4); //Number of co-signatories to the second argument:4
-signedTx =  aggregateTx.signTransactionWithCosignatories(
-    bob, //Multisig account
-    [carol1,carol2,carol3,carol4], //Accounts specified as being added or removed
-    generationHash,
+signedTx = aggregateTx.signTransactionWithCosignatories(
+  bob, //Multisig account
+  [carol1, carol2, carol3, carol4], //Accounts specified as being added or removed
+  generationHash,
 );
 await txRepo.announce(signedTx).toPromise();
 ```
@@ -72,14 +80,17 @@ await txRepo.announce(signedTx).toPromise();
 ## 9.2 確認
 
 ### 多重簽名賬戶的確認
+
 ```js
 msigRepo = repo.createMultisigRepository();
 multisigInfo = await msigRepo.getMultisigAccountInfo(bob.address).toPromise();
 console.log(multisigInfo);
 ```
+
 ###### 市例演示
+
 ```js
-> MultisigAccountInfo 
+> MultisigAccountInfo
     accountAddress: Address {address: 'TCOMA5VG67TZH4X55HGZOXOFP7S232CYEQMOS7Q', networkType: 152}
   > cosignatoryAddresses: Array(4)
         0: Address {address: 'TBAFGZOCB7OHZCCYYV64F2IFZL7SOOXNDHFS5NY', networkType: 152}
@@ -93,14 +104,18 @@ console.log(multisigInfo);
 
 這表明 cosignatoryAddresses 被註冊為共同簽名人。此外，minApproval:3 表示執行交易所需的簽名數量為 3。minRemoval:3 表示需要 3 個簽名人才能刪除一個共同簽名人。
 
-
 ### 共同簽名帳戶的確認
+
 ```js
 msigRepo = repo.createMultisigRepository();
-multisigInfo = await msigRepo.getMultisigAccountInfo(carol1.address).toPromise();
+multisigInfo = await msigRepo
+  .getMultisigAccountInfo(carol1.address)
+  .toPromise();
 console.log(multisigInfo);
 ```
+
 ###### 市例演示
+
 ```
 > MultisigAccountInfo
     accountAddress: Address {address: 'TCV67BMTD2JMDQOJUDQHBFJHQPG4DAKVKST3YJI', networkType: 152}
@@ -123,23 +138,30 @@ console.log(multisigInfo);
 
 ```js
 tx = sym.TransferTransaction.create(
-    undefined,
-    alice.address, 
-    [new sym.Mosaic(new sym.NamespaceId("symbol.xym"),sym.UInt64.fromUint(1000000))],
-    sym.PlainMessage.create('test'),
-    networkType
+  undefined,
+  alice.address,
+  [
+    new sym.Mosaic(
+      new sym.NamespaceId("symbol.xym"),
+      sym.UInt64.fromUint(1000000),
+    ),
+  ],
+  sym.PlainMessage.create("test"),
+  networkType,
 );
 aggregateTx = sym.AggregateTransaction.createComplete(
-    sym.Deadline.create(epochAdjustment),
-     [//The public key of the multisig account
-       tx.toAggregate(bob.publicAccount)
-     ],
-    networkType,[],
+  sym.Deadline.create(epochAdjustment),
+  [
+    //The public key of the multisig account
+    tx.toAggregate(bob.publicAccount),
+  ],
+  networkType,
+  [],
 ).setMaxFeeForAggregate(100, 2); //Number of co-signatories to the second argument:2
-signedTx =  aggregateTx.signTransactionWithCosignatories(
-    carol1, //Transaction creator
-    [carol2,carol3],　//Cosignatories
-    generationHash,
+signedTx = aggregateTx.signTransactionWithCosignatories(
+  carol1, //Transaction creator
+  [carol2, carol3], //Cosignatories
+  generationHash,
 );
 await txRepo.announce(signedTx).toPromise();
 ```
@@ -150,26 +172,36 @@ await txRepo.announce(signedTx).toPromise();
 
 ```js
 tx = sym.TransferTransaction.create(
-    undefined,
-    alice.address, //Transfer to Alice
-    [new sym.Mosaic(new sym.NamespaceId("symbol.xym"),sym.UInt64.fromUint(1000000))], //1XYM
-    sym.PlainMessage.create('test'),
-    networkType
+  undefined,
+  alice.address, //Transfer to Alice
+  [
+    new sym.Mosaic(
+      new sym.NamespaceId("symbol.xym"),
+      sym.UInt64.fromUint(1000000),
+    ),
+  ], //1XYM
+  sym.PlainMessage.create("test"),
+  networkType,
 );
 aggregateTx = sym.AggregateTransaction.createBonded(
-    sym.Deadline.create(epochAdjustment),
-     [ //The public key of the multisig account
-       tx.toAggregate(bob.publicAccount)
-     ],
-    networkType,[],
+  sym.Deadline.create(epochAdjustment),
+  [
+    //The public key of the multisig account
+    tx.toAggregate(bob.publicAccount),
+  ],
+  networkType,
+  [],
 ).setMaxFeeForAggregate(100, 0); //Number of co-signatories to the second argument:0
 signedAggregateTx = carol1.sign(aggregateTx, generationHash);
 hashLockTx = sym.HashLockTransaction.create(
   sym.Deadline.create(epochAdjustment),
-	new sym.Mosaic(new sym.NamespaceId("symbol.xym"),sym.UInt64.fromUint(10 * 1000000)), //Fixed value:10XYM
-	sym.UInt64.fromUint(480),
-	signedAggregateTx,
-	networkType
+  new sym.Mosaic(
+    new sym.NamespaceId("symbol.xym"),
+    sym.UInt64.fromUint(10 * 1000000),
+  ), //Fixed value:10XYM
+  sym.UInt64.fromUint(480),
+  signedAggregateTx,
+  networkType,
 ).setMaxFee(100);
 signedLockTx = carol1.sign(hashLockTx, generationHash);
 //Announce Hashlock TX
@@ -180,18 +212,22 @@ await txRepo.announce(signedLockTx).toPromise();
 //Announces bonded TX after confirming approval of hashlocks
 await txRepo.announceAggregateBonded(signedAggregateTx).toPromise();
 ```
-當一個節點知道一個綁定交易時，它將是一個部分簽名狀態，並將使用第 8 章“鎖定”中介紹的共同簽名使用多重簽名帳戶進行簽名。 也可以通過支持共同簽名的錢包來確認。
 
+當一個節點知道一個綁定交易時，它將是一個部分簽名狀態，並將使用第 8 章“鎖定”中介紹的共同簽名使用多重簽名帳戶進行簽名。 也可以通過支持共同簽名的錢包來確認。
 
 ## 9.4 確認多重簽名轉移
 
 檢查多重簽名轉賬交易的結果。
 
 ```js
-txInfo = await txRepo.getTransaction(signedTx.hash,sym.TransactionGroup.Confirmed).toPromise();
+txInfo = await txRepo
+  .getTransaction(signedTx.hash, sym.TransactionGroup.Confirmed)
+  .toPromise();
 console.log(txInfo);
 ```
+
 ###### 市例演示
+
 ```js
 > AggregateTransaction
   > cosignatures: Array(2)
@@ -228,7 +264,7 @@ console.log(txInfo);
   > signer: PublicAccount
         address: Address {address: 'TCV67BMTD2JMDQOJUDQHBFJHQPG4DAKVKST3YJI', networkType: 152}
         publicKey: "FF9595FDCD983F46FF9AE0F7D86D94E9B164E385BD125202CF16528F53298656"
-  > transactionInfo: 
+  > transactionInfo:
         hash: "AA99F8F4000F989E6F135228829DB66AEB3B3C4B1F06BA77D373D042EAA4C8DA"
         height: UInt64 {lower: 322376, higher: 0}
         id: "62600A8C0A21EB5CD28679A3"
@@ -237,20 +273,20 @@ console.log(txInfo);
 ```
 
 - 多重簽名賬戶
-    - Bob
-        - AggregateTransaction.innerTransactions[0].signer.address
-            - TCOMA5VG67TZH4X55HGZOXOFP7S232CYEQMOS7Q
+  - Bob
+    - AggregateTransaction.innerTransactions[0].signer.address
+      - TCOMA5VG67TZH4X55HGZOXOFP7S232CYEQMOS7Q
 - Creator's 帳戶
-    - Carol1
-        - AggregateTransaction.signer.address
-            - TCV67BMTD2JMDQOJUDQHBFJHQPG4DAKVKST3YJI
+  - Carol1
+    - AggregateTransaction.signer.address
+      - TCV67BMTD2JMDQOJUDQHBFJHQPG4DAKVKST3YJI
 - 簽署者帳戶
-    - Carol2
-        - AggregateTransaction.cosignatures[0].signer.address
-            - TB3XP4GQK6XH2SSA2E2U6UWCESNACK566DS4COY
-    - Carol3
-        - AggregateTransaction.cosignatures[1].signer.address
-            - TBAFGZOCB7OHZCCYYV64F2IFZL7SOOXNDHFS5NY
+  - Carol2
+    - AggregateTransaction.cosignatures[0].signer.address
+      - TB3XP4GQK6XH2SSA2E2U6UWCESNACK566DS4COY
+  - Carol3
+    - AggregateTransaction.cosignatures[1].signer.address
+      - TBAFGZOCB7OHZCCYYV64F2IFZL7SOOXNDHFS5NY
 
 ## 9.5 修改多重簽名賬戶最低批准
 
@@ -260,24 +296,26 @@ console.log(txInfo);
 
 ```js
 multisigTx = sym.MultisigAccountModificationTransaction.create(
-    undefined, 
-    -1, //Minimum incremental number of signatories required for approval
-    -1, //Minimum incremental number of signatories required for remove
-    [], //Additional target address
-    [carol3.address],//Address to removing
-    networkType
+  undefined,
+  -1, //Minimum incremental number of signatories required for approval
+  -1, //Minimum incremental number of signatories required for remove
+  [], //Additional target address
+  [carol3.address], //Address to removing
+  networkType,
 );
 aggregateTx = sym.AggregateTransaction.createComplete(
-    sym.Deadline.create(epochAdjustment),
-    [ //Specify the public key of the multisig account which configuration you want to change
-      multisigTx.toAggregate(bob.publicAccount),
-    ],
-    networkType,[]    
+  sym.Deadline.create(epochAdjustment),
+  [
+    //Specify the public key of the multisig account which configuration you want to change
+    multisigTx.toAggregate(bob.publicAccount),
+  ],
+  networkType,
+  [],
 ).setMaxFeeForAggregate(100, 1); //Number of co-signatories to the second argument:1
-signedTx =  aggregateTx.signTransactionWithCosignatories(
-    carol1,
-    [carol2],
-    generationHash,
+signedTx = aggregateTx.signTransactionWithCosignatories(
+  carol1,
+  [carol2],
+  generationHash,
 );
 await txRepo.announce(signedTx).toPromise();
 ```
@@ -289,24 +327,26 @@ await txRepo.announce(signedTx).toPromise();
 
 ```js
 multisigTx = sym.MultisigAccountModificationTransaction.create(
-    undefined, 
-    0, //Minimum incremental number of signatories required for approval
-    0, //Minimum incremental number of signatories required for remove
-    [carol5.address], //Additional target address
-    [carol4.address], //Address to removing
-    networkType
+  undefined,
+  0, //Minimum incremental number of signatories required for approval
+  0, //Minimum incremental number of signatories required for remove
+  [carol5.address], //Additional target address
+  [carol4.address], //Address to removing
+  networkType,
 );
 aggregateTx = sym.AggregateTransaction.createComplete(
-    sym.Deadline.create(epochAdjustment),
-    [ //Specify the public key of the multisig account which configuration you want to change
-      multisigTx.toAggregate(bob.publicAccount),
-    ],
-    networkType,[]    
+  sym.Deadline.create(epochAdjustment),
+  [
+    //Specify the public key of the multisig account which configuration you want to change
+    multisigTx.toAggregate(bob.publicAccount),
+  ],
+  networkType,
+  [],
 ).setMaxFeeForAggregate(100, 2); //Number of co-signatories to the second argument:
-signedTx =  aggregateTx.signTransactionWithCosignatories(
-    carol1, //Transaction creator
-    [carol2,carol5], //Cosignatory + Consent account
-    generationHash,
+signedTx = aggregateTx.signTransactionWithCosignatories(
+  carol1, //Transaction creator
+  [carol2, carol5], //Cosignatory + Consent account
+  generationHash,
 );
 await txRepo.announce(signedTx).toPromise();
 ```

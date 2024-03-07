@@ -5,7 +5,7 @@ symbol-bootstrap に代わる新たな node 起動用ツールとして symbol-s
 ## 検証時点の環境情報
 
 ```
-Ubuntu 20.04.6 LTS 
+Ubuntu 20.04.6 LTS
 Python 3.8.10
 gettext (GNU gettext-runtime) 0.19.8.1
 docker
@@ -17,7 +17,7 @@ docker compose
 (a) wizardを起動させるまで
 (b) wizardのsetupを完了させるための修正
 (c) wizardのsetup実行
-(d) nodeを起動するまで 
+(d) nodeを起動するまで
 (a) wizardを起動させるまで
 
 ## (a) wizardを起動させるまで
@@ -25,7 +25,7 @@ docker compose
 ### 以前の残骸があったら念のために消す
 
 ```shell
-cd 
+cd
 rm -rf .local
 ```
 
@@ -52,6 +52,7 @@ cp -p messages.po messages.po.org
 以下を `messages.po` の 6 行目に追加してください。次の手順でエラーが生じます。
 
 **修正前**
+
 ```messages.po
 # Translations for Shoestring.
 # Copyright (C) 2023 Symbol Contributors
@@ -65,6 +66,7 @@ msgstr "transaction was successfully sent to the network"
 ```
 
 **修正後**
+
 ```messages.po
 # Translations for Shoestring.
 # Copyright (C) 2023 Symbol Contributors
@@ -94,6 +96,7 @@ python3 -m shoestring.wizard
 ## (b) wizardのsetupを完了させるための修正
 
 ### 端末のサイズの設定(環境により不要）
+
 画面が小さいと以下のようなエラーがでる場合は画面幅を広く取ってください。
 
 ```
@@ -109,6 +112,7 @@ vi internal/PackageResolver.py
 ```
 
 **修正内容**
+
 ```PackageResolver.py
 for file in subdir.glob('*'):
 -    shutil.move(file, destination_directory)
@@ -117,8 +121,9 @@ for file in subdir.glob('*'):
 ```
 
 ### startup/templatesディレクトリをshoestringにコピー
+
 https://github.com/symbol/product/tree/dev/tools/shoestring/startup
-https://github.com/symbol/product/tree/dev/tools/shoestring/templates 
+https://github.com/symbol/product/tree/dev/tools/shoestring/templates
 
 ```shell
 cd ~/.local/lib/python3.8/site-packages/shoestring/
@@ -137,7 +142,7 @@ wget https://raw.githubusercontent.com/symbol/product/dev/tools/shoestring/templ
 wget https://raw.githubusercontent.com/symbol/product/dev/tools/shoestring/templates/docker-compose-peer.yaml
 wget https://raw.githubusercontent.com/symbol/product/dev/tools/shoestring/templates/nginx.conf.erb
 ```
- 
+
 ## (c) wizardのsetup実行
 
 ### symbolディレクトリ作成
@@ -155,18 +160,25 @@ python3 -m shoestring.wizard
 ```
 
 ### welcome画面で`<setup>`を選択しリターン
+
 タブで選択項目を移動可能
 
 ### Obligatory settingで以下を実行
 
 1. Configuration destination directoryが(1)で作成したディレクトリになっていること
-  * 上記が赤字になっていたらうまくディレクトリが作成されていないので、最初からやりなおす
+
+- 上記が赤字になっていたらうまくディレクトリが作成されていないので、最初からやりなおす
+
 2. CA PEM file path(main account)
-  * 最初赤字になっているはず
+
+- 最初赤字になっているはず
+
 3. タブで"ca.key.pem"と初期値が表示されている箇所に移動。
 4. フルパスに修正
-  * 例: /home/pasomi/ca.key.pem
-5. 3番目の入力フィールドの"* CA PEM file"にタブで移動
+
+- 例: /home/pasomi/ca.key.pem
+
+5. 3番目の入力フィールドの"\* CA PEM file"にタブで移動
 6. 右矢印キー(>)で2番目の"Generate randam private keyに移動(タブでは移動できないので注意)して、リターンキーを実行。
 7. 次にタブを押して、"Specify output location of private key PEM file above"フィールドに移動。
 8. `<Generate!>`にカーソルがくるので、リターンを押すと"Key generated and saved to file"と表示される。
@@ -177,7 +189,9 @@ python3 -m shoestring.wizard
 13. Havest settingsは何も選択せずに、`<Next>`
 14. Voter settingsも何も選択せずに、`<Next>`
 15. Node settingsを指定して`<Next>`
-  * 今回とりあえずIP or domain nameのみ設定
+
+- 今回とりあえずIP or domain nameのみ設定
+
 16. CA name + node cert nameはデフォルトのままで`<Next>`
 17. writing configuraionが大丈夫そうだったら`<Finish>`
 

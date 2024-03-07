@@ -16,7 +16,7 @@ console.log(carol.address);
 console.log(
   "https://testnet.symbol.tools/?recipient=" +
     carol.address.plain() +
-    "&amount=100"
+    "&amount=100",
 );
 ```
 
@@ -33,7 +33,7 @@ tx =
     sym.AddressRestrictionFlag.BlockIncomingAddress, //Address restriction flag
     [bob.address], //Setup address
     [], //Cancellation address
-    networkType
+    networkType,
   ).setMaxFee(100);
 signedTx = carol.sign(tx, generationHash);
 await txRepo.announce(signedTx).toPromise();
@@ -62,7 +62,7 @@ tx =
     sym.MosaicRestrictionFlag.BlockMosaic, //Mosaic restriction flag
     [mosaicId], //Setup mosaic
     [], //Cancellation mosaic
-    networkType
+    networkType,
   ).setMaxFee(100);
 signedTx = carol.sign(tx, generationHash);
 await txRepo.announce(signedTx).toPromise();
@@ -89,7 +89,7 @@ tx =
     sym.OperationRestrictionFlag.AllowOutgoingTransactionType,
     [sym.TransactionType.ACCOUNT_OPERATION_RESTRICTION], //Setup transaction
     [], //Cancellation transaction
-    networkType
+    networkType,
   ).setMaxFee(100);
 signedTx = carol.sign(tx, generationHash);
 await txRepo.announce(signedTx).toPromise();
@@ -117,7 +117,6 @@ TransactionType is as follows.
 17232: `ACCOUNT_OPERATION_RESTRICTION` restriction is not permitted.
 This means that if AllowOutgoingTransactionType is specified, ACCOUNT_OPERATION_RESTRICTION must be included, and
 If BlockOutgoingTransactionType is specified, ACCOUNT_OPERATION_RESTRICTION cannot be included.
-
 
 ### Confirmation
 
@@ -160,7 +159,7 @@ nsRepo = repo.createNamespaceRepository();
 resMosaicRepo = repo.createRestrictionMosaicRepository();
 mosaicResService = new sym.MosaicRestrictionTransactionService(
   resMosaicRepo,
-  nsRepo
+  nsRepo,
 );
 ```
 
@@ -182,7 +181,7 @@ mosaicDefTx = sym.MosaicDefinitionTransaction.create(
   sym.MosaicFlags.create(supplyMutable, transferable, restrictable, revokable),
   0, //divisibility
   sym.UInt64.fromUint(0), //duration
-  networkType
+  networkType,
 );
 
 //Mosaic change
@@ -191,7 +190,7 @@ mosaicChangeTx = sym.MosaicSupplyChangeTransaction.create(
   mosaicDefTx.mosaicId,
   sym.MosaicSupplyChangeAction.Increase,
   sym.UInt64.fromUint(1000000),
-  networkType
+  networkType,
 );
 
 //Mosaic Global Restriction
@@ -203,7 +202,7 @@ mosaicGlobalResTx = await mosaicResService
     mosaicDefTx.mosaicId,
     key,
     "1",
-    sym.MosaicRestrictionType.EQ
+    sym.MosaicRestrictionType.EQ,
   )
   .toPromise();
 
@@ -215,7 +214,7 @@ aggregateTx = sym.AggregateTransaction.createComplete(
     mosaicGlobalResTx.toAggregate(carol.publicAccount),
   ],
   networkType,
-  []
+  [],
 ).setMaxFeeForAggregate(100, 0);
 
 signedTx = carol.sign(aggregateTx, generationHash);
@@ -253,7 +252,7 @@ carolMosaicAddressResTx = sym.MosaicAddressRestrictionTransaction.create(
   carol.address, // address
   sym.UInt64.fromUint(1), // newRestrictionValue
   networkType,
-  sym.UInt64.fromHex("FFFFFFFFFFFFFFFF") //previousRestrictionValue
+  sym.UInt64.fromHex("FFFFFFFFFFFFFFFF"), //previousRestrictionValue
 ).setMaxFee(100);
 signedTx = carol.sign(carolMosaicAddressResTx, generationHash);
 await txRepo.announce(signedTx).toPromise();
@@ -267,7 +266,7 @@ bobMosaicAddressResTx = sym.MosaicAddressRestrictionTransaction.create(
   bob.address, // address
   sym.UInt64.fromUint(1), // newRestrictionValue
   networkType,
-  sym.UInt64.fromHex("FFFFFFFFFFFFFFFF") //previousRestrictionValue
+  sym.UInt64.fromHex("FFFFFFFFFFFFFFFF"), //previousRestrictionValue
 ).setMaxFee(100);
 signedTx = carol.sign(bobMosaicAddressResTx, generationHash);
 await txRepo.announce(signedTx).toPromise();
@@ -323,7 +322,7 @@ trTx = sym.TransferTransaction.create(
   bob.address,
   [new sym.Mosaic(mosaicDefTx.mosaicId, sym.UInt64.fromUint(1))],
   sym.PlainMessage.create(""),
-  networkType
+  networkType,
 ).setMaxFee(100);
 signedTx = carol.sign(trTx, generationHash);
 await txRepo.announce(signedTx).toPromise();
@@ -335,7 +334,7 @@ trTx = sym.TransferTransaction.create(
   dave.address,
   [new sym.Mosaic(mosaicDefTx.mosaicId, sym.UInt64.fromUint(1))],
   sym.PlainMessage.create(""),
-  networkType
+  networkType,
 ).setMaxFee(100);
 signedTx = carol.sign(trTx, generationHash);
 await txRepo.announce(signedTx).toPromise();
@@ -353,10 +352,12 @@ Failure will result in the following error status.
 
 ### Account burn
 
-Using "AllowIncomingAddress" to limit funds being received only from a specified address and then sending the entire XYM balance to another account a user can explicitly create an account that is difficult to operate on its own, even with the  private key. (Note, it is possibly to be authorised by a node whose minimum fee is 0.)
+Using "AllowIncomingAddress" to limit funds being received only from a specified address and then sending the entire XYM balance to another account a user can explicitly create an account that is difficult to operate on its own, even with the private key. (Note, it is possibly to be authorised by a node whose minimum fee is 0.)
 
 ### Mosaic lock
+
 A mosaic can be issued with non-transferable settings, if the account creator prohibits the mosaic from being received by their account then the mosaic is locked and cannot be moved from the recipient's account.
 
 ### Proof of membership
+
 Proof of ownership was explained in the chapter on mosaics. By utilising the mosaic global restriction, it is possible to create a mosaic that can only be owned and circulated between accounts that have for instance, gone through a KYC process, creating a unique economic zone to which only the owner can belong.

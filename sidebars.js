@@ -12,7 +12,7 @@ const sidebars = {
           dirName: "symbol_sdk",
         },
       ],
-    }
+    },
   ],
   node: [
     {
@@ -24,8 +24,8 @@ const sidebars = {
           dirName: "node",
         },
       ],
-    }
-  ]
+    },
+  ],
 };
 
 module.exports = sidebars;

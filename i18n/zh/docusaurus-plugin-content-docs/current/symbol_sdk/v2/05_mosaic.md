@@ -9,6 +9,7 @@
 ## 5.1 马赛克生成
 
 对于马赛克生成，定义要创建的马赛克。
+
 ```js
 supplyMutable = true; //Availability of supply changes
 transferable = false; //Transferability to third parties
@@ -17,13 +18,13 @@ revokable = true; //Revocability from the issuer
 //Mosaic definition
 nonce = sym.MosaicNonce.createRandom();
 mosaicDefTx = sym.MosaicDefinitionTransaction.create(
-    undefined, 
-    nonce,
-    sym.MosaicId.createFromNonce(nonce, alice.address), //Mosaic ID
-    sym.MosaicFlags.create(supplyMutable, transferable, restrictable, revokable),
-    2,//Divisibility:Divisibility
-    sym.UInt64.fromUint(0), //Duration:Effective date
-    networkType
+  undefined,
+  nonce,
+  sym.MosaicId.createFromNonce(nonce, alice.address), //Mosaic ID
+  sym.MosaicFlags.create(supplyMutable, transferable, restrictable, revokable),
+  2, //Divisibility:Divisibility
+  sym.UInt64.fromUint(0), //Duration:Effective date
+  networkType,
 );
 ```
 
@@ -34,6 +35,7 @@ MosaicFlags {
   supplyMutable: false, transferable: false, restrictable: false, revokable: false
 }
 ```
+
 可以指定供应变更的许可、向第三方的可转让性、Mosaic 全球限制的应用和发行人的可撤销性。
 一旦设置这些属性，以后就不能更改。
 
@@ -43,7 +45,7 @@ MosaicFlags {
 
 divisibility:0 = 1  
 divisibility:1 = 1.0  
-divisibility:2 = 1.00  
+divisibility:2 = 1.00
 
 #### 持续时间
 
@@ -51,57 +53,63 @@ divisibility:2 = 1.00
 如果设置了马赛克有效期，有效期过后数据不会消失。
 请注意，每个帐户最多可以拥有 1,000 个马赛克。
 
-
 接下来，更改数量。
+
 ```js
 //Mosaic change
 mosaicChangeTx = sym.MosaicSupplyChangeTransaction.create(
-    undefined,
-    mosaicDefTx.mosaicId,
-    sym.MosaicSupplyChangeAction.Increase,
-    sym.UInt64.fromUint(1000000),
-    networkType
+  undefined,
+  mosaicDefTx.mosaicId,
+  sym.MosaicSupplyChangeAction.Increase,
+  sym.UInt64.fromUint(1000000),
+  networkType,
 );
 ```
-如果supplyMutable:false，只有当整个马赛克的供应量在发行者的账户中时，数量才能被更改。 
+
+如果supplyMutable:false，只有当整个马赛克的供应量在发行者的账户中时，数量才能被更改。
 如果整除率 > 0，则将其定义为最小单位为 1 的整数值。
 （如果要创建 1.00 可整除性，请指定 100：2）
 
 马赛克供应量更改操作如下所示。
+
 ```js
 {0: 'Decrease', 1: 'Increase'}
 ```
+
 如果要增加它，请指定增加。
 将上面的两个事务合并成一个聚合事务。
 
 ```js
 aggregateTx = sym.AggregateTransaction.createComplete(
-    sym.Deadline.create(epochAdjustment),
-    [
-      mosaicDefTx.toAggregate(alice.publicAccount),
-      mosaicChangeTx.toAggregate(alice.publicAccount),
-    ],
-    networkType,[],
+  sym.Deadline.create(epochAdjustment),
+  [
+    mosaicDefTx.toAggregate(alice.publicAccount),
+    mosaicChangeTx.toAggregate(alice.publicAccount),
+  ],
+  networkType,
+  [],
 ).setMaxFeeForAggregate(100, 0);
-signedTx = alice.sign(aggregateTx,generationHash);
+signedTx = alice.sign(aggregateTx, generationHash);
 await txRepo.announce(signedTx).toPromise();
 ```
 
 请注意，聚合交易的一个特点是它会尝试更改尚不存在的马赛克的数量。
 排列时，如果没有不一致，则可以在单个块内毫无问题的处理它们。
 
-
 ### 确认
+
 确认创建马赛克的账户持有的马赛克信息。
 
 ```js
 mosaicRepo = repo.createMosaicRepository();
-accountInfo.mosaics.forEach(async mosaic => {
+accountInfo.mosaics.forEach(async (mosaic) => {
   mosaicInfo = await mosaicRepo.getMosaic(mosaic.id).toPromise();
   console.log(mosaicInfo);
 });
 ```
+
 ###### 示例演示
+
 ```js
 > MosaicInfo {version: 1, recordId: '622988B12A6128903FC10496', id: MosaicId, supply: UInt64, startHeight: UInt64, …}
 > MosaicInfo
@@ -115,7 +123,7 @@ accountInfo.mosaics.forEach(async mosaic => {
   > id: MosaicId
         id: Id {lower: 207493124, higher: 890137608} //MosaicID
     ownerAddress: Address {address: 'TBIL6D6RURP45YQRWV6Q7YVWIIPLQGLZQFHWFEQ', networkType: 152} //Issure address
-    recordId: "62626E3C741381859AFAD4D5" 
+    recordId: "62626E3C741381859AFAD4D5"
     supply: UInt64 {lower: 1000000, higher: 0} //Total supply
 ```
 
@@ -129,27 +137,25 @@ accountInfo.mosaics.forEach(async mosaic => {
 //Creating a receiving account
 bob = sym.Account.generateNewAccount(networkType);
 tx = sym.TransferTransaction.create(
-    sym.Deadline.create(epochAdjustment),
-    bob.address,  //Destination address
-    // Transfer mosaic list
-    [ 
-      new sym.Mosaic(
-        new sym.MosaicId("3A8416DB2D53B6C8"), //TestnetXYM
-        sym.UInt64.fromUint(1000000) //1XYM(divisibility:6)
-      ),
-      new sym.Mosaic(
-        mosaicDefTx.mosaicId, // Mosaic created in 5.1.
-        sym.UInt64.fromUint(1)  // Amount:0.01(InCaseDivisibility:2)
-      )
-    ],
-    sym.EmptyMessage,
-    networkType
+  sym.Deadline.create(epochAdjustment),
+  bob.address, //Destination address
+  // Transfer mosaic list
+  [
+    new sym.Mosaic(
+      new sym.MosaicId("3A8416DB2D53B6C8"), //TestnetXYM
+      sym.UInt64.fromUint(1000000), //1XYM(divisibility:6)
+    ),
+    new sym.Mosaic(
+      mosaicDefTx.mosaicId, // Mosaic created in 5.1.
+      sym.UInt64.fromUint(1), // Amount:0.01(InCaseDivisibility:2)
+    ),
+  ],
+  sym.EmptyMessage,
+  networkType,
 ).setMaxFee(100);
-signedTx = alice.sign(tx,generationHash);
+signedTx = alice.sign(tx, generationHash);
 await txRepo.announce(signedTx).toPromise();
 ```
-
-
 
 ##### 传输马赛克列表
 
@@ -160,16 +166,21 @@ await txRepo.announce(signedTx).toPromise();
 - 测试网：3A8416DB2D53B6C8
 
 #### 帐户
+
 所有小数点也指定为整数。
 XYM 可整除 6，因此指定为 1XYM=1000000。
 
 ### 交易确认
 
 ```js
-txInfo = await txRepo.getTransaction(signedTx.hash,sym.TransactionGroup.Confirmed).toPromise();
-console.log(txInfo); 
+txInfo = await txRepo
+  .getTransaction(signedTx.hash, sym.TransactionGroup.Confirmed)
+  .toPromise();
+console.log(txInfo);
 ```
+
 ###### 示例演示
+
 ```js
 > TransferTransaction
     deadline: Deadline {adjustedValue: 12776690385}
@@ -198,6 +209,7 @@ console.log(txInfo);
     type: 16724
     version: 1
 ```
+
 可以看到在TransferTransaction的马赛克中转了两种类型的马赛克。您还可以在 TransactionInfo 中找到有关已批准区块的信息。
 
 ## 5.3 使用提示
@@ -219,52 +231,56 @@ console.log(txInfo);
 请注意，还有一种方法可以将元数据注册到 马赛克，如第 7 章所述，可以通过注册帐户和 马赛克 发布者的多重签名来更新。
 
 创建 NFT 的方法有很多种，下面给出了一个过程示例（执行时请适当设置 nonce 和 flag 信息）。
+
 ```js
 supplyMutable = false; //Availability of supply changes
 //Mosaic definition
 mosaicDefTx = sym.MosaicDefinitionTransaction.create(
-    undefined, nonce,mosaicId,
-    sym.MosaicFlags.create(supplyMutable, transferable, restrictable, revokable),
-    0,//Divisibility:Divisibility
-    sym.UInt64.fromUint(0), //Duration:Indefinite
-    networkType
+  undefined,
+  nonce,
+  mosaicId,
+  sym.MosaicFlags.create(supplyMutable, transferable, restrictable, revokable),
+  0, //Divisibility:Divisibility
+  sym.UInt64.fromUint(0), //Duration:Indefinite
+  networkType,
 );
 //Fixed mosaic quantity
 mosaicChangeTx = sym.MosaicSupplyChangeTransaction.create(
-    undefined,mosaicId,
-    sym.MosaicSupplyChangeAction.Increase, //Increase
-    sym.UInt64.fromUint(1), //Amount1
-    networkType
+  undefined,
+  mosaicId,
+  sym.MosaicSupplyChangeAction.Increase, //Increase
+  sym.UInt64.fromUint(1), //Amount1
+  networkType,
 );
 //NFTdata
-nftTx  = sym.TransferTransaction.create(
-    undefined, //Deadline:Duration
-    alice.address, 
-    [],
-    sym.PlainMessage.create("Hello Symbol!"), //NFTdata
-    networkType
-)
+nftTx = sym.TransferTransaction.create(
+  undefined, //Deadline:Duration
+  alice.address,
+  [],
+  sym.PlainMessage.create("Hello Symbol!"), //NFTdata
+  networkType,
+);
 //Generating mosaic and aggregating NFT data and registering them in blocks.
 aggregateTx = sym.AggregateTransaction.createComplete(
-    sym.Deadline.create(epochAdjustment),
-    [
-      mosaicDefTx.toAggregate(alice.publicAccount),
-      mosaicChangeTx.toAggregate(alice.publicAccount),
-      nftTx.toAggregate(alice.publicAccount)
-    ],
-    networkType,[],
+  sym.Deadline.create(epochAdjustment),
+  [
+    mosaicDefTx.toAggregate(alice.publicAccount),
+    mosaicChangeTx.toAggregate(alice.publicAccount),
+    nftTx.toAggregate(alice.publicAccount),
+  ],
+  networkType,
+  [],
 ).setMaxFeeForAggregate(100, 0);
 ```
 
 马赛克信息中包含马赛克生成时的区块高度和创建账户，因此通过搜索同一区块内的交易，可以检索到与马赛克关联的NFT数据。
 可以检索与同一块中的交易关联的 NFT 数据。
 
-
 ##### 注意事项
+
 如果马赛克的创建者拥有全部数量，则可以更改总供应量。
 如果将数据拆分成交易记录，则不可篡改，但可以追加数据。
 在管理 NFT 时，请注意妥善管理，例如严格管理或丢弃马赛克创建者的私钥。
-
 
 #### 可撤销的积分服务操作。
 

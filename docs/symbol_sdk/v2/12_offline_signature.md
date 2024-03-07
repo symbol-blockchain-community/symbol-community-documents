@@ -21,7 +21,7 @@ innerTx1 = sym.TransferTransaction.create(
   bob.address,
   [],
   sym.PlainMessage.create("tx1"),
-  networkType
+  networkType,
 );
 
 innerTx2 = sym.TransferTransaction.create(
@@ -29,7 +29,7 @@ innerTx2 = sym.TransferTransaction.create(
   alice.address,
   [],
   sym.PlainMessage.create("tx2"),
-  networkType
+  networkType,
 );
 
 aggregateTx = sym.AggregateTransaction.createComplete(
@@ -39,7 +39,7 @@ aggregateTx = sym.AggregateTransaction.createComplete(
     innerTx2.toAggregate(bob.publicAccount),
   ],
   networkType,
-  []
+  [],
 ).setMaxFeeForAggregate(100, 1);
 
 signedTx = alice.sign(aggregateTx, generationHash);
@@ -94,9 +94,9 @@ Buffer = require("/node_modules/buffer").Buffer;
 res = tx.signer.verifySignature(
   tx.getSigningBytes(
     [...Buffer.from(signedPayload, "hex")],
-    [...Buffer.from(generationHash, "hex")]
+    [...Buffer.from(generationHash, "hex")],
   ),
-  tx.signature
+  tx.signature,
 );
 console.log(res);
 ```
@@ -113,7 +113,7 @@ It has been verified that the payload is signed by the signer Alice, then Bob co
 bobSignedTx = sym.CosignatureTransaction.signTransactionPayload(
   bob,
   signedPayload,
-  generationHash
+  generationHash,
 );
 bobSignedTxSignature = bobSignedTx.signature;
 bobSignedTxSignerPublicKey = bobSignedTx.signerPublicKey;
@@ -129,13 +129,13 @@ Alice receives bobSignedTxSignature, bobSignedTxSignerPublicKey from Bob. Also, 
 ```js
 signedHash = sym.Transaction.createTransactionHash(
   signedPayload,
-  Buffer.from(generationHash, "hex")
+  Buffer.from(generationHash, "hex"),
 );
 cosignSignedTxs = [
   new sym.CosignatureSignedTransaction(
     signedHash,
     bobSignedTxSignature,
-    bobSignedTxSignerPublicKey
+    bobSignedTxSignerPublicKey,
   ),
 ];
 
@@ -163,7 +163,7 @@ signedTx = new sym.SignedTransaction(
   signedHash,
   alice.publicKey,
   recreatedTx.type,
-  recreatedTx.networkType
+  recreatedTx.networkType,
 );
 
 await txRepo.announce(signedTx).toPromise();
@@ -176,7 +176,7 @@ If the private key of Alice can be used to sign the transaction again, it is pos
 resignedTx = recreatedTx.signTransactionGivenSignatures(
   alice,
   cosignSignedTxs,
-  generationHash
+  generationHash,
 );
 await txRepo.announce(resignedTx).toPromise();
 ```

@@ -277,7 +277,7 @@ bondedHttp = txRepo
   .search({ address: bob.address, group: sym.TransactionGroup.Partial })
   .pipe(
     op.delay(2000),
-    op.mergeMap((page) => page.data)
+    op.mergeMap((page) => page.data),
   );
 
 //選択中アカウントの完了トランザクション検知リスナー
@@ -292,7 +292,7 @@ const statusChanged = function (address, hash) {
       } else {
         return errorOrTransaction;
       }
-    })
+    }),
   );
 };
 
@@ -301,17 +301,17 @@ function exeAggregateBondedCosignature(tx) {
   txRepo
     .getTransactionsById(
       [tx.transactionInfo.hash],
-      sym.TransactionGroup.Partial
+      sym.TransactionGroup.Partial,
     )
     .pipe(
       //トランザクションが抽出された場合のみ
-      op.filter((aggTx) => aggTx.length > 0)
+      op.filter((aggTx) => aggTx.length > 0),
     )
     .subscribe(async (aggTx) => {
       //インナートランザクションの署名者に自分が指定されている場合
       if (
         aggTx[0].innerTransactions.find((inTx) =>
-          inTx.signer.equals(bob.publicAccount)
+          inTx.signer.equals(bob.publicAccount),
         ) != undefined
       ) {
         //Aliceのトランザクションで署名
@@ -333,9 +333,9 @@ bondedSubscribe = function (observer) {
       //すでに署名済みでない場合
       op.filter((tx) => {
         return !tx.signedByAccount(
-          sym.PublicAccount.createFromPublicKey(bob.publicKey, networkType)
+          sym.PublicAccount.createFromPublicKey(bob.publicKey, networkType),
         );
-      })
+      }),
     )
     .subscribe((tx) => {
       console.log(tx);

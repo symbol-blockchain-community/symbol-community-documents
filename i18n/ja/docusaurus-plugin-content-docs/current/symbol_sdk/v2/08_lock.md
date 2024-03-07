@@ -21,11 +21,11 @@ tx1 = sym.TransferTransaction.create(
     //1XYM
     new sym.Mosaic(
       new sym.NamespaceId("symbol.xym"),
-      sym.UInt64.fromUint(1000000)
+      sym.UInt64.fromUint(1000000),
     ),
   ],
   sym.EmptyMessage, //メッセージ無し
-  networkType
+  networkType,
 );
 
 tx2 = sym.TransferTransaction.create(
@@ -33,7 +33,7 @@ tx2 = sym.TransferTransaction.create(
   alice.address, // Aliceへの送信
   [],
   sym.PlainMessage.create("thank you!"), //メッセージ
-  networkType
+  networkType,
 );
 
 aggregateArray = [
@@ -46,7 +46,7 @@ aggregateTx = sym.AggregateTransaction.createBonded(
   sym.Deadline.create(epochAdjustment),
   aggregateArray,
   networkType,
-  []
+  [],
 ).setMaxFeeForAggregate(100, 1);
 
 //署名
@@ -67,11 +67,11 @@ hashLockTx = sym.HashLockTransaction.create(
   sym.Deadline.create(epochAdjustment),
   new sym.Mosaic(
     new sym.NamespaceId("symbol.xym"),
-    sym.UInt64.fromUint(10 * 1000000)
+    sym.UInt64.fromUint(10 * 1000000),
   ), //10xym固定値
   sym.UInt64.fromUint(480), // ロック有効期限
   signedAggregateTx, // このハッシュ値を登録
-  networkType
+  networkType,
 ).setMaxFee(100);
 
 //署名
@@ -129,7 +129,7 @@ console.log(bob.address);
 console.log(
   "https://testnet.symbol.tools/?recipient=" +
     bob.address.plain() +
-    "&amount=10"
+    "&amount=10",
 );
 ```
 
@@ -162,13 +162,13 @@ lockTx = sym.SecretLockTransaction.create(
   sym.Deadline.create(epochAdjustment),
   new sym.Mosaic(
     new sym.NamespaceId("symbol.xym"),
-    sym.UInt64.fromUint(1000000) //1XYM
+    sym.UInt64.fromUint(1000000), //1XYM
   ), //ロックするモザイク
   sym.UInt64.fromUint(480), //ロック期間(ブロック数)
   sym.LockHashAlgorithm.Op_Sha3_256, //ロックキーワード生成に使用したアルゴリズム
   secret, //ロック用キーワード
   bob.address, //解除時の転送先:Bob
-  networkType
+  networkType,
 ).setMaxFee(100);
 
 signedLockTx = alice.sign(lockTx, generationHash);
@@ -224,7 +224,7 @@ proofTx = sym.SecretProofTransaction.create(
   secret, //ロックキーワード
   bob.address, //解除アカウント（受信アカウント）
   proof, //解除用キーワード
-  networkType
+  networkType,
 ).setMaxFee(100);
 
 signedProofTx = bob.sign(proofTx, generationHash);

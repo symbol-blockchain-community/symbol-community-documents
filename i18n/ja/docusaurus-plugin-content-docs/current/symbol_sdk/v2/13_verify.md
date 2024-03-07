@@ -39,7 +39,7 @@ height = 59639;
 tx = sym.TransactionMapping.createFromPayload(payload);
 hash = sym.Transaction.createTransactionHash(
   payload,
-  Buffer.from(generationHash, "hex")
+  Buffer.from(generationHash, "hex"),
 );
 console.log(hash);
 console.log(tx);
@@ -80,9 +80,9 @@ console.log(tx);
 res = alice.publicAccount.verifySignature(
   tx.getSigningBytes(
     [...Buffer.from(payload, "hex")],
-    [...Buffer.from(generationHash, "hex")]
+    [...Buffer.from(generationHash, "hex")],
   ),
-  "93B0B985101C1BDD1BC2BF30D72F35E34265B3F381ECA464733E147A4F0A6B9353547E2E08189EF37E50D271BEB5F09B81CE5816BB34A153D2268520AF630A0A"
+  "93B0B985101C1BDD1BC2BF30D72F35E34265B3F381ECA464733E147A4F0A6B9353547E2E08189EF37E50D271BEB5F09B81CE5816BB34A153D2268520AF630A0A",
 );
 console.log(res);
 ```
@@ -175,19 +175,22 @@ if (block.type === sym.BlockType.NormalBlock) {
   hasher.update(cat.GeneratorUtils.uintToBuffer(block.networkType, 1));
   hasher.update(cat.GeneratorUtils.uintToBuffer(block.type, 2));
   hasher.update(
-    cat.GeneratorUtils.uint64ToBuffer([block.height.lower, block.height.higher])
+    cat.GeneratorUtils.uint64ToBuffer([
+      block.height.lower,
+      block.height.higher,
+    ]),
   );
   hasher.update(
     cat.GeneratorUtils.uint64ToBuffer([
       block.timestamp.lower,
       block.timestamp.higher,
-    ])
+    ]),
   );
   hasher.update(
     cat.GeneratorUtils.uint64ToBuffer([
       block.difficulty.lower,
       block.difficulty.higher,
-    ])
+    ]),
   );
   hasher.update(Buffer.from(block.proofGamma, "hex"));
   hasher.update(Buffer.from(block.proofVerificationHash, "hex"));
@@ -197,7 +200,7 @@ if (block.type === sym.BlockType.NormalBlock) {
   hasher.update(Buffer.from(block.blockReceiptsHash, "hex"));
   hasher.update(Buffer.from(block.stateHash, "hex"));
   hasher.update(
-    sym.RawAddress.stringToAddress(block.beneficiaryAddress.address)
+    sym.RawAddress.stringToAddress(block.beneficiaryAddress.address),
   );
   hasher.update(cat.GeneratorUtils.uintToBuffer(block.feeMultiplier, 4));
   hash = hasher.hex().toUpperCase();
@@ -232,19 +235,22 @@ if (block.type === sym.BlockType.ImportanceBlock) {
   hasher.update(cat.GeneratorUtils.uintToBuffer(block.networkType, 1));
   hasher.update(cat.GeneratorUtils.uintToBuffer(block.type, 2));
   hasher.update(
-    cat.GeneratorUtils.uint64ToBuffer([block.height.lower, block.height.higher])
+    cat.GeneratorUtils.uint64ToBuffer([
+      block.height.lower,
+      block.height.higher,
+    ]),
   );
   hasher.update(
     cat.GeneratorUtils.uint64ToBuffer([
       block.timestamp.lower,
       block.timestamp.higher,
-    ])
+    ]),
   );
   hasher.update(
     cat.GeneratorUtils.uint64ToBuffer([
       block.difficulty.lower,
       block.difficulty.higher,
-    ])
+    ]),
   );
   hasher.update(Buffer.from(block.proofGamma, "hex"));
   hasher.update(Buffer.from(block.proofVerificationHash, "hex"));
@@ -254,23 +260,23 @@ if (block.type === sym.BlockType.ImportanceBlock) {
   hasher.update(Buffer.from(block.blockReceiptsHash, "hex"));
   hasher.update(Buffer.from(block.stateHash, "hex"));
   hasher.update(
-    sym.RawAddress.stringToAddress(block.beneficiaryAddress.address)
+    sym.RawAddress.stringToAddress(block.beneficiaryAddress.address),
   );
   hasher.update(cat.GeneratorUtils.uintToBuffer(block.feeMultiplier, 4));
   hasher.update(
-    cat.GeneratorUtils.uintToBuffer(block.votingEligibleAccountsCount, 4)
+    cat.GeneratorUtils.uintToBuffer(block.votingEligibleAccountsCount, 4),
   );
   hasher.update(
     cat.GeneratorUtils.uint64ToBuffer([
       block.harvestingEligibleAccountsCount.lower,
       block.harvestingEligibleAccountsCount.higher,
-    ])
+    ]),
   );
   hasher.update(
     cat.GeneratorUtils.uint64ToBuffer([
       block.totalVotingBalance.lower,
       block.totalVotingBalance.higher,
-    ])
+    ]),
   );
   hasher.update(Buffer.from(block.previousImportanceBlockHash, "hex"));
 
@@ -345,7 +351,7 @@ function getLeafHash(encodedPath, leafValue) {
 //枝のハッシュ値取得関数
 function getBranchHash(encodedPath, links) {
   const branchLinks = Array(16).fill(
-    sym.Convert.uint8ToHex(new Uint8Array(32))
+    sym.Convert.uint8ToHex(new Uint8Array(32)),
   );
   links.forEach((link) => {
     branchLinks[parseInt(`0x${link.bit}`, 16)] = link.link;
@@ -399,7 +405,7 @@ function checkState(stateProof, stateHash, pathHash, rootHash) {
 stateProofService = new sym.StateProofService(repo);
 
 aliceAddress = sym.Address.createFromRawAddress(
-  "TBIL6D6RURP45YQRWV6Q7YVWIIPLQGLZQFHWFEQ"
+  "TBIL6D6RURP45YQRWV6Q7YVWIIPLQGLZQFHWFEQ",
 );
 
 hasher = sha3_256.create();
@@ -432,16 +438,16 @@ checkState(stateProof, aliceStateHash, alicePathHash, rootHash);
 ```js
 srcAddress = Buffer.from(
   sym.Address.createFromRawAddress(
-    "TBIL6D6RURP45YQRWV6Q7YVWIIPLQGLZQFHWFEQ"
+    "TBIL6D6RURP45YQRWV6Q7YVWIIPLQGLZQFHWFEQ",
   ).encoded(),
-  "hex"
+  "hex",
 );
 
 targetAddress = Buffer.from(
   sym.Address.createFromRawAddress(
-    "TBIL6D6RURP45YQRWV6Q7YVWIIPLQGLZQFHWFEQ"
+    "TBIL6D6RURP45YQRWV6Q7YVWIIPLQGLZQFHWFEQ",
   ).encoded(),
-  "hex"
+  "hex",
 );
 
 hasher = sha3_256.create();
@@ -492,16 +498,16 @@ checkState(stateProof, stateHash, pathHash, rootHash);
 ```js
 srcAddress = Buffer.from(
   sym.Address.createFromRawAddress(
-    "TBIL6D6RURP45YQRWV6Q7YVWIIPLQGLZQFHWFEQ"
+    "TBIL6D6RURP45YQRWV6Q7YVWIIPLQGLZQFHWFEQ",
   ).encoded(),
-  "hex"
+  "hex",
 );
 
 targetAddress = Buffer.from(
   sym.Address.createFromRawAddress(
-    "TBIL6D6RURP45YQRWV6Q7YVWIIPLQGLZQFHWFEQ"
+    "TBIL6D6RURP45YQRWV6Q7YVWIIPLQGLZQFHWFEQ",
   ).encoded(),
-  "hex"
+  "hex",
 );
 
 //compositePathHash(Key値)

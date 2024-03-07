@@ -17,7 +17,7 @@ innerTx1 = sym.TransferTransaction.create(
   bob.address,
   [],
   sym.PlainMessage.create("tx1"),
-  networkType
+  networkType,
 );
 
 innerTx2 = sym.TransferTransaction.create(
@@ -25,7 +25,7 @@ innerTx2 = sym.TransferTransaction.create(
   alice.address,
   [],
   sym.PlainMessage.create("tx2"),
-  networkType
+  networkType,
 );
 
 aggregateTx = sym.AggregateTransaction.createComplete(
@@ -35,7 +35,7 @@ aggregateTx = sym.AggregateTransaction.createComplete(
     innerTx2.toAggregate(bob.publicAccount),
   ],
   networkType,
-  []
+  [],
 ).setMaxFeeForAggregate(100, 1);
 
 signedTx = alice.sign(aggregateTx, generationHash);
@@ -90,9 +90,9 @@ Buffer = require("/node_modules/buffer").Buffer;
 res = tx.signer.verifySignature(
   tx.getSigningBytes(
     [...Buffer.from(signedPayload, "hex")],
-    [...Buffer.from(generationHash, "hex")]
+    [...Buffer.from(generationHash, "hex")],
   ),
-  tx.signature
+  tx.signature,
 );
 console.log(res);
 ```
@@ -109,7 +109,7 @@ console.log(res);
 bobSignedTx = sym.CosignatureTransaction.signTransactionPayload(
   bob,
   signedPayload,
-  generationHash
+  generationHash,
 );
 bobSignedTxSignature = bobSignedTx.signature;
 bobSignedTxSignerPublicKey = bobSignedTx.signerPublicKey;
@@ -125,13 +125,13 @@ Alice 从 Bob 那里收到 bobSignedTxSignature 和 bobSignedTxSignerPublicKey�
 ```js
 signedHash = sym.Transaction.createTransactionHash(
   signedPayload,
-  Buffer.from(generationHash, "hex")
+  Buffer.from(generationHash, "hex"),
 );
 cosignSignedTxs = [
   new sym.CosignatureSignedTransaction(
     signedHash,
     bobSignedTxSignature,
-    bobSignedTxSignerPublicKey
+    bobSignedTxSignerPublicKey,
   ),
 ];
 
@@ -159,7 +159,7 @@ signedTx = new sym.SignedTransaction(
   signedHash,
   alice.publicKey,
   recreatedTx.type,
-  recreatedTx.networkType
+  recreatedTx.networkType,
 );
 
 await txRepo.announce(signedTx).toPromise();
@@ -172,7 +172,7 @@ await txRepo.announce(signedTx).toPromise();
 resignedTx = recreatedTx.signTransactionGivenSignatures(
   alice,
   cosignSignedTxs,
-  generationHash
+  generationHash,
 );
 await txRepo.announce(resignedTx).toPromise();
 ```
@@ -181,7 +181,7 @@ await txRepo.announce(resignedTx).toPromise();
 
 ### 超越市场
 
-与保税交易不同，哈希锁无需支付费用（10XYM）。 
+与保税交易不同，哈希锁无需支付费用（10XYM）。
 如果有效载荷(Payload)可以共享，卖方可以为所有可能的潜在买方创建有效负载并等待谈判开始。
 （应使用排除控制，例如将仅一个现有的收据NFT混合到聚合事务中，以便不会单独执行多个事务）。
 无需为这些谈判建立专门的市场。

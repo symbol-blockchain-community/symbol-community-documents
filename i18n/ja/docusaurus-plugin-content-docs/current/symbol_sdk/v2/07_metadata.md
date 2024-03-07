@@ -27,7 +27,7 @@ tx = await metaService
     alice.address, //メタデータ記録先アドレス
     key,
     value, //Key-Value値
-    alice.address //メタデータ作成者アドレス
+    alice.address, //メタデータ作成者アドレス
   )
   .toPromise();
 
@@ -35,7 +35,7 @@ aggregateTx = sym.AggregateTransaction.createComplete(
   sym.Deadline.create(epochAdjustment),
   [tx.toAggregate(alice.publicAccount)],
   networkType,
-  []
+  [],
 ).setMaxFeeForAggregate(100, 0);
 
 signedTx = alice.sign(aggregateTx, generationHash);
@@ -56,7 +56,7 @@ tx = await metaService
     bob.address, //メタデータ記録先アドレス
     key,
     value, //Key-Value値
-    alice.address //メタデータ作成者アドレス
+    alice.address, //メタデータ作成者アドレス
   )
   .toPromise();
 
@@ -64,13 +64,13 @@ aggregateTx = sym.AggregateTransaction.createComplete(
   sym.Deadline.create(epochAdjustment),
   [tx.toAggregate(alice.publicAccount)],
   networkType,
-  []
+  [],
 ).setMaxFeeForAggregate(100, 1); // 第二引数に連署者の数:1
 
 signedTx = aggregateTx.signTransactionWithCosignatories(
   alice,
   [bob],
-  generationHash // 第二引数に連署者
+  generationHash, // 第二引数に連署者
 );
 await txRepo.announce(signedTx).toPromise();
 ```
@@ -98,7 +98,7 @@ tx = await metaService
     mosaicId,
     key,
     value, //Key-Value値
-    alice.address
+    alice.address,
   )
   .toPromise();
 
@@ -106,7 +106,7 @@ aggregateTx = sym.AggregateTransaction.createComplete(
   sym.Deadline.create(epochAdjustment),
   [tx.toAggregate(alice.publicAccount)],
   networkType,
-  []
+  [],
 ).setMaxFeeForAggregate(100, 0);
 
 signedTx = alice.sign(aggregateTx, generationHash);
@@ -134,7 +134,7 @@ tx = await metaService
     namespaceId,
     key,
     value, //Key-Value値
-    alice.address //メタデータの登録者
+    alice.address, //メタデータの登録者
   )
   .toPromise();
 
@@ -142,7 +142,7 @@ aggregateTx = sym.AggregateTransaction.createComplete(
   sym.Deadline.create(epochAdjustment),
   [tx.toAggregate(alice.publicAccount)],
   networkType,
-  []
+  [],
 ).setMaxFeeForAggregate(100, 0);
 
 signedTx = alice.sign(aggregateTx, generationHash);

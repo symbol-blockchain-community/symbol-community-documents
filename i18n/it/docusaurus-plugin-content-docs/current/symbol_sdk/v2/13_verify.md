@@ -1,8 +1,8 @@
 # 13. Validation
 
 Verify all kinds of information recorded on the blockchain.
-While recording data on the blockchain is done with the agreement of all nodes, 
- **referencing data** on the blockchain is achieved by obtaining information from a single 
+While recording data on the blockchain is done with the agreement of all nodes,
+**referencing data** on the blockchain is achieved by obtaining information from a single
 node. For this reason, to avoid making a new transaction based on information from an untrusted node, the data obtained from the node must be verified.
 
 ## 13.1 Transaction validation
@@ -39,7 +39,7 @@ Verify the contents of the transaction.
 tx = sym.TransactionMapping.createFromPayload(payload);
 hash = sym.Transaction.createTransactionHash(
   payload,
-  Buffer.from(generationHash, "hex")
+  Buffer.from(generationHash, "hex"),
 );
 console.log(hash);
 console.log(tx);
@@ -79,9 +79,9 @@ The transaction can be verified by confirming that it has been included in the b
 res = alice.publicAccount.verifySignature(
   tx.getSigningBytes(
     [...Buffer.from(payload, "hex")],
-    [...Buffer.from(generationHash, "hex")]
+    [...Buffer.from(generationHash, "hex")],
   ),
-  "93B0B985101C1BDD1BC2BF30D72F35E34265B3F381ECA464733E147A4F0A6B9353547E2E08189EF37E50D271BEB5F09B81CE5816BB34A153D2268520AF630A0A"
+  "93B0B985101C1BDD1BC2BF30D72F35E34265B3F381ECA464733E147A4F0A6B9353547E2E08189EF37E50D271BEB5F09B81CE5816BB34A153D2268520AF630A0A",
 );
 console.log(res);
 ```
@@ -174,19 +174,22 @@ if (block.type === sym.BlockType.NormalBlock) {
   hasher.update(cat.GeneratorUtils.uintToBuffer(block.networkType, 1));
   hasher.update(cat.GeneratorUtils.uintToBuffer(block.type, 2));
   hasher.update(
-    cat.GeneratorUtils.uint64ToBuffer([block.height.lower, block.height.higher])
+    cat.GeneratorUtils.uint64ToBuffer([
+      block.height.lower,
+      block.height.higher,
+    ]),
   );
   hasher.update(
     cat.GeneratorUtils.uint64ToBuffer([
       block.timestamp.lower,
       block.timestamp.higher,
-    ])
+    ]),
   );
   hasher.update(
     cat.GeneratorUtils.uint64ToBuffer([
       block.difficulty.lower,
       block.difficulty.higher,
-    ])
+    ]),
   );
   hasher.update(Buffer.from(block.proofGamma, "hex"));
   hasher.update(Buffer.from(block.proofVerificationHash, "hex"));
@@ -196,7 +199,7 @@ if (block.type === sym.BlockType.NormalBlock) {
   hasher.update(Buffer.from(block.blockReceiptsHash, "hex"));
   hasher.update(Buffer.from(block.stateHash, "hex"));
   hasher.update(
-    sym.RawAddress.stringToAddress(block.beneficiaryAddress.address)
+    sym.RawAddress.stringToAddress(block.beneficiaryAddress.address),
   );
   hasher.update(cat.GeneratorUtils.uintToBuffer(block.feeMultiplier, 4));
   hash = hasher.hex().toUpperCase();
@@ -228,19 +231,22 @@ if (block.type === sym.BlockType.ImportanceBlock) {
   hasher.update(cat.GeneratorUtils.uintToBuffer(block.networkType, 1));
   hasher.update(cat.GeneratorUtils.uintToBuffer(block.type, 2));
   hasher.update(
-    cat.GeneratorUtils.uint64ToBuffer([block.height.lower, block.height.higher])
+    cat.GeneratorUtils.uint64ToBuffer([
+      block.height.lower,
+      block.height.higher,
+    ]),
   );
   hasher.update(
     cat.GeneratorUtils.uint64ToBuffer([
       block.timestamp.lower,
       block.timestamp.higher,
-    ])
+    ]),
   );
   hasher.update(
     cat.GeneratorUtils.uint64ToBuffer([
       block.difficulty.lower,
       block.difficulty.higher,
-    ])
+    ]),
   );
   hasher.update(Buffer.from(block.proofGamma, "hex"));
   hasher.update(Buffer.from(block.proofVerificationHash, "hex"));
@@ -250,23 +256,23 @@ if (block.type === sym.BlockType.ImportanceBlock) {
   hasher.update(Buffer.from(block.blockReceiptsHash, "hex"));
   hasher.update(Buffer.from(block.stateHash, "hex"));
   hasher.update(
-    sym.RawAddress.stringToAddress(block.beneficiaryAddress.address)
+    sym.RawAddress.stringToAddress(block.beneficiaryAddress.address),
   );
   hasher.update(cat.GeneratorUtils.uintToBuffer(block.feeMultiplier, 4));
   hasher.update(
-    cat.GeneratorUtils.uintToBuffer(block.votingEligibleAccountsCount, 4)
+    cat.GeneratorUtils.uintToBuffer(block.votingEligibleAccountsCount, 4),
   );
   hasher.update(
     cat.GeneratorUtils.uint64ToBuffer([
       block.harvestingEligibleAccountsCount.lower,
       block.harvestingEligibleAccountsCount.higher,
-    ])
+    ]),
   );
   hasher.update(
     cat.GeneratorUtils.uint64ToBuffer([
       block.totalVotingBalance.lower,
       block.totalVotingBalance.higher,
-    ])
+    ]),
   );
   hasher.update(Buffer.from(block.previousImportanceBlockHash, "hex"));
 
@@ -341,7 +347,7 @@ function getLeafHash(encodedPath, leafValue) {
 //Function for obtaining the hash value of a branch
 function getBranchHash(encodedPath, links) {
   const branchLinks = Array(16).fill(
-    sym.Convert.uint8ToHex(new Uint8Array(32))
+    sym.Convert.uint8ToHex(new Uint8Array(32)),
   );
   links.forEach((link) => {
     branchLinks[parseInt(`0x${link.bit}`, 16)] = link.link;
@@ -394,7 +400,7 @@ Trace the branches on the Merkle tree by address and confirm whether the route c
 stateProofService = new sym.StateProofService(repo);
 
 aliceAddress = sym.Address.createFromRawAddress(
-  "TBIL6D6RURP45YQRWV6Q7YVWIIPLQGLZQFHWFEQ"
+  "TBIL6D6RURP45YQRWV6Q7YVWIIPLQGLZQFHWFEQ",
 );
 
 hasher = sha3_256.create();
@@ -425,16 +431,16 @@ Metadata values are registered in the mosaic as a leaf. Trace the branches on th
 ```js
 srcAddress = Buffer.from(
   sym.Address.createFromRawAddress(
-    "TBIL6D6RURP45YQRWV6Q7YVWIIPLQGLZQFHWFEQ"
+    "TBIL6D6RURP45YQRWV6Q7YVWIIPLQGLZQFHWFEQ",
   ).encoded(),
-  "hex"
+  "hex",
 );
 
 targetAddress = Buffer.from(
   sym.Address.createFromRawAddress(
-    "TBIL6D6RURP45YQRWV6Q7YVWIIPLQGLZQFHWFEQ"
+    "TBIL6D6RURP45YQRWV6Q7YVWIIPLQGLZQFHWFEQ",
   ).encoded(),
-  "hex"
+  "hex",
 );
 
 hasher = sha3_256.create();
@@ -483,16 +489,16 @@ Metadata values are registered in the account as a leaf. Trace the branches on t
 ```js
 srcAddress = Buffer.from(
   sym.Address.createFromRawAddress(
-    "TBIL6D6RURP45YQRWV6Q7YVWIIPLQGLZQFHWFEQ"
+    "TBIL6D6RURP45YQRWV6Q7YVWIIPLQGLZQFHWFEQ",
   ).encoded(),
-  "hex"
+  "hex",
 );
 
 targetAddress = Buffer.from(
   sym.Address.createFromRawAddress(
-    "TBIL6D6RURP45YQRWV6Q7YVWIIPLQGLZQFHWFEQ"
+    "TBIL6D6RURP45YQRWV6Q7YVWIIPLQGLZQFHWFEQ",
   ).encoded(),
-  "hex"
+  "hex",
 );
 
 //compositePathHash(Key value)
@@ -542,4 +548,3 @@ A simple explanation of the “Trusted Web” is the realisation of a Web where 
 What the verification methods in this chapter shows is that all information held by the blockchain can be verified by the hash value of the block header. Blockchains are based on the sharing of block headers that everyone agrees upon and the existence of full nodes that can reproduce them. However, it is challenging to maintain an environment to verify these in every situation where you want to utilise the blockchain.
 
 If the latest block headers are constantly broadcast from multiple trusted institutions, this can greatly reduce the need for verification. Such an infrastructure would allow access to trusted information even in places beyond the capabilities of the blockchain, such as urban areas where tens of millions of people are densely populated, or in remote areas where base stations cannot be adequately deployed, or during wide-area network outages during disasters.
-

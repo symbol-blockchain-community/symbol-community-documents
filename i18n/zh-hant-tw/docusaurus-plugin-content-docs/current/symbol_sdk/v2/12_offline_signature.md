@@ -17,7 +17,7 @@ innerTx1 = sym.TransferTransaction.create(
   bob.address,
   [],
   sym.PlainMessage.create("tx1"),
-  networkType
+  networkType,
 );
 
 innerTx2 = sym.TransferTransaction.create(
@@ -25,7 +25,7 @@ innerTx2 = sym.TransferTransaction.create(
   alice.address,
   [],
   sym.PlainMessage.create("tx2"),
-  networkType
+  networkType,
 );
 
 aggregateTx = sym.AggregateTransaction.createComplete(
@@ -35,7 +35,7 @@ aggregateTx = sym.AggregateTransaction.createComplete(
     innerTx2.toAggregate(bob.publicAccount),
   ],
   networkType,
-  []
+  [],
 ).setMaxFeeForAggregate(100, 1);
 
 signedTx = alice.sign(aggregateTx, generationHash);
@@ -90,9 +90,9 @@ Buffer = require("/node_modules/buffer").Buffer;
 res = tx.signer.verifySignature(
   tx.getSigningBytes(
     [...Buffer.from(signedPayload, "hex")],
-    [...Buffer.from(generationHash, "hex")]
+    [...Buffer.from(generationHash, "hex")],
   ),
-  tx.signature
+  tx.signature,
 );
 console.log(res);
 ```
@@ -109,13 +109,13 @@ console.log(res);
 bobSignedTx = sym.CosignatureTransaction.signTransactionPayload(
   bob,
   signedPayload,
-  generationHash
+  generationHash,
 );
 bobSignedTxSignature = bobSignedTx.signature;
 bobSignedTxSignerPublicKey = bobSignedTx.signerPublicKey;
 ```
 
-Bob使用signatureCosignatureTransaction進行簽署，輸出bobSignedTxSignature、bobSignedTxSignerPublicKey，然後將這些返回給Alice。 
+Bob使用signatureCosignatureTransaction進行簽署，輸出bobSignedTxSignature、bobSignedTxSignerPublicKey，然後將這些返回給Alice。
 如果 Bob 可以創建所有簽名，那麼 Bob 也可以發佈公告而無需將其返回給 Alice。
 
 ## 12.3 Alice 的公告
@@ -125,13 +125,13 @@ Alice 從 Bob 那裡收到 bobSignedTxSignature 和 bobSignedTxSignerPublicKey�
 ```js
 signedHash = sym.Transaction.createTransactionHash(
   signedPayload,
-  Buffer.from(generationHash, "hex")
+  Buffer.from(generationHash, "hex"),
 );
 cosignSignedTxs = [
   new sym.CosignatureSignedTransaction(
     signedHash,
     bobSignedTxSignature,
-    bobSignedTxSignerPublicKey
+    bobSignedTxSignerPublicKey,
   ),
 ];
 
@@ -159,7 +159,7 @@ signedTx = new sym.SignedTransaction(
   signedHash,
   alice.publicKey,
   recreatedTx.type,
-  recreatedTx.networkType
+  recreatedTx.networkType,
 );
 
 await txRepo.announce(signedTx).toPromise();
@@ -172,7 +172,7 @@ await txRepo.announce(signedTx).toPromise();
 resignedTx = recreatedTx.signTransactionGivenSignatures(
   alice,
   cosignSignedTxs,
-  generationHash
+  generationHash,
 );
 await txRepo.announce(resignedTx).toPromise();
 ```

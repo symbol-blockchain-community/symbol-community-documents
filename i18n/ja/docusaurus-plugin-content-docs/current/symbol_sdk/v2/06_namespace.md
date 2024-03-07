@@ -56,7 +56,7 @@ tx = sym.NamespaceRegistrationTransaction.createRootNamespace(
   sym.Deadline.create(epochAdjustment),
   "xembook",
   sym.UInt64.fromUint(86400),
-  networkType
+  networkType,
 ).setMaxFee(100);
 signedTx = alice.sign(tx, generationHash);
 await txRepo.announce(signedTx).toPromise();
@@ -69,7 +69,7 @@ subNamespaceTx = sym.NamespaceRegistrationTransaction.createSubNamespace(
   sym.Deadline.create(epochAdjustment),
   "tomato", //作成するサブネームスペース
   "xembook", //紐づけたいルートネームスペース
-  networkType
+  networkType,
 ).setMaxFee(100);
 signedTx = alice.sign(subNamespaceTx, generationHash);
 await txRepo.announce(signedTx).toPromise();
@@ -103,7 +103,7 @@ lastBlock = await blockRepo.getBlockByHeight(lastHeight).toPromise();
 remainHeight = nsInfo.endHeight.compact() - lastHeight.compact();
 
 endDate = new Date(
-  lastBlock.timestamp.compact() + remainHeight * 30000 + epochAdjustment * 1000
+  lastBlock.timestamp.compact() + remainHeight * 30000 + epochAdjustment * 1000,
 );
 console.log(endDate);
 ```
@@ -124,14 +124,14 @@ console.log(endDate);
 ```js
 namespaceId = new sym.NamespaceId("xembook");
 address = sym.Address.createFromRawAddress(
-  "TBIL6D6RURP45YQRWV6Q7YVWIIPLQGLZQFHWFEQ"
+  "TBIL6D6RURP45YQRWV6Q7YVWIIPLQGLZQFHWFEQ",
 );
 tx = sym.AliasTransaction.createForAddress(
   sym.Deadline.create(epochAdjustment),
   sym.AliasAction.Link,
   namespaceId,
   address,
-  networkType
+  networkType,
 ).setMaxFee(100);
 signedTx = alice.sign(tx, generationHash);
 await txRepo.announce(signedTx).toPromise();
@@ -149,7 +149,7 @@ tx = sym.AliasTransaction.createForMosaic(
   sym.AliasAction.Link,
   namespaceId,
   mosaicId,
-  networkType
+  networkType,
 ).setMaxFee(100);
 signedTx = alice.sign(tx, generationHash);
 await txRepo.announce(signedTx).toPromise();
@@ -169,7 +169,7 @@ tx = sym.TransferTransaction.create(
   namespaceId, //UnresolvedAccount:未解決アカウントアドレス
   [],
   sym.EmptyMessage,
-  networkType
+  networkType,
 ).setMaxFee(100);
 signedTx = alice.sign(tx, generationHash);
 await txRepo.announce(signedTx).toPromise();
@@ -185,11 +185,11 @@ tx = sym.TransferTransaction.create(
   [
     new sym.Mosaic(
       namespaceId, //UnresolvedMosaic:未解決モザイク
-      sym.UInt64.fromUint(1) //送信量
+      sym.UInt64.fromUint(1), //送信量
     ),
   ],
   sym.EmptyMessage,
-  networkType
+  networkType,
 ).setMaxFee(100);
 signedTx = alice.sign(tx, generationHash);
 await txRepo.announce(signedTx).toPromise();

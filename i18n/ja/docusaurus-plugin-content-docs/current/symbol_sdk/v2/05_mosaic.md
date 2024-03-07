@@ -25,7 +25,7 @@ mosaicDefTx = sym.MosaicDefinitionTransaction.create(
   sym.MosaicFlags.create(supplyMutable, transferable, restrictable, revokable),
   2, //divisibility:可分性
   sym.UInt64.fromUint(0), //duration:有効期限
-  networkType
+  networkType,
 );
 ```
 
@@ -63,7 +63,7 @@ mosaicChangeTx = sym.MosaicSupplyChangeTransaction.create(
   mosaicDefTx.mosaicId,
   sym.MosaicSupplyChangeAction.Increase,
   sym.UInt64.fromUint(1000000), //数量
-  networkType
+  networkType,
 );
 ```
 
@@ -88,7 +88,7 @@ aggregateTx = sym.AggregateTransaction.createComplete(
     mosaicChangeTx.toAggregate(alice.publicAccount),
   ],
   networkType,
-  []
+  [],
 ).setMaxFeeForAggregate(100, 0);
 
 signedTx = alice.sign(aggregateTx, generationHash);
@@ -149,15 +149,15 @@ tx = sym.TransferTransaction.create(
   [
     new sym.Mosaic(
       new sym.MosaicId("72C0212E67A08BCE"), //テストネットXYM
-      sym.UInt64.fromUint(1000000) //1XYM(divisibility:6)
+      sym.UInt64.fromUint(1000000), //1XYM(divisibility:6)
     ),
     new sym.Mosaic(
       mosaicDefTx.mosaicId, // 5.1 で作成したモザイク
-      sym.UInt64.fromUint(1) // 数量:0.01(divisibility:2 の場合)
+      sym.UInt64.fromUint(1), // 数量:0.01(divisibility:2 の場合)
     ),
   ],
   sym.EmptyMessage,
-  networkType
+  networkType,
 ).setMaxFee(100);
 signedTx = alice.sign(tx, generationHash);
 await txRepo.announce(signedTx).toPromise();
@@ -247,7 +247,7 @@ mosaicDefTx = sym.MosaicDefinitionTransaction.create(
   sym.MosaicFlags.create(supplyMutable, transferable, restrictable, revokable),
   0, //divisibility:可分性
   sym.UInt64.fromUint(0), //duration:無期限
-  networkType
+  networkType,
 );
 
 //モザイク数量固定
@@ -256,7 +256,7 @@ mosaicChangeTx = sym.MosaicSupplyChangeTransaction.create(
   mosaicId,
   sym.MosaicSupplyChangeAction.Increase, //増やす
   sym.UInt64.fromUint(1), //数量1
-  networkType
+  networkType,
 );
 
 //NFTデータ
@@ -265,7 +265,7 @@ nftTx = sym.TransferTransaction.create(
   alice.address,
   [],
   sym.PlainMessage.create("Hello Symbol!"), //NFTデータ実体
-  networkType
+  networkType,
 );
 
 //モザイクの生成とNFTデータをアグリゲートしてブロックに登録
@@ -277,7 +277,7 @@ aggregateTx = sym.AggregateTransaction.createComplete(
     nftTx.toAggregate(alice.publicAccount),
   ],
   networkType,
-  []
+  [],
 ).setMaxFeeForAggregate(100, 0);
 ```
 
@@ -307,6 +307,6 @@ revocationTx = sym.MosaicSupplyRevocationTransaction.create(
   sym.Deadline.create(epochAdjustment),
   bob.address, //回収先アドレス
   new sym.Mosaic(mosaicId, sym.UInt64.fromUint(3)), //回収モザイクIDと数量
-  networkType
+  networkType,
 ).setMaxFee(100);
 ```

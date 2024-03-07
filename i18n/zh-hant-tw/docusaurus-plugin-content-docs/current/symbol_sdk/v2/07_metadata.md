@@ -4,11 +4,13 @@
 本章我們假設 mosaic、namespace 和 account 都是 Alice 創建的。
 
 在運行本章示例腳本之前，請加載以下資料庫：
+
 ```js
 metaRepo = repo.createMetadataRepository();
 mosaicRepo = repo.createMosaicRepository();
 metaService = new sym.MetadataTransactionService(metaRepo);
 ```
+
 ## 7.1 註冊賬號
 
 為帳戶註冊一個Key-Value。
@@ -17,21 +19,25 @@ metaService = new sym.MetadataTransactionService(metaRepo);
 key = sym.KeyGenerator.generateUInt64Key("key_account");
 value = "test";
 
-tx = await metaService.createAccountMetadataTransaction(
+tx = await metaService
+  .createAccountMetadataTransaction(
     undefined,
     networkType,
     alice.address, //Metadata registration destination address
-    key,value, //Key-Value
-    alice.address //Metadata creator address
-).toPromise();
+    key,
+    value, //Key-Value
+    alice.address, //Metadata creator address
+  )
+  .toPromise();
 
 aggregateTx = sym.AggregateTransaction.createComplete(
   sym.Deadline.create(epochAdjustment),
   [tx.toAggregate(alice.publicAccount)],
-  networkType,[]
+  networkType,
+  [],
 ).setMaxFeeForAggregate(100, 0);
 
-signedTx = alice.sign(aggregateTx,generationHash);
+signedTx = alice.sign(aggregateTx, generationHash);
 await txRepo.announce(signedTx).toPromise();
 ```
 
@@ -41,22 +47,28 @@ await txRepo.announce(signedTx).toPromise();
 當將元數據註冊到不同的帳戶時，請使用“用共簽人簽署交易”進行簽署。
 
 ```js
-tx = await metaService.createAccountMetadataTransaction(
+tx = await metaService
+  .createAccountMetadataTransaction(
     undefined,
     networkType,
     bob.address, //Metadata registration destination address
-    key,value, //Key-Value
-    alice.address //Metadata creator address
-).toPromise();
+    key,
+    value, //Key-Value
+    alice.address, //Metadata creator address
+  )
+  .toPromise();
 
 aggregateTx = sym.AggregateTransaction.createComplete(
   sym.Deadline.create(epochAdjustment),
   [tx.toAggregate(alice.publicAccount)],
-  networkType,[]
+  networkType,
+  [],
 ).setMaxFeeForAggregate(100, 1); // Number of co-signer to second argument: 1
 
 signedTx = aggregateTx.signTransactionWithCosignatories(
-  alice,[bob],generationHash,// Co-signer to second argument
+  alice,
+  [bob],
+  generationHash, // Co-signer to second argument
 );
 await txRepo.announce(signedTx).toPromise();
 ```
@@ -72,25 +84,29 @@ await txRepo.announce(signedTx).toPromise();
 mosaicId = new sym.MosaicId("1275B0B7511D9161");
 mosaicInfo = await mosaicRepo.getMosaic(mosaicId).toPromise();
 
-key = sym.KeyGenerator.generateUInt64Key('key_mosaic');
-value = 'test';
+key = sym.KeyGenerator.generateUInt64Key("key_mosaic");
+value = "test";
 
-tx = await metaService.createMosaicMetadataTransaction(
-  undefined,
-  networkType,
-  mosaicInfo.ownerAddress, //Mosaic creator address
-  mosaicId,
-  key,value, //Key-Value
-  alice.address
-).toPromise();
+tx = await metaService
+  .createMosaicMetadataTransaction(
+    undefined,
+    networkType,
+    mosaicInfo.ownerAddress, //Mosaic creator address
+    mosaicId,
+    key,
+    value, //Key-Value
+    alice.address,
+  )
+  .toPromise();
 
 aggregateTx = sym.AggregateTransaction.createComplete(
-    sym.Deadline.create(epochAdjustment),
-    [tx.toAggregate(alice.publicAccount)],
-    networkType,[]
+  sym.Deadline.create(epochAdjustment),
+  [tx.toAggregate(alice.publicAccount)],
+  networkType,
+  [],
 ).setMaxFeeForAggregate(100, 0);
 
-signedTx = alice.sign(aggregateTx,generationHash);
+signedTx = alice.sign(aggregateTx, generationHash);
 await txRepo.announce(signedTx).toPromise();
 ```
 
@@ -104,38 +120,48 @@ nsRepo = repo.createNamespaceRepository();
 namespaceId = new sym.NamespaceId("xembook");
 namespaceInfo = await nsRepo.getNamespace(namespaceId).toPromise();
 
-key = sym.KeyGenerator.generateUInt64Key('key_namespace');
-value = 'test';
+key = sym.KeyGenerator.generateUInt64Key("key_namespace");
+value = "test";
 
-tx = await metaService.createNamespaceMetadataTransaction(
-    undefined,networkType,
+tx = await metaService
+  .createNamespaceMetadataTransaction(
+    undefined,
+    networkType,
     namespaceInfo.ownerAddress, //Namespace creator address
     namespaceId,
-    key,value, //Key-Value
-    alice.address //Metadata registrant
-).toPromise();
+    key,
+    value, //Key-Value
+    alice.address, //Metadata registrant
+  )
+  .toPromise();
 
 aggregateTx = sym.AggregateTransaction.createComplete(
-    sym.Deadline.create(epochAdjustment),
-    [tx.toAggregate(alice.publicAccount)],
-    networkType,[]
+  sym.Deadline.create(epochAdjustment),
+  [tx.toAggregate(alice.publicAccount)],
+  networkType,
+  [],
 ).setMaxFeeForAggregate(100, 0);
 
-signedTx = alice.sign(aggregateTx,generationHash);
+signedTx = alice.sign(aggregateTx, generationHash);
 await txRepo.announce(signedTx).toPromise();
 ```
 
 ## 7.4 確認
+
 檢查註冊的元數據。
 
 ```js
-res = await metaRepo.search({
-  targetAddress:alice.address,
-  sourceAddress:alice.address}
-).toPromise();
+res = await metaRepo
+  .search({
+    targetAddress: alice.address,
+    sourceAddress: alice.address,
+  })
+  .toPromise();
 console.log(res);
 ```
+
 ###### 市例演示
+
 ```js
 data: Array(3)
   0: Metadata
@@ -171,16 +197,18 @@ data: Array(3)
       id: Id {lower: 646738821, higher: 2754876907}
       value: "test"
 ```
+
 元數據類型如下。
+
 ```js
 sym.MetadataType
 {0: 'Account', 1: 'Mosaic', 2: 'Namespace'}
 ```
 
 ### 注意事項
+
 雖然元數據具有通過 Key-Value 提供對信息的快速訪問的優勢，但應該注意它需要更新。
 更新需要發行人賬戶和註冊賬戶的簽名，所以只有在兩個賬戶都可以信任的情況下才應該使用它。
-
 
 ## 7.5 使用提示
 

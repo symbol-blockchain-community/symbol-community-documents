@@ -11,34 +11,37 @@ pertanto si consiglia controllarne l'ammontare prima dell'esecuzione.
 
 Nel seguente esempio, le commissioni sono calcolate per un periodo di affitto di 365 giorni e Sinonimo di primo livello.
 
-
 ```js
 nwRepo = repo.createNetworkRepository();
 
 rentalFees = await nwRepo.getRentalFees().toPromise();
 rootNsperBlock = rentalFees.effectiveRootNamespaceRentalFeePerBlock.compact();
 rentalDays = 365;
-rentalBlock = rentalDays * 24 * 60 * 60 / 30;
+rentalBlock = (rentalDays * 24 * 60 * 60) / 30;
 rootNsRenatalFeeTotal = rentalBlock * rootNsperBlock;
 console.log("rentalBlock:" + rentalBlock);
 console.log("rootNsRenatalFeeTotal:" + rootNsRenatalFeeTotal);
 ```
+
 ###### Output esemplificativo
+
 ```js
 > rentalBlock:1051200
 > rootNsRenatalFeeTotal:210240000 //Approximately 210XYM
 ```
 
 L'intervallo di tempo è misurato in numero di blocchi; un blocco conta per 30 secondi.
-Il periodo minimo di affitto è limitato inferiormente a 30 giorni, il periodo massimo di affitto è di 1825 giorni. 
+Il periodo minimo di affitto è limitato inferiormente a 30 giorni, il periodo massimo di affitto è di 1825 giorni.
 
 A seguire viene calcolata la commissione per affittare un Sinonimo di secondo livello.
 
 ```js
-childNamespaceRentalFee = rentalFees.effectiveChildNamespaceRentalFee.compact()
+childNamespaceRentalFee = rentalFees.effectiveChildNamespaceRentalFee.compact();
 console.log(childNamespaceRentalFee);
 ```
+
 ###### Output esemplificativo
+
 ```js
 > 10000000 //10XYM
 ```
@@ -49,27 +52,28 @@ esistenza dipende dalla durata del relativo Sinonimo di primo livello.
 ## 6.2 Affitto
 
 Affitto di un Sinonimo di primo livello il cui nome è per esempio:`xembook`
-```js
 
+```js
 tx = sym.NamespaceRegistrationTransaction.createRootNamespace(
-    sym.Deadline.create(epochAdjustment),
-    "xembook",
-    sym.UInt64.fromUint(86400),
-    networkType
+  sym.Deadline.create(epochAdjustment),
+  "xembook",
+  sym.UInt64.fromUint(86400),
+  networkType,
 ).setMaxFee(100);
-signedTx = alice.sign(tx,generationHash);
+signedTx = alice.sign(tx, generationHash);
 await txRepo.announce(signedTx).toPromise();
 ```
 
 Affitto di un Sinonimo di secondo livello (per esempio:`xembook.tomato`)
+
 ```js
 subNamespaceTx = sym.NamespaceRegistrationTransaction.createSubNamespace(
-    sym.Deadline.create(epochAdjustment),
-    "tomato",  //Subnamespace to be created
-    "xembook", //Route namespace to be linked to
-    networkType,
+  sym.Deadline.create(epochAdjustment),
+  "tomato", //Subnamespace to be created
+  "xembook", //Route namespace to be linked to
+  networkType,
 ).setMaxFee(100);
-signedTx = alice.sign(subNamespaceTx,generationHash);
+signedTx = alice.sign(subNamespaceTx, generationHash);
 await txRepo.announce(signedTx).toPromise();
 ```
 
@@ -99,88 +103,98 @@ lastHeight = (await chainRepo.getChainInfo().toPromise()).height;
 lastBlock = await blockRepo.getBlockByHeight(lastHeight).toPromise();
 remainHeight = nsInfo.endHeight.compact() - lastHeight.compact();
 
-endDate = new Date(lastBlock.timestamp.compact() + remainHeight * 30000 + epochAdjustment * 1000)
+endDate = new Date(
+  lastBlock.timestamp.compact() + remainHeight * 30000 + epochAdjustment * 1000,
+);
 console.log(endDate);
 ```
 
-ecuperando la data di scadenza del Sinonimo si calcola la differenza tra il numero di blocchi a scadenza e 
+ecuperando la data di scadenza del Sinonimo si calcola la differenza tra il numero di blocchi a scadenza e
 il blocco corrente (block height della blockchain), moltiplicandolo per 30 secondi (tempo medio di un blocco).
 Si prega di notare che per la rete di test (testnet), la scadenza è differita di un giorno.
 
 ###### Output esemplificativo
+
 ```js
 > Tue Mar 29 2022 18:17:06 GMT+0900 (JST)
 ```
+
 ## 6.3 Link
 
 ### Collegare un Indirizzo
+
 ```js
 namespaceId = new sym.NamespaceId("xembook");
-address = sym.Address.createFromRawAddress("TBIL6D6RURP45YQRWV6Q7YVWIIPLQGLZQFHWFEQ");
+address = sym.Address.createFromRawAddress(
+  "TBIL6D6RURP45YQRWV6Q7YVWIIPLQGLZQFHWFEQ",
+);
 tx = sym.AliasTransaction.createForAddress(
-    sym.Deadline.create(epochAdjustment),
-    sym.AliasAction.Link,
-    namespaceId,
-    address,
-    networkType
+  sym.Deadline.create(epochAdjustment),
+  sym.AliasAction.Link,
+  namespaceId,
+  address,
+  networkType,
 ).setMaxFee(100);
-signedTx = alice.sign(tx,generationHash);
+signedTx = alice.sign(tx, generationHash);
 await txRepo.announce(signedTx).toPromise();
 ```
+
 Per collegare un Indirizzo, non è necessario esserne i proprietari.
 
 ### Collegare un Mosaic
+
 ```js
 namespaceId = new sym.NamespaceId("xembook.tomato");
 mosaicId = new sym.MosaicId("3A8416DB2D53xxxx");
 tx = sym.AliasTransaction.createForMosaic(
-    sym.Deadline.create(epochAdjustment),
-    sym.AliasAction.Link,
-    namespaceId,
-    mosaicId,
-    networkType
+  sym.Deadline.create(epochAdjustment),
+  sym.AliasAction.Link,
+  namespaceId,
+  mosaicId,
+  networkType,
 ).setMaxFee(100);
-signedTx = alice.sign(tx,generationHash);
+signedTx = alice.sign(tx, generationHash);
 await txRepo.announce(signedTx).toPromise();
 ```
 
 Un Mosaic è collegabile con il Sinonimo esclusivamente all'Indirizzo di creazione del Mosaic.
-
 
 ## 6.4 Richiesta di Link formale
 
 Impostare l'Indirizzo di destinazione in modalità `UnresolvedAccount` firmando
 una transazione da propagare senza specificare l'Indirizzo.
 La transazione verrà eseguita per l'Indirizzo determinato lato blockchain.
+
 ```js
 namespaceId = new sym.NamespaceId("xembook");
 tx = sym.TransferTransaction.create(
-    sym.Deadline.create(epochAdjustment),
-    namespaceId, //Unresolved Account: Indirizzo non specificato
-    [],
-    sym.EmptyMessage,
-    networkType
+  sym.Deadline.create(epochAdjustment),
+  namespaceId, //Unresolved Account: Indirizzo non specificato
+  [],
+  sym.EmptyMessage,
+  networkType,
 ).setMaxFee(100);
-signedTx = alice.sign(tx,generationHash);
+signedTx = alice.sign(tx, generationHash);
 await txRepo.announce(signedTx).toPromise();
 ```
+
 Impostare il Mosaic come `UnresolvedMosaic` in una transazione firmata da propagare.
 
 ```js
 namespaceId = new sym.NamespaceId("xembook.tomato");
 tx = sym.TransferTransaction.create(
-    sym.Deadline.create(epochAdjustment),
-    address, 
-    [
-        new sym.Mosaic(
-          namespaceId,//Unresolved Mosaic:Mosaic non specificato
-          sym.UInt64.fromUint(1) //Quantità
-        )
-    ],
-    sym.EmptyMessage,
-    networkType
+  sym.Deadline.create(epochAdjustment),
+  address,
+  [
+    new sym.Mosaic(
+      namespaceId, //Unresolved Mosaic:Mosaic non specificato
+      sym.UInt64.fromUint(1), //Quantità
+    ),
+  ],
+  sym.EmptyMessage,
+  networkType,
 ).setMaxFee(100);
-signedTx = alice.sign(tx,generationHash);
+signedTx = alice.sign(tx, generationHash);
 await txRepo.announce(signedTx).toPromise();
 ```
 
@@ -189,6 +203,7 @@ Se si vogliono utilizzare monete XYM, nel campo `namespace`, specificare quanto 
 ```js
 namespaceId = new sym.NamespaceId("symbol.xym");
 ```
+
 ```js
 > NamespaceId {fullName: 'symbol.xym', id: Id}
     fullName: "symbol.xym"
@@ -200,13 +215,18 @@ il valore del campo `Id` è mappato internamente come numero `{lower: 1106554862
 ## 6.5 Riferimenti al Sinonimo
 
 Per ottenere il riferimento al Sinonimo associato all'Indirizzo.
+
 ```js
 nsRepo = repo.createNamespaceRepository();
 
-namespaceInfo = await nsRepo.getNamespace(new sym.NamespaceId("xembook")).toPromise();
+namespaceInfo = await nsRepo
+  .getNamespace(new sym.NamespaceId("xembook"))
+  .toPromise();
 console.log(namespaceInfo);
 ```
+
 ###### Output esemplificativo
+
 ```js
 NamespaceInfo
     active: true
@@ -225,23 +245,30 @@ NamespaceInfo
 ```
 
 `AliasType` è definito come segue:
+
 ```js
 {0: 'None', 1: 'Mosaic', 2: 'Address'}
 ```
 
 `NamespaceRegistrationType` è definito come segue:
+
 ```js
 {0: 'RootNamespace', 1: 'SubNamespace'}
 ```
 
 Per ottenere il riferimento al Sinonimo collegato al Mosaic:
+
 ```js
 nsRepo = repo.createNamespaceRepository();
 
-namespaceInfo = await nsRepo.getNamespace(new sym.NamespaceId("xembook.tomato")).toPromise();
+namespaceInfo = await nsRepo
+  .getNamespace(new sym.NamespaceId("xembook.tomato"))
+  .toPromise();
 console.log(namespaceInfo);
 ```
+
 ###### Output esemplificativo
+
 ```js
 NamespaceInfo
   > active: true
@@ -260,46 +287,54 @@ NamespaceInfo
     startHeight: UInt64 {lower: 324865, higher: 0}
 ```
 
-### Ricerca inversa 
+### Ricerca inversa
 
 Recuperare tutti i Sinonimi collegati ad un Indirizzo:
+
 ```js
 nsRepo = repo.createNamespaceRepository();
 
-accountNames = await nsRepo.getAccountsNames(
-  [sym.Address.createFromRawAddress("TBIL6D6RURP45YQRWV6Q7YVWIIPLQGLZQFHWFEQ")]
-).toPromise();
+accountNames = await nsRepo
+  .getAccountsNames([
+    sym.Address.createFromRawAddress("TBIL6D6RURP45YQRWV6Q7YVWIIPLQGLZQFHWFEQ"),
+  ])
+  .toPromise();
 
-namespaceIds = accountNames[0].names.map(name=>{
+namespaceIds = accountNames[0].names.map((name) => {
   return name.namespaceId;
 });
 console.log(namespaceIds);
 ```
 
 Recuperare tutti i Sinonimi collegati ad un Mosaic:
+
 ```js
 nsRepo = repo.createNamespaceRepository();
 
-mosaicNames = await nsRepo.getMosaicsNames(
-  [new sym.MosaicId("72C0212E67A08BCE")]
-).toPromise();
+mosaicNames = await nsRepo
+  .getMosaicsNames([new sym.MosaicId("72C0212E67A08BCE")])
+  .toPromise();
 
-namespaceIds = mosaicNames[0].names.map(name=>{
+namespaceIds = mosaicNames[0].names.map((name) => {
   return name.namespaceId;
 });
 console.log(namespaceIds);
 ```
 
-
-### Ricevuta di associazione dalla blockchain 
+### Ricevuta di associazione dalla blockchain
 
 Per verificare il tipo di associazione calcolato dalla blockchain, cioè se il Sinonimo
 è stato associato ad un Indirizzo oppure ad un Mosaic
+
 ```js
 receiptRepo = repo.createReceiptRepository();
-state = await receiptRepo.searchAddressResolutionStatements({height:179401}).toPromise();
+state = await receiptRepo
+  .searchAddressResolutionStatements({ height: 179401 })
+  .toPromise();
 ```
+
 ###### Output Esemplificativo
+
 ```js
 data: Array(1)
   0: ResolutionStatement
@@ -314,11 +349,13 @@ data: Array(1)
 ```
 
 `ResolutionType` è definito come segue:
+
 ```js
 {0: 'Address', 1: 'Mosaic'}
 ```
 
 #### Note
+
 Il Sinonimo, essendo concesso in affitto, potrebbe essere già stato associato (linked) da transazioni eseguite
 precedentemente, quindi bisogna sempre verificare la ricevuta della blockchain per accertarsi
 dell'Indirizzo o Mosaico collegato in un dato momento. Per es. nella consultazione di dati storici.
@@ -337,7 +374,8 @@ per tutta la durata dell'affitto del Sinonimo.
 Fare attenzione all'affidabilità e sicurezza dei domini esterni, ed assicurarsi di rinnovare il Sinonimo in base
 alle proprie necessità.
 
-#### Note sugli Indirizzi che utilizzano i Sinonimi 
+#### Note sugli Indirizzi che utilizzano i Sinonimi
+
 I Sinonimi sono in affitto a scadenza. L'implementazione per ora comprende solo due casi,
 la scadenza per mancato rinnovo e il rinnovo.
 Qualora si desiderasse utilizzare un Sinonimo in un sistema con trasferimenti di proprietà, si

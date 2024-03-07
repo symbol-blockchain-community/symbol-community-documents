@@ -1,6 +1,6 @@
 # 10. Monitoraggio
 
-I nodi della rete Symbol ricevono o inviano notifiche di cambi di stato o eventi attraverso la tecnologia di comunicazione WebSocket. 
+I nodi della rete Symbol ricevono o inviano notifiche di cambi di stato o eventi attraverso la tecnologia di comunicazione WebSocket.
 
 ## 10.1 Configurazione del Listener
 
@@ -66,7 +66,7 @@ Dopo aver impostato il listener, propaghiamo una transazione di test all'Indiriz
 
 Come si può verificare dai dati al campo `height`, le transazioni non ancora convalidate sono valorizzate con l'altezza del blocco a 0.
 
-## 10.3 Ricevere notifiche sui blocchi 
+## 10.3 Ricevere notifiche sui blocchi
 
 Per venire informati alla creazione dei nuovi blocchi.
 
@@ -152,7 +152,7 @@ L'evento relativo alla firma di un Indirizzo cointestato è distinto da questo e
 
 Scegliere dalla lista dei nodi uno che possa andar bene e tentare la connessione.
 
-##### Collegamento ad un nodo 
+##### Collegamento ad un nodo
 
 ```js
 //lista dei nodi
@@ -260,7 +260,7 @@ bondedHttp = txRepo
   .search({ address: bob.address, group: sym.TransactionGroup.Partial })
   .pipe(
     op.delay(2000),
-    op.mergeMap((page) => page.data)
+    op.mergeMap((page) => page.data),
   );
 //Imposta i listener per le transazioni confermate relative agli Indirizzi di interessse
 const statusChanged = function (address, hash) {
@@ -274,7 +274,7 @@ const statusChanged = function (address, hash) {
       } else {
         return errorOrTransaction;
       }
-    })
+    }),
   );
 };
 //Esecuzione delle firme dei cofirmatari
@@ -282,17 +282,17 @@ function exeAggregateBondedCosignature(tx) {
   txRepo
     .getTransactionsById(
       [tx.transactionInfo.hash],
-      sym.TransactionGroup.Partial
+      sym.TransactionGroup.Partial,
     )
     .pipe(
       //Solo nel caso di transazione notificata
-      op.filter((aggTx) => aggTx.length > 0)
+      op.filter((aggTx) => aggTx.length > 0),
     )
     .subscribe(async (aggTx) => {
       //Se il mio Indirizzo è in firma
       if (
         aggTx[0].innerTransactions.find((inTx) =>
-          inTx.signer.equals(bob.publicAccount)
+          inTx.signer.equals(bob.publicAccount),
         ) != undefined
       ) {
         //Transazione con la firma di Alice
@@ -313,9 +313,9 @@ bondedSubscribe = function (observer) {
       //Se non è già stata firmata
       op.filter((tx) => {
         return !tx.signedByAccount(
-          sym.PublicAccount.createFromPublicKey(bob.publicKey, networkType)
+          sym.PublicAccount.createFromPublicKey(bob.publicKey, networkType),
         );
-      })
+      }),
     )
     .subscribe((tx) => {
       console.log(tx);

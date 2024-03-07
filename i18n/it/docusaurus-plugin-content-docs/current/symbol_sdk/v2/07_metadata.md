@@ -6,11 +6,13 @@ In questo capitolo assumiamo che il Sinonimo, in entrambi i casi in cui sia asso
 creato da Alice.
 
 Prima di eseguire gli script di esempio, è necessario caricare le seguenti librerie:
+
 ```js
 metaRepo = repo.createMetadataRepository();
 mosaicRepo = repo.createMosaicRepository();
 metaService = new sym.MetadataTransactionService(metaRepo);
 ```
+
 ## 7.1 Memorizzazione nell'Indirizzo
 
 Memorizzazione di una coppia chiave-valore nell'Indirizzo.
@@ -19,21 +21,25 @@ Memorizzazione di una coppia chiave-valore nell'Indirizzo.
 key = sym.KeyGenerator.generateUInt64Key("key_account");
 value = "test";
 
-tx = await metaService.createAccountMetadataTransaction(
+tx = await metaService
+  .createAccountMetadataTransaction(
     undefined,
     networkType,
     alice.address, //Indirizzo su cui si vogliono memorizzare i Metadati
-    key,value, //coppia chiave-valore
-    alice.address //Indirizzo del proprietario dei Metadati
-).toPromise();
+    key,
+    value, //coppia chiave-valore
+    alice.address, //Indirizzo del proprietario dei Metadati
+  )
+  .toPromise();
 
 aggregateTx = sym.AggregateTransaction.createComplete(
   sym.Deadline.create(epochAdjustment),
   [tx.toAggregate(alice.publicAccount)],
-  networkType,[]
+  networkType,
+  [],
 ).setMaxFeeForAggregate(100, 0);
 
-signedTx = alice.sign(aggregateTx,generationHash);
+signedTx = alice.sign(aggregateTx, generationHash);
 await txRepo.announce(signedTx).toPromise();
 ```
 
@@ -44,22 +50,28 @@ il caso in cui l'Indirizzo di destinazione e l'Indirizzo mittente coincidono.
 Se si memorizzano Metadati su più Indirizzi, usare il metodo `signTransactionWithCosignatories` per l'operazione di firma.
 
 ```js
-tx = await metaService.createAccountMetadataTransaction(
+tx = await metaService
+  .createAccountMetadataTransaction(
     undefined,
     networkType,
     bob.address, //Indirizzo di destinazione della memorizzazione dei Metadati
-    key,value, //Coppia chiave-valore
-    alice.address //Indirizzo di chi sta creando i Metadati
-).toPromise();
+    key,
+    value, //Coppia chiave-valore
+    alice.address, //Indirizzo di chi sta creando i Metadati
+  )
+  .toPromise();
 
 aggregateTx = sym.AggregateTransaction.createComplete(
   sym.Deadline.create(epochAdjustment),
   [tx.toAggregate(alice.publicAccount)],
-  networkType,[]
+  networkType,
+  [],
 ).setMaxFeeForAggregate(100, 1); // Il numero di cofirmatari nel secondo argomento: 1
 
 signedTx = aggregateTx.signTransactionWithCosignatories(
-  alice,[bob],generationHash,// Specificare il cofirmatario nel secondo argomento
+  alice,
+  [bob],
+  generationHash, // Specificare il cofirmatario nel secondo argomento
 );
 await txRepo.announce(signedTx).toPromise();
 ```
@@ -76,25 +88,29 @@ E' necessario firmare la Transazione per memorizzare i dati, con l'Indirizzo con
 mosaicId = new sym.MosaicId("1275B0B7511D9161");
 mosaicInfo = await mosaicRepo.getMosaic(mosaicId).toPromise();
 
-key = sym.KeyGenerator.generateUInt64Key('key_mosaic');
-value = 'test';
+key = sym.KeyGenerator.generateUInt64Key("key_mosaic");
+value = "test";
 
-tx = await metaService.createMosaicMetadataTransaction(
-  undefined,
-  networkType,
-  mosaicInfo.ownerAddress, //Indirizzo con cui è stato creato il Mosaic
-  mosaicId,
-  key,value, //coppia chiave valore
-  alice.address
-).toPromise();
+tx = await metaService
+  .createMosaicMetadataTransaction(
+    undefined,
+    networkType,
+    mosaicInfo.ownerAddress, //Indirizzo con cui è stato creato il Mosaic
+    mosaicId,
+    key,
+    value, //coppia chiave valore
+    alice.address,
+  )
+  .toPromise();
 
 aggregateTx = sym.AggregateTransaction.createComplete(
-    sym.Deadline.create(epochAdjustment),
-    [tx.toAggregate(alice.publicAccount)],
-    networkType,[]
+  sym.Deadline.create(epochAdjustment),
+  [tx.toAggregate(alice.publicAccount)],
+  networkType,
+  [],
 ).setMaxFeeForAggregate(100, 0);
 
-signedTx = alice.sign(aggregateTx,generationHash);
+signedTx = alice.sign(aggregateTx, generationHash);
 await txRepo.announce(signedTx).toPromise();
 ```
 
@@ -108,24 +124,29 @@ nsRepo = repo.createNamespaceRepository();
 namespaceId = new sym.NamespaceId("xembook");
 namespaceInfo = await nsRepo.getNamespace(namespaceId).toPromise();
 
-key = sym.KeyGenerator.generateUInt64Key('key_namespace');
-value = 'test';
+key = sym.KeyGenerator.generateUInt64Key("key_namespace");
+value = "test";
 
-tx = await metaService.createNamespaceMetadataTransaction(
-    undefined,networkType,
+tx = await metaService
+  .createNamespaceMetadataTransaction(
+    undefined,
+    networkType,
     namespaceInfo.ownerAddress, //Indirizzo con cui è stato creato il Sinonimo
     namespaceId,
-    key,value, //coppia chiave valore
-    alice.address //Indirizzo del regisrante
-).toPromise();
+    key,
+    value, //coppia chiave valore
+    alice.address, //Indirizzo del regisrante
+  )
+  .toPromise();
 
 aggregateTx = sym.AggregateTransaction.createComplete(
-    sym.Deadline.create(epochAdjustment),
-    [tx.toAggregate(alice.publicAccount)],
-    networkType,[]
+  sym.Deadline.create(epochAdjustment),
+  [tx.toAggregate(alice.publicAccount)],
+  networkType,
+  [],
 ).setMaxFeeForAggregate(100, 0);
 
-signedTx = alice.sign(aggregateTx,generationHash);
+signedTx = alice.sign(aggregateTx, generationHash);
 await txRepo.announce(signedTx).toPromise();
 ```
 
@@ -134,13 +155,17 @@ await txRepo.announce(signedTx).toPromise();
 Per verificare che i metadati siano stati registrati.
 
 ```js
-res = await metaRepo.search({
-  targetAddress:alice.address,
-  sourceAddress:alice.address}
-).toPromise();
+res = await metaRepo
+  .search({
+    targetAddress: alice.address,
+    sourceAddress: alice.address,
+  })
+  .toPromise();
 console.log(res);
 ```
+
 ###### Output esemplificativo
+
 ```js
 data: Array(3)
   0: Metadata
@@ -176,18 +201,20 @@ data: Array(3)
       id: Id {lower: 646738821, higher: 2754876907}
       value: "test"
 ```
+
 Segue la definizione del tipo `metadataType`:
+
 ```js
 sym.MetadataType
 {0: 'Account', 1: 'Mosaic', 2: 'Namespace'}
 ```
 
 ### Note
+
 Nonostante la comodità che deriva dall'utilizzo semplice e veloce di informazioni di tipo coppia chiave valore,
-si rammenta  l'operazione richiede la registrazione nella blockchain. Ciò comporta la firma dell'operazione con l'Indirizzo
+si rammenta l'operazione richiede la registrazione nella blockchain. Ciò comporta la firma dell'operazione con l'Indirizzo
 del registrante oltre alla firma fatta con l'Indirizzo di destinazione, in cui verrà registrata la coppia chiave valore.
 Di conseguenza, gli Indirizzi che si utilizzano devono essere di fiducia.
-
 
 ## 7.5 Consigli pratici
 

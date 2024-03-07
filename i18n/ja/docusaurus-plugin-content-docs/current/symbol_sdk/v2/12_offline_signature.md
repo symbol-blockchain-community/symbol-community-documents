@@ -20,7 +20,7 @@ innerTx1 = sym.TransferTransaction.create(
   bob.address,
   [],
   sym.PlainMessage.create("tx1"),
-  networkType
+  networkType,
 );
 
 innerTx2 = sym.TransferTransaction.create(
@@ -28,7 +28,7 @@ innerTx2 = sym.TransferTransaction.create(
   alice.address,
   [],
   sym.PlainMessage.create("tx2"),
-  networkType
+  networkType,
 );
 
 aggregateTx = sym.AggregateTransaction.createComplete(
@@ -38,7 +38,7 @@ aggregateTx = sym.AggregateTransaction.createComplete(
     innerTx2.toAggregate(bob.publicAccount),
   ],
   networkType,
-  []
+  [],
 ).setMaxFeeForAggregate(100, 1);
 
 signedTx = alice.sign(aggregateTx, generationHash);
@@ -94,9 +94,9 @@ Buffer = require("/node_modules/buffer").Buffer;
 res = tx.signer.verifySignature(
   tx.getSigningBytes(
     [...Buffer.from(signedPayload, "hex")],
-    [...Buffer.from(generationHash, "hex")]
+    [...Buffer.from(generationHash, "hex")],
   ),
-  tx.signature
+  tx.signature,
 );
 console.log(res);
 ```
@@ -114,7 +114,7 @@ console.log(res);
 bobSignedTx = sym.CosignatureTransaction.signTransactionPayload(
   bob,
   signedPayload,
-  generationHash
+  generationHash,
 );
 bobSignedTxSignature = bobSignedTx.signature;
 bobSignedTxSignerPublicKey = bobSignedTx.signerPublicKey;
@@ -131,13 +131,13 @@ Alice は Bob から bobSignedTxSignature,bobSignedTxSignerPublicKey を受け�
 ```js
 signedHash = sym.Transaction.createTransactionHash(
   signedPayload,
-  Buffer.from(generationHash, "hex")
+  Buffer.from(generationHash, "hex"),
 );
 cosignSignedTxs = [
   new sym.CosignatureSignedTransaction(
     signedHash,
     bobSignedTxSignature,
-    bobSignedTxSignerPublicKey
+    bobSignedTxSignerPublicKey,
   ),
 ];
 
@@ -165,7 +165,7 @@ signedTx = new sym.SignedTransaction(
   signedHash,
   alice.publicKey,
   recreatedTx.type,
-  recreatedTx.networkType
+  recreatedTx.networkType,
 );
 
 await txRepo.announce(signedTx).toPromise();
@@ -178,7 +178,7 @@ Alice の秘密鍵で再度署名できる場合は cosignSignedTxs を生成し
 resignedTx = recreatedTx.signTransactionGivenSignatures(
   alice,
   cosignSignedTxs,
-  generationHash
+  generationHash,
 );
 await txRepo.announce(resignedTx).toPromise();
 ```

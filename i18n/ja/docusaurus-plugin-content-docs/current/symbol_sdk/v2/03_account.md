@@ -62,7 +62,7 @@ console.log(aliceRawAddress);
 ```js
 alice = sym.Account.createFromPrivateKey(
   "1E9139CC1580B4AED6A1FE110085281D4982ED0D89CE07F3380EB83069B1****",
-  networkType
+  networkType,
 );
 ```
 
@@ -71,7 +71,7 @@ alice = sym.Account.createFromPrivateKey(
 ```js
 alicePublicAccount = sym.PublicAccount.createFromPublicKey(
   "D4933FC1E4C56F9DF9314E9E0533173E1AB727BDB2A04B59F048124E93BEFBD2",
-  networkType
+  networkType,
 );
 console.log(alicePublicAccount);
 ```
@@ -89,7 +89,7 @@ console.log(alicePublicAccount);
 
 ```js
 aliceAddress = sym.Address.createFromRawAddress(
-  "TBXUTAX6O6EUVPB6X7OBNX6UUXBMPPAFX7KE5TQ"
+  "TBXUTAX6O6EUVPB6X7OBNX6UUXBMPPAFX7KE5TQ",
 );
 console.log(aliceAddress);
 ```
@@ -232,9 +232,9 @@ console.log(encryptedMessage);
 ```js
 decryptMessage = bob.decryptMessage(
   new sym.EncryptedMessage(
-    "294C8979156C0D941270BAC191F7C689E93371EDBC36ADD8B920CF494012A97BA2D1A3759F9A6D55D5957E9D"
+    "294C8979156C0D941270BAC191F7C689E93371EDBC36ADD8B920CF494012A97BA2D1A3759F9A6D55D5957E9D",
   ),
-  alice.publicAccount
+  alice.publicAccount,
 ).payload;
 console.log(decryptMessage);
 ```
@@ -266,7 +266,7 @@ console.log(signature);
 isVerified = sym.KeyPair.verify(
   alice.keyPair.publicKey,
   Buffer.from("Hello Symol!", "utf-8"),
-  Buffer.from(signature, "hex")
+  Buffer.from(signature, "hex"),
 );
 console.log(isVerified);
 ```
@@ -292,7 +292,7 @@ signerQR = qr.QRCodeGenerator.createExportAccount(
   alice.privateKey,
   networkType,
   generationHash,
-  "パスフレーズ"
+  "パスフレーズ",
 );
 
 //QRコード表示
