@@ -195,7 +195,7 @@ mosaicInfo = await mosaicRepo.getMosaic(accountInfo.mosaics[0].id).toPromise();
 divisibility = mosaicInfo.divisibility; //Divisibility
 if (divisibility > 0) {
   displayAmount =
-    mosaicAmount.slice(0, mosaicAmount.length - divisibility) +
+    mosaicAmount.slice(0, mosaicAmount.length - divisibility) || "0" +
     "." +
     mosaicAmount.slice(-divisibility);
 } else {
