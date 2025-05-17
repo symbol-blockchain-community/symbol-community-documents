@@ -19,17 +19,17 @@ sidebar_position: 9
 本章でマルチシグ化したアカウントBobは、Carolの秘密鍵を紛失すると使えなくなってしまうのでご注意ください。
 
 ```js
-bobKey = new symbolSdk.symbol.KeyPair(symbolSdk.PrivateKey.random());
+bobKey = facade.createAccount(sdkCore.PrivateKey.random());
 bobAddress = facade.network.publicKeyToAddress(bobKey.publicKey);
-carol1Key = new symbolSdk.symbol.KeyPair(symbolSdk.PrivateKey.random());
+carol1Key = facade.createAccount(sdkCore.PrivateKey.random());
 carol1Address = facade.network.publicKeyToAddress(carol1Key.publicKey);
-carol2Key = new symbolSdk.symbol.KeyPair(symbolSdk.PrivateKey.random());
+carol2Key = facade.createAccount(sdkCore.PrivateKey.random());
 carol2Address = facade.network.publicKeyToAddress(carol2Key.publicKey);
-carol3Key = new symbolSdk.symbol.KeyPair(symbolSdk.PrivateKey.random());
+carol3Key = facade.createAccount(sdkCore.PrivateKey.random());
 carol3Address = facade.network.publicKeyToAddress(carol3Key.publicKey);
-carol4Key = new symbolSdk.symbol.KeyPair(symbolSdk.PrivateKey.random());
+carol4Key = facade.createAccount(sdkCore.PrivateKey.random());
 carol4Address = facade.network.publicKeyToAddress(carol4Key.publicKey);
-carol5Key = new symbolSdk.symbol.KeyPair(symbolSdk.PrivateKey.random());
+carol5Key = facade.createAccount(sdkCore.PrivateKey.random());
 carol5Address = facade.network.publicKeyToAddress(carol5Key.publicKey);
 
 console.log(bobKey.privateKey.toString());
@@ -67,55 +67,27 @@ Symbolではマルチシグアカウントを新規に作成するのではな�
 
 ```js
 // マルチシグ設定Tx作成
-multisigTx = facade.transactionFactory.createEmbedded({
-  type: "multisig_account_modification_transaction_v1", // Txタイプ:マルチシグ設定Tx
-  signerPublicKey: bobKey.publicKey, // マルチシグ化したいアカウントの公開鍵を指定
-  minApprovalDelta: 3, // minApproval:承認のために必要な最小署名者数増分
-  minRemovalDelta: 3, // minRemoval:除名のために必要な最小署名者数増分
-  addressAdditions: [
-    // 追加対象アドレスリスト
-    carol1Address,
-    carol2Address,
-    carol3Address,
-    carol4Address,
-  ],
-  addressDeletions: [], // 除名対象アドレスリスト
-});
-
-// マークルハッシュの算出
-embeddedTransactions = [multisigTx];
-merkleHash = facade.constructor.hashEmbeddedTransactions(embeddedTransactions);
-
-// アグリゲートTx作成
-aggregateTx = facade.transactionFactory.create({
-  type: "aggregate_complete_transaction_v2",
-  signerPublicKey: bobKey.publicKey, // マルチシグ化したいアカウントの公開鍵を指定
-  deadline: facade.network.fromDatetime(Date.now()).addHours(2).timestamp, //Deadline:有効期限
-  transactionsHash: merkleHash,
-  transactions: embeddedTransactions,
-});
-
-// 連署により追加される連署情報のサイズを追加して最終的なTxサイズを算出する
-requiredCosignatures = 4; // 連署者の数:4
-calculatedCosignatures =
-  requiredCosignatures > aggregateTx.cosignatures.length
-    ? requiredCosignatures
-    : aggregateTx.cosignatures.length;
-sizePerCosignature = 8 + 32 + 64;
-calculatedSize =
-  aggregateTx.size -
-  aggregateTx.cosignatures.length * sizePerCosignature +
-  calculatedCosignatures * sizePerCosignature;
-aggregateTx.fee = new symbolSdk.symbol.Amount(BigInt(calculatedSize * 100)); //手数料
-
-// マルチシグ化したいアカウントによる署名
-sig = facade.signTransaction(bobKey, aggregateTx);
-jsonPayload = facade.transactionFactory.constructor.attachSignature(
-  aggregateTx,
-  sig,
+multisigDescriptor = new symbolSdk.descriptors.MultisigAccountModificationTransactionV1Descriptor(
+  3,  // minApproval:承認のために必要な最小署名者数増分
+  3,  // minRemoval:除名のために必要な最小署名者数増分
+  [carol1Address, carol2Address, carol3Address, carol4Address],  // 追加する連署者リスト
+  []  // 削除する連署者リスト
 );
 
-// 追加・除外対象として指定したアカウントによる連署
+// アグリゲートTx作成
+embeddedTx = facade.createEmbeddedTransactionFromTypedDescriptor(multisigDescriptor, bobKey.publicKey);
+embeddedTransactions = [embeddedTx];
+aggregateDescriptor = new symbolSdk.descriptors.AggregateCompleteTransactionV2Descriptor(
+  facade.static.hashEmbeddedTransactions(embeddedTransactions),
+  embeddedTransactions
+);
+aggregateTx = facade.createTransactionFromTypedDescriptor(aggregateDescriptor, bobKey.publicKey, 100, 60 * 60 * 2);
+
+// 署名
+sig = bobKey.signTransaction(aggregateTx);
+jsonPayload = facade.transactionFactory.static.attachSignature(aggregateTx, sig);
+
+// 連署
 coSig1 = facade.cosignTransaction(carol1Key, aggregateTx, false);
 aggregateTx.cosignatures.push(coSig1);
 coSig2 = facade.cosignTransaction(carol2Key, aggregateTx, false);
@@ -130,13 +102,9 @@ await fetch(new URL("/transactions", NODE), {
   method: "PUT",
   headers: { "Content-Type": "application/json" },
   body: JSON.stringify({
-    payload: symbolSdk.utils.uint8ToHex(aggregateTx.serialize()),
+    payload: sdkCore.utils.uint8ToHex(aggregateTx.serialize()),
   }),
-})
-  .then((res) => res.json())
-  .then((json) => {
-    return json;
-  });
+});
 ```
 
 ## 9.2 確認
@@ -221,54 +189,33 @@ multisigAddresses に対して連署する権利を持っていることが分�
 アグリゲートコンプリートトランザクションの場合、ノードにアナウンスする前に連署者の署名を全て集めてからトランザクションを作成します。
 
 ```js
-namespaceIds = symbolSdk.symbol.generateNamespacePath("symbol.xym");
+namespaceIds = symbolSdk.generateNamespacePath("symbol.xym");
 namespaceId = namespaceIds[namespaceIds.length - 1];
 
 // アグリゲートTxに含めるTxを作成
-tx = facade.transactionFactory.createEmbedded({
-  type: "transfer_transaction_v1", // Txタイプ:転送Tx
-  signerPublicKey: bobKey.publicKey, // マルチシグ化したアカウントの公開鍵
-  recipientAddress: aliceAddress.toString(),
-  mosaics: [
-    { mosaicId: namespaceId, amount: 1000000n }, // 1XYM送金
-  ],
-  message: new Uint8Array([0x00, ...new TextEncoder("utf-8").encode("test")]), // 平文メッセージ
-});
-
-// マークルハッシュの算出
-embeddedTransactions = [tx];
-merkleHash = facade.constructor.hashEmbeddedTransactions(embeddedTransactions);
-
-// アグリゲートTx作成
-aggregateTx = facade.transactionFactory.create({
-  type: "aggregate_complete_transaction_v2",
-  signerPublicKey: carol1Key.publicKey, // 起案者アカウントの公開鍵を指定
-  deadline: facade.network.fromDatetime(Date.now()).addHours(2).timestamp, //Deadline:有効期限
-  transactionsHash: merkleHash,
-  transactions: embeddedTransactions,
-});
-
-// 連署により追加される連署情報のサイズを追加して最終的なTxサイズを算出する
-requiredCosignatures = 2; // 連署者の数:2
-calculatedCosignatures =
-  requiredCosignatures > aggregateTx.cosignatures.length
-    ? requiredCosignatures
-    : aggregateTx.cosignatures.length;
-sizePerCosignature = 8 + 32 + 64;
-calculatedSize =
-  aggregateTx.size -
-  aggregateTx.cosignatures.length * sizePerCosignature +
-  calculatedCosignatures * sizePerCosignature;
-aggregateTx.fee = new symbolSdk.symbol.Amount(BigInt(calculatedSize * 100)); //手数料
-
-// 起案者アカウントによる署名
-sig = facade.signTransaction(carol1Key, aggregateTx);
-jsonPayload = facade.transactionFactory.constructor.attachSignature(
-  aggregateTx,
-  sig,
+tx = facade.createEmbeddedTransactionFromTypedDescriptor(
+  new symbolSdk.descriptors.TransferTransactionV1Descriptor(
+    aliceAddress.toString(),
+    new symbolSdk.models.UnresolvedMosaicId(namespaceId),
+    new symbolSdk.models.Amount(1000000n),
+    new Uint8Array([0x00, ...new TextEncoder("utf-8").encode("test")])
+  ),
+  bobKey.publicKey
 );
 
-// 連署者アカウントによる連署
+// アグリゲートTx作成
+embeddedTransactions = [tx];
+aggregateDescriptor = new symbolSdk.descriptors.AggregateCompleteTransactionV2Descriptor(
+  facade.static.hashEmbeddedTransactions(embeddedTransactions),
+  embeddedTransactions
+);
+aggregateTx = facade.createTransactionFromTypedDescriptor(aggregateDescriptor, carol1Key.publicKey, 100, 60 * 60 * 2);
+
+// 署名
+sig = carol1Key.signTransaction(aggregateTx);
+jsonPayload = facade.transactionFactory.static.attachSignature(aggregateTx, sig);
+
+// 連署
 coSig2 = facade.cosignTransaction(carol2Key, aggregateTx, false);
 aggregateTx.cosignatures.push(coSig2);
 coSig3 = facade.cosignTransaction(carol3Key, aggregateTx, false);
@@ -279,13 +226,9 @@ await fetch(new URL("/transactions", NODE), {
   method: "PUT",
   headers: { "Content-Type": "application/json" },
   body: JSON.stringify({
-    payload: symbolSdk.utils.uint8ToHex(aggregateTx.serialize()),
+    payload: sdkCore.utils.uint8ToHex(aggregateTx.serialize()),
   }),
-})
-  .then((res) => res.json())
-  .then((json) => {
-    return json;
-  });
+});
 ```
 
 ### アグリゲートボンデッドトランザクションで送信
@@ -298,80 +241,51 @@ namespaceIds = symbolSdk.symbol.generateNamespacePath("symbol.xym");
 namespaceId = namespaceIds[namespaceIds.length - 1];
 
 // アグリゲートTxに含めるTxを作成
-tx = facade.transactionFactory.createEmbedded({
-  type: "transfer_transaction_v1", // Txタイプ:転送Tx
-  signerPublicKey: bobKey.publicKey, // マルチシグ化したアカウントの公開鍵
-  recipientAddress: aliceAddress.toString(), // Aliceへの送信
-  mosaics: [
-    { mosaicId: namespaceId, amount: 1000000n }, // 1XYM送金
-  ],
-  message: new Uint8Array([0x00, ...new TextEncoder("utf-8").encode("test")]), // 平文メッセージ
-});
-
-// マークルハッシュの算出
-embeddedTransactions = [tx];
-merkleHash = facade.constructor.hashEmbeddedTransactions(embeddedTransactions);
-
-// アグリゲートTx作成
-aggregateTx = facade.transactionFactory.create({
-  type: "aggregate_bonded_transaction_v2",
-  signerPublicKey: carol1Key.publicKey, // 起案者アカウントの公開鍵を指定
-  deadline: facade.network.fromDatetime(Date.now()).addHours(2).timestamp, //Deadline:有効期限
-  transactionsHash: merkleHash,
-  transactions: embeddedTransactions,
-});
-
-// 連署により追加される連署情報のサイズを追加して最終的なTxサイズを算出する
-requiredCosignatures = 2; // 連署者の数:2
-calculatedCosignatures =
-  requiredCosignatures > aggregateTx.cosignatures.length
-    ? requiredCosignatures
-    : aggregateTx.cosignatures.length;
-sizePerCosignature = 8 + 32 + 64;
-calculatedSize =
-  aggregateTx.size -
-  aggregateTx.cosignatures.length * sizePerCosignature +
-  calculatedCosignatures * sizePerCosignature;
-aggregateTx.fee = new symbolSdk.symbol.Amount(BigInt(calculatedSize * 100)); //手数料
-
-// 署名
-sig = facade.signTransaction(carol1Key, aggregateTx);
-jsonPayload = facade.transactionFactory.constructor.attachSignature(
-  aggregateTx,
-  sig,
+tx = facade.createEmbeddedTransactionFromTypedDescriptor(
+  new symbolSdk.descriptors.TransferTransactionV1Descriptor(
+    aliceAddress.toString(),
+    new symbolSdk.models.UnresolvedMosaicId(namespaceId),
+    new symbolSdk.models.Amount(1000000n),
+    new Uint8Array([0x00, ...new TextEncoder("utf-8").encode("test")])
+  ),
+  bobKey.publicKey
 );
 
+// アグリゲートTx作成
+embeddedTransactions = [tx];
+aggregateDescriptor = new symbolSdk.descriptors.AggregateBondedTransactionV2Descriptor(
+  facade.static.hashEmbeddedTransactions(embeddedTransactions),
+  embeddedTransactions
+);
+aggregateTx = facade.createTransactionFromTypedDescriptor(aggregateDescriptor, carol1Key.publicKey, 100, 60 * 60 * 2);
+
+// 署名
+sig = carol1Key.signTransaction(aggregateTx);
+jsonPayload = facade.transactionFactory.static.attachSignature(aggregateTx, sig);
+
 // ハッシュロックTx作成
-hashLockTx = facade.transactionFactory.create({
-  type: "hash_lock_transaction_v1", // Txタイプ:ハッシュロックTx
-  signerPublicKey: carol1Key.publicKey, // 起案者アカウントの公開鍵を指定
-  deadline: facade.network.fromDatetime(Date.now()).addHours(2).timestamp, //Deadline:有効期限
-  mosaic: { mosaicId: namespaceId, amount: 10n * 1000000n }, // 10xym固定値
-  duration: new symbolSdk.symbol.BlockDuration(480n), // ロック有効期限
-  hash: facade.hashTransaction(aggregateTx), // アグリゲートトランザクションのハッシュ値を登録
-});
+hashLockTx = facade.createTransactionFromTypedDescriptor(
+  new symbolSdk.descriptors.HashLockTransactionV1Descriptor(
+    carol1Key.publicKey,
+    10n * 1000000n,
+    new symbolSdk.models.BlockDuration(480n),
+    facade.static.hashTransaction(aggregateTx)
+  ),
+  carol1Key.publicKey
+);
 hashLockTx.fee = new symbolSdk.symbol.Amount(BigInt(hashLockTx.size * 100)); // 手数料
 
 // 署名
-hashLockSig = facade.signTransaction(carol1Key, hashLockTx);
-hashLockJsonPayload = facade.transactionFactory.constructor.attachSignature(
-  hashLockTx,
-  hashLockSig,
-);
+hashLockSig = carol1Key.signTransaction(hashLockTx);
+hashLockJsonPayload = facade.transactionFactory.static.attachSignature(hashLockTx, hashLockSig);
 
 // ハッシュロックTXをアナウンス
 await fetch(new URL("/transactions", NODE), {
   method: "PUT",
   headers: { "Content-Type": "application/json" },
   body: hashLockJsonPayload,
-})
-  .then((res) => res.json())
-  .then((json) => {
-    return json;
-  });
-```
+});
 
-```js
 //ハッシュロックの承認を確認した後、ボンデッドTXをアナウンス
 await fetch(new URL("/transactions/partial", NODE), {
   method: "PUT",
@@ -470,24 +384,24 @@ console.log(txInfo);
   - Bob
     - txInfo.transaction.transactions[0].transaction.signerPublicKey
       - 09F81ED97EBB0A85C6DFEACF2B518EFB471BEDA18709EF4C60823B21698B7B22
-    - facade.network.publicKeyToAddress(new symbolSdk.symbol.PublicKey(txInfo.transaction.transactions[0].transaction.signerPublicKey)).toString()
+    - facade.network.publicKeyToAddress(new sdkCore.PublicKey(txInfo.transaction.transactions[0].transaction.signerPublicKey)).toString()
       - TAUBDCXUGTUDJXKF2PSETQ62JGAESZCBNYSUW7Y
 - 起案者アカウント
   - Carol1
     - txInfo.transaction.signerPublicKey
       - E20A3B5BC132EBE9B075F1B326FE1C4C8827ACEF0DF7F24082D6C6A4A708980B
-    - facade.network.publicKeyToAddress(new symbolSdk.symbol.PublicKey(txInfo.transaction.signerPublicKey)).toString()
+    - facade.network.publicKeyToAddress(new sdkCore.PublicKey(txInfo.transaction.signerPublicKey)).toString()
       - TCMMKDQUV45LRBU2HJZNLRT32MN7GLX76PLMULQ
 - 連署者アカウント
   - Carol3
     - txInfo.transaction.cosignatures[1].signerPublicKey
       - A33F1B26DE7498EAE8D27A084323BB9D3AA95486F879F248B679A3DEB06D6431
-    - facade.network.publicKeyToAddress(new symbolSdk.symbol.PublicKey(txInfo.transaction.cosignatures[1].signerPublicKey)).toString()
+    - facade.network.publicKeyToAddress(new sdkCore.PublicKey(txInfo.transaction.cosignatures[1].signerPublicKey)).toString()
       - TB2EIC366LCAORC3AWQNR4ZFHWBPBU47VKOPD5Q
   - Carol3
     - txInfo.transaction.cosignatures[0].signerPublicKey
       - 0ABC3E2B403C9E1597DF04C8E9AE1E9D3F22D70D87A0A7BDC8D1B16BB9D324DD
-    - facade.network.publicKeyToAddress(new symbolSdk.symbol.PublicKey(txInfo.transaction.cosignatures[0].signerPublicKey)).toString()
+    - facade.network.publicKeyToAddress(new sdkCore.PublicKey(txInfo.transaction.cosignatures[0].signerPublicKey)).toString()
       - TDTW4SWRMI64JM7TK6RJZFEW5XKI4KBQVPQM7QY
 
 ## 9.5 マルチシグ構成変更
@@ -499,52 +413,27 @@ console.log(txInfo);
 
 ```js
 // マルチシグ設定Tx作成
-multisigTx = facade.transactionFactory.createEmbedded({
-  type: "multisig_account_modification_transaction_v1", // Txタイプ:マルチシグ設定Tx
-  signerPublicKey: bobKey.publicKey, // 構成変更したいマルチシグアカウントの公開鍵を指定
-  minApprovalDelta: -1, // 承認のために必要な最小署名者数増分
-  minRemovalDelta: -1, // 除名のために必要な最小署名者数増分
-  addressAdditions: [], // 追加対象アドレスリスト
-  addressDeletions: [
-    // 除名対象アドレスリスト
-    carol3Address,
-  ],
-});
-
-// マークルハッシュの算出
-embeddedTransactions = [multisigTx];
-merkleHash = facade.constructor.hashEmbeddedTransactions(embeddedTransactions);
-
-// アグリゲートTx作成
-aggregateTx = facade.transactionFactory.create({
-  type: "aggregate_complete_transaction_v2",
-  signerPublicKey: carol1Key.publicKey, // 起案者アカウントの公開鍵を指定
-  deadline: facade.network.fromDatetime(Date.now()).addHours(2).timestamp, //Deadline:有効期限
-  transactionsHash: merkleHash,
-  transactions: embeddedTransactions,
-});
-
-// 連署により追加される連署情報のサイズを追加して最終的なTxサイズを算出する
-requiredCosignatures = 2; // 連署者の数:2
-calculatedCosignatures =
-  requiredCosignatures > aggregateTx.cosignatures.length
-    ? requiredCosignatures
-    : aggregateTx.cosignatures.length;
-sizePerCosignature = 8 + 32 + 64;
-calculatedSize =
-  aggregateTx.size -
-  aggregateTx.cosignatures.length * sizePerCosignature +
-  calculatedCosignatures * sizePerCosignature;
-aggregateTx.fee = new symbolSdk.symbol.Amount(BigInt(calculatedSize * 100)); //手数料
-
-// 起案者アカウントによる署名
-sig = facade.signTransaction(carol1Key, aggregateTx);
-jsonPayload = facade.transactionFactory.constructor.attachSignature(
-  aggregateTx,
-  sig,
+multisigDescriptor = new symbolSdk.descriptors.MultisigAccountModificationTransactionV1Descriptor(
+  -1,  // minApproval:承認のために必要な最小署名者数増分
+  -1,  // minRemoval:除名のために必要な最小署名者数増分
+  [],  // 追加対象アドレスリスト
+  [carol3Address]  // 除名対象アドレスリスト
 );
 
-// 連署者アカウントによる連署
+// アグリゲートTx作成
+embeddedTx = facade.createEmbeddedTransactionFromTypedDescriptor(multisigDescriptor, bobKey.publicKey);
+embeddedTransactions = [embeddedTx];
+aggregateDescriptor = new symbolSdk.descriptors.AggregateCompleteTransactionV2Descriptor(
+  facade.static.hashEmbeddedTransactions(embeddedTransactions),
+  embeddedTransactions
+);
+aggregateTx = facade.createTransactionFromTypedDescriptor(aggregateDescriptor, bobKey.publicKey, 100, 60 * 60 * 2);
+
+// 署名
+sig = bobKey.signTransaction(aggregateTx);
+jsonPayload = facade.transactionFactory.static.attachSignature(aggregateTx, sig);
+
+// 連署
 coSig2 = facade.cosignTransaction(carol2Key, aggregateTx, false);
 aggregateTx.cosignatures.push(coSig2);
 coSig4 = facade.cosignTransaction(carol4Key, aggregateTx, false);
@@ -555,13 +444,9 @@ await fetch(new URL("/transactions", NODE), {
   method: "PUT",
   headers: { "Content-Type": "application/json" },
   body: JSON.stringify({
-    payload: symbolSdk.utils.uint8ToHex(aggregateTx.serialize()),
+    payload: sdkCore.utils.uint8ToHex(aggregateTx.serialize()),
   }),
-})
-  .then((res) => res.json())
-  .then((json) => {
-    return json;
-  });
+});
 ```
 
 ### 連署者構成の差替え
@@ -571,59 +456,29 @@ await fetch(new URL("/transactions", NODE), {
 
 ```js
 // マルチシグ設定Tx作成
-multisigTx = facade.transactionFactory.createEmbedded({
-  type: "multisig_account_modification_transaction_v1", // Txタイプ:マルチシグ設定Tx
-  signerPublicKey: bobKey.publicKey, // 構成変更したいマルチシグアカウントの公開鍵を指定
-  minApprovalDelta: 0, // 承認のために必要な最小署名者数増分
-  minRemovalDelta: 0, // 除名のために必要な最小署名者数増分
-  addressAdditions: [
-    // 追加対象アドレスリスト
-    carol5Address,
-  ],
-  addressDeletions: [
-    // 除名対象アドレスリスト
-    carol4Address,
-  ],
-});
-
-// マークルハッシュの算出
-embeddedTransactions = [multisigTx];
-merkleHash = facade.constructor.hashEmbeddedTransactions(embeddedTransactions);
-
-// アグリゲートTx作成
-aggregateTx = facade.transactionFactory.create({
-  type: "aggregate_complete_transaction_v2",
-  signerPublicKey: carol1Key.publicKey, // 起案者アカウントの公開鍵を指定
-  deadline: facade.network.fromDatetime(Date.now()).addHours(2).timestamp, //Deadline:有効期限
-  transactionsHash: merkleHash,
-  transactions: embeddedTransactions,
-});
-
-// 連署により追加される連署情報のサイズを追加して最終的なTxサイズを算出する
-requiredCosignatures = 2; // 連署者の数:2
-calculatedCosignatures =
-  requiredCosignatures > aggregateTx.cosignatures.length
-    ? requiredCosignatures
-    : aggregateTx.cosignatures.length;
-sizePerCosignature = 8 + 32 + 64;
-calculatedSize =
-  aggregateTx.size -
-  aggregateTx.cosignatures.length * sizePerCosignature +
-  calculatedCosignatures * sizePerCosignature;
-aggregateTx.fee = new symbolSdk.symbol.Amount(BigInt(calculatedSize * 100)); //手数料
-
-// 起案者アカウントによる署名
-sig = facade.signTransaction(carol1Key, aggregateTx);
-jsonPayload = facade.transactionFactory.constructor.attachSignature(
-  aggregateTx,
-  sig,
+multisigDescriptor = new symbolSdk.descriptors.MultisigAccountModificationTransactionV1Descriptor(
+  0,  // minApproval:承認のために必要な最小署名者数増分
+  0,  // minRemoval:除名のために必要な最小署名者数増分
+  [carol5Address],  // 追加対象アドレスリスト
+  [carol4Address]  // 除名対象アドレスリスト
 );
 
-// 連署者アカウントによる連署
+// アグリゲートTx作成
+embeddedTx = facade.createEmbeddedTransactionFromTypedDescriptor(multisigDescriptor, bobKey.publicKey);
+embeddedTransactions = [embeddedTx];
+aggregateDescriptor = new symbolSdk.descriptors.AggregateCompleteTransactionV2Descriptor(
+  facade.static.hashEmbeddedTransactions(embeddedTransactions),
+  embeddedTransactions
+);
+aggregateTx = facade.createTransactionFromTypedDescriptor(aggregateDescriptor, bobKey.publicKey, 100, 60 * 60 * 2);
+
+// 署名
+sig = bobKey.signTransaction(aggregateTx);
+jsonPayload = facade.transactionFactory.static.attachSignature(aggregateTx, sig);
+
+// 連署
 coSig2 = facade.cosignTransaction(carol2Key, aggregateTx, false);
 aggregateTx.cosignatures.push(coSig2);
-
-// 承諾アカウントによる連署
 coSig5 = facade.cosignTransaction(carol5Key, aggregateTx, false);
 aggregateTx.cosignatures.push(coSig5);
 
@@ -632,13 +487,9 @@ await fetch(new URL("/transactions", NODE), {
   method: "PUT",
   headers: { "Content-Type": "application/json" },
   body: JSON.stringify({
-    payload: symbolSdk.utils.uint8ToHex(aggregateTx.serialize()),
+    payload: sdkCore.utils.uint8ToHex(aggregateTx.serialize()),
   }),
-})
-  .then((res) => res.json())
-  .then((json) => {
-    return json;
-  });
+});
 ```
 
 ## 9.6 現場で使えるヒント

@@ -41,9 +41,8 @@ sidebar_position: 4
 送信先のBobアドレスを作成しておきます。
 
 ```js
-bobKey = new symbolSdk.symbol.KeyPair(symbolSdk.PrivateKey.random());
-bobAddress = facade.network.publicKeyToAddress(bobKey.publicKey);
-console.log(bobAddress.toString());
+bobKey = facade.createAccount(sdkCore.PrivateKey.random());
+console.log(bobKey.address.toString());
 ```
 
 ```js
@@ -53,21 +52,29 @@ console.log(bobAddress.toString());
 トランザクションを作成します。
 
 ```js
+// 転送トランザクションの作成（1XYM送金 + メッセージ）
+// 平文メッセージ
 messageData = new Uint8Array([
   0x00,
   ...new TextEncoder("utf-8").encode("Hello, Symbol!"),
-]); //　平文メッセージ
-tx = facade.transactionFactory.create({
-  type: "transfer_transaction_v1", // Txタイプ:転送Tx
-  signerPublicKey: aliceKey.publicKey, // 署名者公開鍵
-  deadline: facade.network.fromDatetime(Date.now()).addHours(2).timestamp, //Deadline:有効期限
-  recipientAddress: bobAddress.toString(),
-  mosaics: [
-    // { mosaicId: 0x72C0212E67A08BCEn, amount: 1000000n } // 1XYM送金
+]);
+// または下記
+messageData = "\0Hello, Symbol!";  // 平文メッセージ（先頭に0x00）
+
+descriptor = new symbolSdk.descriptors.TransferTransactionV1Descriptor(
+  bobKey.address,
+  [
+    // 1XYM 送金
+    new symbolSdk.descriptors.UnresolvedMosaicDescriptor(
+      // symbol.xymのモザイクID: 0x72C0212E67A08BCE
+      new symbolSdk.models.UnresolvedMosaicId(0x72C0212E67A08BCEn),
+      // 1XYM(1 * 可分性6)
+      new symbolSdk.models.Amount(1n * 1_000_000n)
+    )
   ],
-  message: messageData,
-});
-tx.fee = new symbolSdk.symbol.Amount(BigInt(tx.size * 100)); //手数料
+  messageData
+);
+tx = facade.createTransactionFromTypedDescriptor(descriptor, aliceKey.publicKey, 100, 60 * 60 * 2);
 console.log(tx);
 ```
 
@@ -79,7 +86,7 @@ sdkではデフォルトで2時間後に設定されます。
 最大6時間まで指定可能です。
 
 ```js
-facade.network.fromDatetime(Date.now()).addHours(6).timestamp;
+facade.network.fromDatetime(new Date()).addHours(6).timestamp;
 ```
 
 #### メッセージ
@@ -110,7 +117,7 @@ messageData = new Uint8Array([
 
 ```js
 message = "Hello Symbol!";
-aliceMsgEncoder = new symbolSdk.symbol.MessageEncoder(aliceKey);
+aliceMsgEncoder = new symbolSdk.MessageEncoder(aliceKey.keyPair);
 messageData = aliceMsgEncoder.encode(
   bobKey.publicKey,
   new TextEncoder().encode(message),
@@ -830,3 +837,70 @@ for (let i = 0; i < bigdata.length / 1023; i++) {
 }
 console.log(payloads);
 ```
+
+分割したデータを使用してトランザクションを作成します。
+
+```js
+// 分割したデータごとにトランザクションを作成
+innerTxs = payloads.map((payload) => {
+  return facade.transactionFactory.createEmbedded({
+    type: "transfer_transaction_v1",
+    signerPublicKey: aliceKey.publicKey,
+    recipientAddress: bobAddress.toString(),
+    message: new Uint8Array([0xff, ...new TextEncoder("utf-8").encode(payload)]), // 生データとして送信
+  });
+});
+
+// マークルハッシュの算出
+merkleHash = facade.constructor.hashEmbeddedTransactions(innerTxs);
+
+// アグリゲートTx作成
+aggregateTx = facade.transactionFactory.create({
+  type: "aggregate_complete_transaction_v2",
+  signerPublicKey: aliceKey.publicKey,
+  deadline: facade.network.fromDatetime(Date.now()).addHours(2).timestamp,
+  transactionsHash: merkleHash,
+  transactions: innerTxs,
+});
+
+// 手数料計算
+calculatedSize = aggregateTx.size;
+aggregateTx.fee = new symbolSdk.symbol.Amount(BigInt(calculatedSize * 100));
+
+// 署名とアナウンス
+sig = facade.signTransaction(aliceKey, aggregateTx);
+jsonPayload = facade.transactionFactory.constructor.attachSignature(aggregateTx, sig);
+await fetch(new URL("/transactions", NODE), {
+  method: "PUT",
+  headers: { "Content-Type": "application/json" },
+  body: jsonPayload,
+})
+  .then((res) => res.json())
+  .then((json) => {
+    return json;
+  });
+```
+
+このようにアグリゲートトランザクションを活用することで、大きなデータを分割して送信することができます。
+ただし、ブロックチェーンは改ざん防止の仕組みであって、データベースではありません。
+ブロックチェーンに大量のデータを記録することは、ネットワークに負荷をかけることになりますので、
+利用には注意が必要です。
+
+## 4.8 まとめ
+
+4章では以下のことを確認しました。
+
+- トランザクションのライフサイクル
+  - 作成、署名、アナウンス、承認
+- メッセージの送信方法
+  - 平文メッセージ
+  - 暗号化メッセージ
+  - 生データ
+- アグリゲートトランザクション
+  - 複数のトランザクションをまとめて送信
+  - 連署の必要性
+- 現場で使えるヒント
+  - 存在証明
+  - 大きなデータの分割送信
+
+次章ではモザイクを作成して、独自のトークンを発行する方法について説明します。

@@ -16,42 +16,47 @@ Symbolではトークンのことをモザイクと表現します。
 
 ```js
 // モザイクフラグ設定
-f = symbolSdk.symbol.MosaicFlags.NONE.value;
-f += symbolSdk.symbol.MosaicFlags.SUPPLY_MUTABLE.value; // 供給量変更の可否
-// f += symbolSdk.symbol.MosaicFlags.TRANSFERABLE.value;   // 第三者への譲渡可否
-f += symbolSdk.symbol.MosaicFlags.RESTRICTABLE.value; // 制限設定の可否
-f += symbolSdk.symbol.MosaicFlags.REVOKABLE.value; // 発行者からの還収可否
-flags = new symbolSdk.symbol.MosaicFlags(f);
+f = symbolSdk.models.MosaicFlags.NONE.value;
+f += symbolSdk.models.MosaicFlags.SUPPLY_MUTABLE.value; // 供給量変更の可否
+f += symbolSdk.models.MosaicFlags.TRANSFERABLE.value;   // 第三者への譲渡可否
+f += symbolSdk.models.MosaicFlags.RESTRICTABLE.value; // 制限設定の可否
+f += symbolSdk.models.MosaicFlags.REVOKABLE.value; // 発行者からの還収可否
+flags = new symbolSdk.models.MosaicFlags(f);
 
 // ナンス設定
-array = new Uint8Array(symbolSdk.symbol.MosaicNonce.SIZE);
+array = new Uint8Array(symbolSdk.models.MosaicNonce.SIZE);
 crypto.getRandomValues(array);
-nonce = new symbolSdk.symbol.MosaicNonce(
+nonce = new symbolSdk.models.MosaicNonce(
   array[0] * 0x00000001 +
     array[1] * 0x00000100 +
     array[2] * 0x00010000 +
     array[3] * 0x01000000,
 );
 
-//モザイク定義
-mosaicDefTx = facade.transactionFactory.createEmbedded({
-  type: "mosaic_definition_transaction_v1", // Txタイプ:モザイク定義Tx
-  signerPublicKey: aliceKey.publicKey, // 署名者公開鍵
-  id: new symbolSdk.symbol.MosaicId(
-    symbolSdk.symbol.generateMosaicId(aliceAddress, nonce.value),
-  ),
-  divisibility: 2, // divisibility:可分性
-  duration: new symbolSdk.symbol.BlockDuration(0n), // duration:有効期限
-  nonce: nonce,
-  flags: flags,
-});
+// モザイク定義Tx作成
+divisibility = 2; // 可分性
+mosaicDefDescriptor = new symbolSdk.descriptors.MosaicDefinitionTransactionV1Descriptor(
+  new symbolSdk.models.MosaicId(symbolSdk.generateMosaicId(
+    aliceKey.address, // 署名者公開鍵
+    nonce.value
+  )),
+  new symbolSdk.models.BlockDuration(0n),  // duration:有効期限
+  nonce,
+  flags,
+  divisibility
+);
+mosaicDefTx = facade.createEmbeddedTransactionFromTypedDescriptor(mosaicDefDescriptor, aliceKey.publicKey);
 ```
 
 MosaicFlagsは以下の通りです。
 
 ```js
 MosaicFlags {
-  supplyMutable: false, transferable: false, restrictable: false, revokable: false
+  NONE: 0,
+  SUPPLY_MUTABLE: 1,
+  TRANSFERABLE: 2,
+  RESTRICTABLE: 4,
+  REVOKABLE: 8
 }
 ```
 
@@ -75,14 +80,14 @@ divisibility:2 = 1.00
 次に数量を変更します
 
 ```js
-//モザイク変更
-mosaicChangeTx = facade.transactionFactory.createEmbedded({
-  type: "mosaic_supply_change_transaction_v1", // Txタイプ:モザイク変更Tx
-  signerPublicKey: aliceKey.publicKey, // 署名者公開鍵
-  mosaicId: new symbolSdk.symbol.UnresolvedMosaicId(mosaicDefTx.id.value),
-  delta: new symbolSdk.symbol.Amount(10000n), // 数量
-  action: symbolSdk.symbol.MosaicSupplyChangeAction.INCREASE,
-});
+// モザイク供給変更トランザクションの作成
+mosaicChangeDescriptor = new symbolSdk.descriptors.MosaicSupplyChangeTransactionV1Descriptor(
+  new symbolSdk.models.UnresolvedMosaicId(mosaicDefTx.id.value),
+  new symbolSdk.models.Amount(10000n),
+  symbolSdk.models.MosaicSupplyChangeAction.INCREASE
+);
+mosaicChangeTx = facade.createEmbeddedTransactionFromTypedDescriptor(mosaicChangeDescriptor, aliceKey.publicKey);
+
 ```
 
 supplyMutable:falseの場合、全モザイクが発行者にある場合だけ数量の変更が可能です。
@@ -99,18 +104,13 @@ MosaicSupplyChangeActionは以下の通りです。
 上記2つのトランザクションをまとめてアグリゲートトランザクションを作成します。
 
 ```js
-// マークルハッシュの算出
-embeddedTransactions = [mosaicDefTx, mosaicChangeTx];
-merkleHash = facade.constructor.hashEmbeddedTransactions(embeddedTransactions);
-
-// アグリゲートTx作成
-aggregateTx = facade.transactionFactory.create({
-  type: "aggregate_complete_transaction_v2",
-  signerPublicKey: aliceKey.publicKey, // 署名者公開鍵
-  deadline: facade.network.fromDatetime(Date.now()).addHours(2).timestamp, //Deadline:有効期限
-  transactionsHash: merkleHash,
-  transactions: embeddedTransactions,
-});
+// アグリゲートコンプリートトランザクションの作成（モザイク定義+供給変更）
+embeddedTransactions = [ mosaicDefTx, mosaicChangeTx ];
+aggregateDescriptor = new symbolSdk.descriptors.AggregateCompleteTransactionV2Descriptor(
+  facade.static.hashEmbeddedTransactions(embeddedTransactions),
+  embeddedTransactions
+);
+aggregateTx = facade.createTransactionFromTypedDescriptor(aggregateDescriptor, aliceKey.publicKey, 100, 60 * 60 * 2, 0);
 
 // 連署により追加される連署情報のサイズを追加して最終的なTxサイズを算出する
 requiredCosignatures = 0; // 必要な連署者の数を指定
@@ -123,23 +123,15 @@ calculatedSize =
   aggregateTx.size -
   aggregateTx.cosignatures.length * sizePerCosignature +
   calculatedCosignatures * sizePerCosignature;
-aggregateTx.fee = new symbolSdk.symbol.Amount(BigInt(calculatedSize * 100)); //手数料
+aggregateTx.fee = new symbolSdk.models.Amount(BigInt(calculatedSize * 100)); //手数料
 
 // 署名とアナウンス
-sig = facade.signTransaction(aliceKey, aggregateTx);
-jsonPayload = facade.transactionFactory.constructor.attachSignature(
-  aggregateTx,
-  sig,
+sig = aliceKey.signTransaction(aggregateTx);
+jsonPayload = facade.transactionFactory.static.attachSignature(aggregateTx, sig);
+await fetch(
+  new URL('/transactions', NODE),
+  { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: jsonPayload }
 );
-await fetch(new URL("/transactions", NODE), {
-  method: "PUT",
-  headers: { "Content-Type": "application/json" },
-  body: jsonPayload,
-})
-  .then((res) => res.json())
-  .then((json) => {
-    return json;
-  });
 ```
 
 アグリゲートトランザクションの特徴として、
@@ -197,35 +189,38 @@ accountInfo.mosaics.forEach(async (mosaic) => {
 
 ```js
 //受信アカウント作成
-bobKey = new symbolSdk.symbol.KeyPair(symbolSdk.PrivateKey.random());
+bobKey = facade.createAccount(sdkCore.PrivateKey.random());
+// 既存のprivateKeyで作成する場合
+bobKey = facade.createAccount(new sdkCore.PrivateKey("24B929287E1B68F7CB...."))
+
 bobAddress = facade.network.publicKeyToAddress(bobKey.publicKey);
 
-// Tx作成
-tx = facade.transactionFactory.create({
-  type: "transfer_transaction_v1", // Txタイプ:転送Tx
-  signerPublicKey: aliceKey.publicKey, // 署名者公開鍵
-  deadline: facade.network.fromDatetime(Date.now()).addHours(2).timestamp, //Deadline:有効期限
-  recipientAddress: bobAddress.toString(),
-  mosaics: [
-    { mosaicId: 0x72c0212e67a08bcen, amount: 1000000n }, // 1XYM送金
-    { mosaicId: mosaicDefTx.id.value, amount: 1n }, // 5.1 で作成したモザイク
+// モザイク転送トランザクションの作成（1XYM + 5.1で作成したモザイクを送信）
+descriptor = new symbolSdk.descriptors.TransferTransactionV1Descriptor(
+  bobAddress,
+  [
+    // 1 XYM 送金
+    new symbolSdk.descriptors.UnresolvedMosaicDescriptor(
+      new symbolSdk.models.UnresolvedMosaicId(0x72C0212E67A08BCEn),
+      new symbolSdk.models.Amount(1000000n)
+    ),
+    // 作成したカスタムモザイクを1送信
+    new symbolSdk.descriptors.UnresolvedMosaicDescriptor(
+      new symbolSdk.models.UnresolvedMosaicId(mosaicDefTx.id.value),
+      new symbolSdk.models.Amount(1n)
+    )
   ],
-  message: new Uint8Array(),
-});
-tx.fee = new symbolSdk.symbol.Amount(BigInt(tx.size * 100)); //手数料
+  new Uint8Array()  // メッセージなし
+);
 
 // 署名とアナウンス
-sig = facade.signTransaction(aliceKey, tx);
-jsonPayload = facade.transactionFactory.constructor.attachSignature(tx, sig);
-await fetch(new URL("/transactions", NODE), {
-  method: "PUT",
-  headers: { "Content-Type": "application/json" },
-  body: jsonPayload,
-})
-  .then((res) => res.json())
-  .then((json) => {
-    return json;
-  });
+tx = facade.createTransactionFromTypedDescriptor(descriptor, aliceKey.publicKey, 100, 60 * 60 * 2);
+sig = aliceKey.signTransaction(tx);
+jsonPayload = facade.transactionFactory.static.attachSignature(tx, sig);
+await fetch(
+  new URL('/transactions', NODE),
+  { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: jsonPayload }
+);
 ```
 
 ##### 送信モザイクリスト
@@ -314,68 +309,64 @@ NFTの実現方法はいろいろありますが、その一例の処理概要�
 
 ```js
 // モザイクフラグ設定
-f = symbolSdk.symbol.MosaicFlags.NONE.value;
-// f += symbolSdk.symbol.MosaicFlags.SUPPLY_MUTABLE.value; // 供給量変更の可否
-f += symbolSdk.symbol.MosaicFlags.TRANSFERABLE.value; // 第三者への譲渡可否
-f += symbolSdk.symbol.MosaicFlags.RESTRICTABLE.value; // 制限設定の可否
-f += symbolSdk.symbol.MosaicFlags.REVOKABLE.value; // 発行者からの還収可否
-flags = new symbolSdk.symbol.MosaicFlags(f);
+f = symbolSdk.models.MosaicFlags.NONE.value;
+// f += symbolSdk.models.MosaicFlags.SUPPLY_MUTABLE.value; // 供給量変更の可否
+f += symbolSdk.models.MosaicFlags.TRANSFERABLE.value; // 第三者への譲渡可否
+f += symbolSdk.models.MosaicFlags.RESTRICTABLE.value; // 制限設定の可否
+f += symbolSdk.models.MosaicFlags.REVOKABLE.value; // 発行者からの還収可否
+flags = new symbolSdk.models.MosaicFlags(f);
 
 // ナンス設定
-array = new Uint8Array(symbolSdk.symbol.MosaicNonce.SIZE);
+array = new Uint8Array(symbolSdk.models.MosaicNonce.SIZE);
 crypto.getRandomValues(array);
-nonce = new symbolSdk.symbol.MosaicNonce(
+nonce = new symbolSdk.models.MosaicNonce(
   array[0] * 0x00000001 +
     array[1] * 0x00000100 +
     array[2] * 0x00010000 +
     array[3] * 0x01000000,
 );
 
-//モザイク定義
-mosaicDefTx = facade.transactionFactory.createEmbedded({
-  type: "mosaic_definition_transaction_v1", // Txタイプ:モザイク定義Tx
-  signerPublicKey: aliceKey.publicKey, // 署名者公開鍵
-  id: new symbolSdk.symbol.MosaicId(
-    symbolSdk.symbol.generateMosaicId(aliceAddress, nonce.value),
-  ),
-  divisibility: 0, // divisibility:可分性
-  duration: new symbolSdk.symbol.BlockDuration(0n), // duration:有効期限
-  nonce: nonce,
-  flags: flags,
-});
+// モザイク定義Tx作成
+divisibility = 0; // 可分性
+mosaicDefDescriptor = new symbolSdk.descriptors.MosaicDefinitionTransactionV1Descriptor(
+  new symbolSdk.models.MosaicId(symbolSdk.generateMosaicId(
+    aliceKey.address, // 署名者公開鍵
+    nonce.value
+  )),
+  new symbolSdk.models.BlockDuration(0n),  // duration:有効期限
+  nonce,
+  flags,
+  divisibility
+);
+mosaicDefTx = facade.createEmbeddedTransactionFromTypedDescriptor(mosaicDefDescriptor, aliceKey.publicKey);
 
 //モザイク数量固定
-mosaicChangeTx = facade.transactionFactory.createEmbedded({
-  type: "mosaic_supply_change_transaction_v1", // Txタイプ:モザイク変更Tx
-  signerPublicKey: aliceKey.publicKey, // 署名者公開鍵
-  mosaicId: new symbolSdk.symbol.UnresolvedMosaicId(mosaicDefTx.id.value),
-  delta: new symbolSdk.symbol.Amount(1n), // 数量
-  action: symbolSdk.symbol.MosaicSupplyChangeAction.INCREASE,
-});
+mosaicChangeDescriptor = new symbolSdk.descriptors.MosaicSupplyChangeTransactionV1Descriptor(
+  new symbolSdk.models.UnresolvedMosaicId(mosaicDefTx.id.value),
+  new symbolSdk.models.Amount(1n),
+  symbolSdk.models.MosaicSupplyChangeAction.INCREASE
+);
+mosaicChangeTx = facade.createEmbeddedTransactionFromTypedDescriptor(mosaicChangeDescriptor, aliceKey.publicKey);
 
-// NFTデータ
-nftTx = facade.transactionFactory.createEmbedded({
-  type: "transfer_transaction_v1", // Txタイプ:転送Tx
-  signerPublicKey: aliceKey.publicKey, // 署名者公開鍵
-  recipientAddress: bobAddress.toString(),
-  message: new Uint8Array([
-    0x00,
-    ...new TextEncoder("utf-8").encode("Hello Symbol!"),
-  ]), // NFTデータ実体
-});
+nftTxDescriptor = new symbolSdk.descriptors.TransferTransactionV1Descriptor(
+  bobAddress,
+  [
+    new symbolSdk.descriptors.UnresolvedMosaicDescriptor(
+      new symbolSdk.models.UnresolvedMosaicId(mosaicDefTx.id.value),
+      new symbolSdk.models.Amount(1n)
+    )
+  ],
+  `\0Hello, Symbol!` // NFTデータ実体
+)
+nftTx = facade.createTransactionFromTypedDescriptor(nftTxDescriptor, aliceKey.publicKey, 100, 60 * 60 * 2);
 
 // マークルハッシュの算出
 embeddedTransactions = [mosaicDefTx, mosaicChangeTx, nftTx];
-merkleHash = facade.constructor.hashEmbeddedTransactions(embeddedTransactions);
-
-// モザイクの生成とNFTデータをアグリゲートしてブロックに登録
-aggregateTx = facade.transactionFactory.create({
-  type: "aggregate_complete_transaction_v2",
-  signerPublicKey: aliceKey.publicKey,
-  deadline: facade.network.fromDatetime(Date.now()).addHours(2).timestamp, //Deadline:有効期限
-  transactionsHash: merkleHash,
-  transactions: embeddedTransactions,
-});
+aggregateDescriptor = new symbolSdk.descriptors.AggregateCompleteTransactionV2Descriptor(
+  facade.static.hashEmbeddedTransactions(embeddedTransactions),
+  embeddedTransactions
+);
+aggregateTx = facade.createTransactionFromTypedDescriptor(aggregateDescriptor, aliceKey.publicKey, 100, 60 * 60 * 2, 0);
 
 // 連署により追加される連署情報のサイズを追加して最終的なTxサイズを算出する
 requiredCosignatures = 0; // 必要な連署者の数を指定
@@ -388,7 +379,9 @@ calculatedSize =
   aggregateTx.size -
   aggregateTx.cosignatures.length * sizePerCosignature +
   calculatedCosignatures * sizePerCosignature;
-aggregateTx.fee = new symbolSdk.symbol.Amount(BigInt(calculatedSize * 100)); //手数料
+aggregateTx.fee = new symbolSdk.models.Amount(BigInt(calculatedSize * 100)); //手数料
+
+// 署名とアナウンス(5.2参照)
 ```
 
 モザイク生成時のブロック高と作成アカウントがモザイク情報に含まれているので同ブロック内のトランザクションを検索することにより、
@@ -407,23 +400,36 @@ transferableをfalseに設定することで転売が制限されるため、資
 
 ```js
 // モザイクフラグ設定
-f = symbolSdk.symbol.MosaicFlags.NONE.value;
-f += symbolSdk.symbol.MosaicFlags.SUPPLY_MUTABLE.value; // 供給量変更の可否
-// f += symbolSdk.symbol.MosaicFlags.TRANSFERABLE.value;   // 第三者への譲渡可否
-f += symbolSdk.symbol.MosaicFlags.RESTRICTABLE.value; // 制限設定の可否
-f += symbolSdk.symbol.MosaicFlags.REVOKABLE.value; // 発行者からの還収可否
-flags = new symbolSdk.symbol.MosaicFlags(f);
+f = symbolSdk.models.MosaicFlags.NONE.value;
+f += symbolSdk.models.MosaicFlags.SUPPLY_MUTABLE.value; // 供給量変更の可否
+// f += symbolSdk.models.MosaicFlags.TRANSFERABLE.value;   // 第三者への譲渡可否(ここでは使用しない)
+f += symbolSdk.models.MosaicFlags.RESTRICTABLE.value; // 制限設定の可否
+f += symbolSdk.models.MosaicFlags.REVOKABLE.value; // 発行者からの還収可否
+flags = new symbolSdk.models.MosaicFlags(f);
 ```
 
 トランザクションは以下のように記述します。
+(今回はMosaicの作成はしていないのでmosaicIdは適切な値を指定してください)
 
 ```js
-revocationTx = facade.transactionFactory.create({
-  type: "mosaic_supply_revocation_transaction_v1", // Txタイプ:モザイク回収Tx
-  signerPublicKey: aliceKey.publicKey, // 署名者公開鍵
-  deadline: facade.network.fromDatetime(Date.now()).addHours(2).timestamp, //Deadline:有効期限
-  mosaic: { mosaicId: mosaicId, amount: 1n }, // 回収モザイクIDと数量
-  sourceAddress: bobAddress,
-});
-revocationTx.fee = new symbolSdk.symbol.Amount(BigInt(revocationTx.size * 100)); //手数料
+// モザイク回収トランザクションの作成
+revocationDescriptor = new symbolSdk.descriptors.MosaicSupplyRevocationTransactionV1Descriptor(
+  bobAddress, // ソースアドレス（回収対象のアカウント）
+  new symbolSdk.descriptors.UnresolvedMosaicDescriptor(
+    new symbolSdk.models.UnresolvedMosaicId(mosaicId), // 回収するモザイクID
+    new symbolSdk.models.Amount(1n) // 回収する量
+  )
+);
+
+// トランザクション作成
+revocationTx = facade.createTransactionFromTypedDescriptor(revocationDescriptor, aliceKey.publicKey, 100, 60 * 60 * 2);
+revocationTx.fee = new symbolSdk.models.Amount(BigInt(revocationTx.size * 100)); //手数料
+
+// 署名とアナウンス
+sig = aliceKey.signTransaction(revocationTx);
+jsonPayload = facade.transactionFactory.static.attachSignature(revocationTx, sig);
+await fetch(
+  new URL('/transactions', NODE),
+  { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: jsonPayload }
+);
 ```

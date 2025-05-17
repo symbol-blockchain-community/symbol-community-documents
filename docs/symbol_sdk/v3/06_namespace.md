@@ -45,6 +45,12 @@ console.log("rootNsRenatalFeeTotal:" + rootNsRenatalFeeTotal);
 サブネームスペースの取得手数料を計算します。
 
 ```js
+// レンタル手数料の取得
+rentalFees = await fetch(
+  new URL('/network/fees/rental', NODE),
+  { method: 'GET', headers: { 'Content-Type': 'application/json' } }
+).then(res => res.json());
+console.log(rentalFees);
 childNamespaceRentalFee = Number(rentalFees.effectiveChildNamespaceRentalFee);
 console.log(childNamespaceRentalFee);
 ```
@@ -62,69 +68,37 @@ console.log(childNamespaceRentalFee);
 ルートネームスペースをレンタルします(例:xembook)
 
 ```js
-// ネームスペース設定
-name = "xembook"; // 作成するルートネームスペース
-
-// Tx作成
-tx = facade.transactionFactory.create({
-  type: "namespace_registration_transaction_v1", // Txタイプ:ネームスペース登録Tx
-  signerPublicKey: aliceKey.publicKey, // 署名者公開鍵
-  deadline: facade.network.fromDatetime(Date.now()).addHours(2).timestamp, //Deadline:有効期限
-  duration: new symbolSdk.symbol.BlockDuration(86400n), // duration:有効期限
-  registrationType: symbolSdk.symbol.NamespaceRegistrationType.ROOT,
-  name: new TextEncoder("utf-8").encode(name),
-});
-tx.fee = new symbolSdk.symbol.Amount(BigInt(tx.size * 100)); //手数料
-
-// 署名とアナウンス
-sig = facade.signTransaction(aliceKey, tx);
-jsonPayload = facade.transactionFactory.constructor.attachSignature(tx, sig);
-await fetch(new URL("/transactions", NODE), {
-  method: "PUT",
-  headers: { "Content-Type": "application/json" },
-  body: jsonPayload,
-})
-  .then((res) => res.json())
-  .then((json) => {
-    return json;
-  });
+rootName = "yournamespacename"; // 各自で値を設定してください
+rootDescriptor = new symbolSdk.descriptors.NamespaceRegistrationTransactionV1Descriptor(
+  new symbolSdk.models.NamespaceId(symbolSdk.generateNamespaceId(rootName)),
+  symbolSdk.models.NamespaceRegistrationType.ROOT,
+  new symbolSdk.models.BlockDuration(86400n),
+  undefined,
+  rootName
+);
+rootTx = facade.createTransactionFromTypedDescriptor(rootDescriptor, aliceKey.publicKey, 100, 60 * 60 * 2);
+sig = aliceKey.signTransaction(rootTx);
+jsonPayload = facade.transactionFactory.static.attachSignature(rootTx, sig);
+await fetch(new URL('/transactions', NODE), { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: jsonPayload });
 ```
 
 サブネームスペースをレンタルします(例:xembook.tomato)
 
 ```js
-// ネームスペース設定
-parentNameId = symbolSdk.symbol.generateNamespaceId("xembook"); // 紐づけたいルートネームスペース
+parentNameId = symbolSdk.generateNamespaceId(rootName); // 紐づけたいルートネームスペース
 name = "tomato"; // 作成するサブネームスペース
-
-subNamespaceTx = facade.transactionFactory.create({
-  type: "namespace_registration_transaction_v1", // Txタイプ:ネームスペース登録Tx
-  signerPublicKey: aliceKey.publicKey, // 署名者公開鍵
-  deadline: facade.network.fromDatetime(Date.now()).addHours(2).timestamp, //Deadline:有効期限
-  duration: new symbolSdk.symbol.BlockDuration(86400n), // duration:有効期限
-  parentId: parentNameId,
-  registrationType: symbolSdk.symbol.NamespaceRegistrationType.CHILD,
-  name: new TextEncoder("utf-8").encode(name),
-});
-subNamespaceTx.fee = new symbolSdk.symbol.Amount(
-  BigInt(subNamespaceTx.size * 100),
-); //手数料
-
-// 署名とアナウンス
-sig = facade.signTransaction(aliceKey, subNamespaceTx);
-jsonPayload = facade.transactionFactory.constructor.attachSignature(
-  subNamespaceTx,
-  sig,
+subDescriptor = new symbolSdk.descriptors.NamespaceRegistrationTransactionV1Descriptor(
+  new symbolSdk.models.NamespaceId(symbolSdk.generateNamespaceId(name, parentNameId)),
+  symbolSdk.models.NamespaceRegistrationType.CHILD,
+  undefined,
+  parentNameId,
+  name
 );
-await fetch(new URL("/transactions", NODE), {
-  method: "PUT",
-  headers: { "Content-Type": "application/json" },
-  body: jsonPayload,
-})
-  .then((res) => res.json())
-  .then((json) => {
-    return json;
-  });
+subNamespaceTx = facade.createTransactionFromTypedDescriptor(subDescriptor, aliceKey.publicKey, 100, 60 * 60 * 2);
+// 署名とアナウンス
+sig = aliceKey.signTransaction(subNamespaceTx);
+jsonPayload = facade.transactionFactory.static.attachSignature(subNamespaceTx, sig);
+await fetch(new URL('/transactions', NODE), { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: jsonPayload });
 ```
 
 2階層目のサブネームスペースを作成したい場合は
@@ -132,8 +106,8 @@ await fetch(new URL("/transactions", NODE), {
 
 ```js
 // ネームスペース設定
-rootNameId = symbolSdk.symbol.generateNamespaceId("xembook"); // ルートネームスペース
-parentNameId = symbolSdk.symbol.generateNamespaceId("tomato", rootNameId); // 紐づけたい1階層目のサブネームスペース
+rootNameId = symbolSdk.generateNamespaceId(rootName); // ルートネームスペース
+parentNameId = symbolSdk.generateNamespaceId(name, rootNameId); // 紐づけたい1階層目のサブネームスペース
 name = "morning"; // 作成するサブネームスペース
 
 // 以下はサブネームスペース作成と同じ
@@ -144,8 +118,8 @@ name = "morning"; // 作成するサブネームスペース
 レンタル済みルートネームスペースの有効期限を計算します。
 
 ```js
-namespaceIds = symbolSdk.symbol.generateNamespacePath("xembook"); // ルートネームスペース
-namespaceId = namespaceIds[namespaceIds.length - 1];
+namespaceIds = symbolSdk.generateNamespacePath("quicklearnsymbolyourname"); // ルートネームスペース
+namespaceId = new symbolSdk.models.NamespaceId(namespaceIds[namespaceIds.length - 1]);
 
 nsInfo = await fetch(
   new URL("/namespaces/" + namespaceId.toString(16).toUpperCase(), NODE),
@@ -200,34 +174,22 @@ console.log(endDate);
 
 ```js
 // リンクするネームスペースとアドレスの設定
-namespaceId = symbolSdk.symbol.generateNamespaceId("xembook");
-address = new symbolSdk.symbol.Address(
-  "TBIL6D6RURP45YQRWV6Q7YVWIIPLQGLZQFHWFEQ",
-);
+namespaceIds = symbolSdk.generateNamespacePath(rootName);
+namespaceId = new symbolSdk.models.NamespaceId(namespaceIds[namespaceIds.length - 1]);
+address = new symbolSdk.Address("TBIL6D6RURP45YQRWV6Q7YVWIIPLQGLZQFHWFEQ");  // リンク先アドレス
 
-// Tx作成
-tx = facade.transactionFactory.create({
-  type: "address_alias_transaction_v1", // Txタイプ:アドレスエイリアスTx
-  signerPublicKey: aliceKey.publicKey, // 署名者公開鍵
-  deadline: facade.network.fromDatetime(Date.now()).addHours(2).timestamp, //Deadline:有効期限
-  namespaceId: namespaceId,
-  address: address,
-  aliasAction: symbolSdk.symbol.AliasAction.LINK,
-});
-tx.fee = new symbolSdk.symbol.Amount(BigInt(tx.size * 100)); //手数料
+// Tx作成(Txタイプ:アドレスエイリアスTx)
+descriptor = new symbolSdk.descriptors.AddressAliasTransactionV1Descriptor(
+  namespaceId,
+  address,
+  symbolSdk.models.AliasAction.LINK
+);
+tx = facade.createTransactionFromTypedDescriptor(descriptor, aliceKey.publicKey, 100, 60 * 60 * 2);
 
 // 署名とアナウンス
-sig = facade.signTransaction(aliceKey, tx);
-jsonPayload = facade.transactionFactory.constructor.attachSignature(tx, sig);
-await fetch(new URL("/transactions", NODE), {
-  method: "PUT",
-  headers: { "Content-Type": "application/json" },
-  body: jsonPayload,
-})
-  .then((res) => res.json())
-  .then((json) => {
-    return json;
-  });
+sig = aliceKey.signTransaction(tx);
+jsonPayload = facade.transactionFactory.static.attachSignature(tx, sig);
+await fetch(new URL('/transactions', NODE), { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: jsonPayload });
 ```
 
 リンク先のアドレスは自分が所有していなくても問題ありません。
@@ -236,36 +198,22 @@ await fetch(new URL("/transactions", NODE), {
 
 ```js
 // リンクするネームスペースとモザイクの設定
-namespaceIds = symbolSdk.symbol.generateNamespacePath("xembook.tomato");
-namespaceId = namespaceIds[namespaceIds.length - 1];
-mosaicId = new symbolSdk.symbol.MosaicId(0x3A8416DB2D53xxxxn);
+namespaceIds = symbolSdk.generateNamespacePath(`${rootName}.${name}`); // {namespace}.{mosaic}形式
+namespaceId = new symbolSdk.models.NamespaceId(namespaceIds[namespaceIds.length - 1]);
+mosaicId = new symbolSdk.models.MosaicId(0x3A8416DB2D53****n);  // リンク先モザイクID
 
-// Tx作成
-tx = facade.transactionFactory.create({
-  type: 'mosaic_alias_transaction_v1',  // Txタイプ:モザイクエイリアスTx
-  signerPublicKey: aliceKey.publicKey,  // 署名者公開鍵
-  deadline: facade.network.fromDatetime(Date.now()).addHours(2).timestamp, //Deadline:有効期限
-  namespaceId: namespaceId,
-  mosaicId: mosaicId,
-  aliasAction: symbolSdk.symbol.AliasAction.LINK
-});
-tx.fee = new symbolSdk.symbol.Amount(BigInt(tx.size * 100)); //手数料
+// Tx作成(Txタイプ:モザイクエイリアスTx)
+descriptor = new symbolSdk.descriptors.MosaicAliasTransactionV1Descriptor(
+  namespaceId,
+  mosaicId,
+  symbolSdk.models.AliasAction.LINK
+);
+tx = facade.createTransactionFromTypedDescriptor(descriptor, aliceKey.publicKey, 100, 60 * 60 * 2);
 
 // 署名とアナウンス
-sig = facade.signTransaction(aliceKey, tx);
-jsonPayload = facade.transactionFactory.constructor.attachSignature(tx, sig);
-await fetch(
-  new URL('/transactions', NODE),
-  {
-    method: 'PUT',
-    headers: { 'Content-Type': 'application/json' },
-    body: jsonPayload,
-  }
-)
-.then((res) => res.json())
-.then((json) => {
-  return json;
-});
+sig = aliceKey.signTransaction(tx);
+jsonPayload = facade.transactionFactory.static.attachSignature(tx, sig);
+await fetch(new URL('/transactions', NODE), { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: jsonPayload });
 ```
 
 モザイクを作成したアドレスと同一の場合のみリンクできるようです。
@@ -279,7 +227,7 @@ v3 ではネームスペースを直接指定できないため、アドレス�
 
 ```js
 // UnresolvedAccount 導出
-namespaceId = symbolSdk.symbol.generateNamespaceId("xembook");
+namespaceId = symbolSdk.generateNamespaceId(rootName);
 namespaceIdData = symbolSdk.utils.hexToUint8(namespaceId.toString(16));
 namespaceIdData.reverse();
 unresolvecAccount = new Uint8Array([
@@ -288,73 +236,65 @@ unresolvecAccount = new Uint8Array([
   ...new Uint8Array(24 - (namespaceIdData.length + 1)),
 ]);
 
-// Tx作成
-tx = facade.transactionFactory.create({
-  type: "transfer_transaction_v1", // Txタイプ:転送Tx
-  signerPublicKey: aliceKey.publicKey, // 署名者公開鍵
-  deadline: facade.network.fromDatetime(Date.now()).addHours(2).timestamp, //Deadline:有効期限
-  recipientAddress: unresolvecAccount, // UnresolvedAccount:未解決アカウントアドレス
-  mosaics: [],
-  message: new Uint8Array(),
-});
-tx.fee = new symbolSdk.symbol.Amount(BigInt(tx.size * 100)); //手数料
+// Tx作成(Txタイプ:転送Tx)
+tx = facade.createTransactionFromTypedDescriptor(
+  new symbolSdk.descriptors.TransferTransactionV1Descriptor(
+    unresolvecAccount, // UnresolvedAccount:未解決アカウントアドレス
+    [], // 送信モザイクなし
+    new Uint8Array(), // 空メッセージ
+    new symbolSdk.models.Amount(BigInt(tx.size * 100)), // 手数料
+    new symbolSdk.models.Deadline(facade.network.fromDatetime(Date.now()).addHours(2).timestamp), // Deadline:有効期限
+    new symbolSdk.models.MosaicId(0x3A8416DB2D53xxxxn) // 送信モザイクID
+  ),
+  aliceKey.publicKey, // 署名者公開鍵
+  100, // 手数料乗数
+  60 * 60 * 2 // 有効期限（2時間）
+);
 
 // 署名とアナウンス
-sig = facade.signTransaction(aliceKey, tx);
-jsonPayload = facade.transactionFactory.constructor.attachSignature(tx, sig);
-await fetch(new URL("/transactions", NODE), {
-  method: "PUT",
-  headers: { "Content-Type": "application/json" },
-  body: jsonPayload,
-})
-  .then((res) => res.json())
-  .then((json) => {
-    return json;
-  });
+sig = aliceKey.signTransaction(tx);
+jsonPayload = facade.transactionFactory.static.attachSignature(tx, sig);
+await fetch(new URL('/transactions', NODE), { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: jsonPayload });
 ```
 
 送信モザイクにUnresolvedMosaicとして指定して、モザイクIDを特定しないままトランザクションを署名・アナウンスします。
 
 ```js
-// address = new symbolSdk.symbol.Address("*****");
-namespaceIds = symbolSdk.symbol.generateNamespacePath("xembook.tomato");
-namespaceId = namespaceIds[namespaceIds.length - 1];
+// address = new symbolSdk.Address("*****"); // 送信先アドレス
+namespaceIds = symbolSdk.generateNamespacePath(`${rootName}.${name}`); // {namespace}.{mosaic}形式
+namespaceId = new symbolSdk.models.NamespaceId(namespaceIds[namespaceIds.length - 1]);
 
-// Tx作成
-tx = facade.transactionFactory.create({
-  type: "transfer_transaction_v1", // Txタイプ:転送Tx
-  signerPublicKey: aliceKey.publicKey, // 署名者公開鍵
-  deadline: facade.network.fromDatetime(Date.now()).addHours(2).timestamp, //Deadline:有効期限
-  recipientAddress: address,
-  mosaics: [
-    {
-      mosaicId: namespaceId, // UnresolvedMosaic:未解決モザイク
-      amount: 1n, // 送信量
-    },
-  ],
-  message: new Uint8Array(),
-});
-tx.fee = new symbolSdk.symbol.Amount(BigInt(tx.size * 100)); // 手数料
+// Tx作成(Txタイプ:転送Tx)
+tx = facade.createTransactionFromTypedDescriptor(
+  new symbolSdk.descriptors.TransferTransactionV1Descriptor(
+    address, // 送信先アドレス
+    [
+      {
+        mosaicId: namespaceId, // UnresolvedMosaic:未解決モザイク
+        amount: 1n, // 送信量
+      },
+    ],
+    new Uint8Array(), // 空メッセージ
+    new symbolSdk.models.Amount(BigInt(tx.size * 100)), // 手数料
+    new symbolSdk.models.Deadline(facade.network.fromDatetime(Date.now()).addHours(2).timestamp), // Deadline:有効期限
+    new symbolSdk.models.MosaicId(0x3A8416DB2D53xxxxn) // 送信モザイクID
+  ),
+  aliceKey.publicKey, // 署名者公開鍵
+  100, // 手数料乗数
+  60 * 60 * 2 // 有効期限（2時間）
+);
 
 // 署名とアナウンス
-sig = facade.signTransaction(aliceKey, tx);
-jsonPayload = facade.transactionFactory.constructor.attachSignature(tx, sig);
-await fetch(new URL("/transactions", NODE), {
-  method: "PUT",
-  headers: { "Content-Type": "application/json" },
-  body: jsonPayload,
-})
-  .then((res) => res.json())
-  .then((json) => {
-    return json;
-  });
+sig = aliceKey.signTransaction(tx);
+jsonPayload = facade.transactionFactory.static.attachSignature(tx, sig);
+await fetch(new URL('/transactions', NODE), { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: jsonPayload });
 ```
 
 XYMをネームスペースで使用する場合は以下のように指定します。
 
 ```js
-namespaceIds = symbolSdk.symbol.generateNamespacePath("symbol.xym");
-namespaceId = namespaceIds[namespaceIds.length - 1];
+namespaceIds = symbolSdk.generateNamespacePath("symbol.xym");
+namespaceId = new symbolSdk.models.NamespaceId(namespaceIds[namespaceIds.length - 1]);
 ```
 
 ```js
@@ -366,7 +306,7 @@ namespaceId = namespaceIds[namespaceIds.length - 1];
 アドレスへリンクしたネームスペースの参照します
 
 ```js
-nameId = symbolSdk.symbol.generateNamespaceId("xembook");
+nameId = symbolSdk.generateNamespaceId(rootName);
 namespaceInfo = await fetch(
   new URL("/namespaces/" + nameId.toString(16).toUpperCase(), NODE),
   {
@@ -418,8 +358,8 @@ NamespaceRegistrationTypeは以下の通りです。
 モザイクへリンクしたネームスペースを参照します。
 
 ```js
-namespaceIds = symbolSdk.symbol.generateNamespacePath("xembook.tomato");
-nameId = namespaceIds[namespaceIds.length - 1];
+namespaceIds = symbolSdk.generateNamespacePath(`${rootName}.${name}`);
+nameId = new symbolSdk.models.NamespaceId(namespaceIds[namespaceIds.length - 1]);
 namespaceInfo = await fetch(
   new URL("/namespaces/" + nameId.toString(16).toUpperCase(), NODE),
   {

@@ -15,7 +15,10 @@ sidebar_position: 3
 以下の手順で秘密鍵を作成し、秘密鍵より公開鍵を導出します。
 
 ```js
-aliceKey = new symbolSdk.symbol.KeyPair(symbolSdk.PrivateKey.random());
+aliceKey = facade.createAccount(sdkCore.PrivateKey.random());
+// 既存のprivateKeyで作成する場合
+aliceKey = facade.createAccount(new sdkCore.PrivateKey("24B929287E1B68F7CB...."))
+
 console.log(aliceKey);
 aliceAddress = facade.network.publicKeyToAddress(aliceKey.publicKey);
 console.log(aliceAddress);
@@ -38,8 +41,8 @@ console.log(aliceAddress);
 ### 秘密鍵と公開鍵の導出
 
 ```js
-console.log(aliceKey.privateKey.toString());
-console.log(aliceKey.publicKey.toString());
+console.log(alice.keyPair.privateKey.toString());
+console.log(alice.publicKey.toString());
 ```
 
 ```
@@ -68,10 +71,8 @@ console.log(aliceRawAddress);
 ### 秘密鍵からアカウント生成
 
 ```js
-aliceKey = new symbolSdk.symbol.KeyPair(
-  new symbolSdk.PrivateKey(
-    "1E9139CC1580B4AED6A1FE110085281D4982ED0D89CE07F3380EB83069B1****",
-  ),
+aliceKey = facade.createAccount(
+  new sdkCore.PrivateKey("1E9139CC1580B4AED6A1FE110085281D4982ED0D89CE07F3380EB83069B1****")
 );
 
 aliceAddress = facade.network.publicKeyToAddress(aliceKey.publicKey);
@@ -88,8 +89,14 @@ alicePublicAccount = new symbolSdk.symbol.PublicKey(
     ),
   ),
 );
+alicePublicAccount = facade.createPublicAccount(
+  new sdkCore.PublicKey(
+    "D4933FC1E4C56F9DF9314E9E0533173E1AB727BDB2A04B59F048124E93BEFBD2"
+  )
+);
+
 console.log(alicePublicAccount);
-console.log(alicePublicAccount.toString());
+console.log(alicePublicAccount.publicKey.toString());
 ```
 
 ###### 出力例
@@ -105,14 +112,12 @@ console.log(alicePublicAccount.toString());
 aliceAddress = new symbolSdk.symbol.Address(
   "TBXUTAX6O6EUVPB6X7OBNX6UUXBMPPAFX7KE5TQ",
 );
-console.log(aliceAddress);
 console.log(aliceAddress.toString());
 ```
 
 ###### 出力例
 
 ```js
-> Address {bytes: Uint8Array(24)}
 > TBXUTAX6O6EUVPB6X7OBNX6UUXBMPPAFX7KE5TQ
 ```
 
@@ -168,29 +173,22 @@ accountInfo = await fetch(
     return json.account;
   });
 console.log(accountInfo);
+
+accountInfo = await fetch(
+  new URL('/accounts/' + aliceAddress.toString(), NODE),
+  {
+    method: 'GET', 
+    headers: { 'Content-Type': 'application/json' }
+  }
+).then(res => res.json()).then(json => json.account);
+
+console.log(accountInfo); // まだ404エラー
 ```
 
-###### 出力例
+#### アカウント情報の取得について
 
-```js
-> {
-    version: 1, 
-    address: '986F4982FE77894ABC3EBFDC16DFD4A5C2C7BC05BFD44ECE', 
-    addressHeight: '52812', 
-    publicKey: '0000000000000000000000000000000000000000000000000000000000000000', 
-    publicKeyHeight: '0',
-  …}
-    address: "986F4982FE77894ABC3EBFDC16DFD4A5C2C7BC05BFD44ECE"
-    publicKey: "0000000000000000000000000000000000000000000000000000000000000000"
-  > mosaics: Array(1)
-      0:
-        amount: "3510000000"
-        id: "72C0212E67A08BCE"
-```
+クライアント側で作成しただけで、ブロックチェーンでまだ利用されていないアカウント情報は記録されていません。宛先として指定されて受信することで初めてアカウント情報が記録され、署名したトランザクションを送信することで公開鍵の情報が記録されます。そのため、現時点では404エラーが返ります。
 
-#### publicKey
-
-クライアント側で作成しただけで、ブロックチェーンでまだ利用されていないアカウント情報は記録されていません。宛先として指定されて受信することで初めてアカウント情報が記録され、署名したトランザクションを送信することで公開鍵の情報が記録されます。そのため、publicKey は現在 `00000...` 表記となっています。
 
 #### BigInt
 
@@ -211,23 +209,17 @@ BigInt(0x12345);
 ```js
 mosaicAmount = accountInfo.mosaics[0].amount;
 mosaicInfo = await fetch(
-  new URL("/mosaics/" + accountInfo.mosaics[0].id, NODE),
+  new URL('/mosaics/' + accountInfo.mosaics[0].id, NODE),
   {
-    method: "GET",
-    headers: { "Content-Type": "application/json" },
-  },
-)
-  .then((res) => res.json())
-  .then((json) => {
-    return json.mosaic;
-  });
+    method: 'GET',
+    headers: {'Content-Type': 'application/json'}
+  }
+).then(res => res.json()).then(json => json.mosaic);
 
-divisibility = mosaicInfo.divisibility; //可分性
+divisibility = mosaicInfo.divisibility;
+
 if (divisibility > 0) {
-  displayAmount =
-    mosaicAmount.slice(0, mosaicAmount.length - divisibility) || "0" +
-    "." +
-    mosaicAmount.slice(-divisibility);
+  displayAmount = mosaicAmount.slice(0, mosaicAmount.length - divisibility) + "." + mosaicAmount.slice(-divisibility);
 } else {
   displayAmount = mosaicAmount;
 }
@@ -243,7 +235,7 @@ console.log(displayAmount);
 #### 事前準備：対話のための Bob アカウントを生成
 
 ```js
-bobKey = new symbolSdk.symbol.KeyPair(symbolSdk.PrivateKey.random());
+bobKey = facade.createAccount(sdkCore.PrivateKey.random());
 ```
 
 #### 暗号化
@@ -253,10 +245,9 @@ Alice の秘密鍵・Bob の公開鍵で暗号化し、Alice の公開鍵・Bob 
 ```js
 message = "Hello Symbol!";
 aliceMsgEncoder = new symbolSdk.symbol.MessageEncoder(aliceKey);
-encryptedMessage = aliceMsgEncoder.encode(
-  bobKey.publicKey,
-  new TextEncoder().encode(message),
-);
+
+encryptedMessage = alice.messageEncoder().encode(bobKey.publicKey, new TextEncoder().encode(message));
+
 console.log(Buffer.from(encryptedMessage).toString("hex").toUpperCase());
 ```
 
@@ -267,16 +258,8 @@ console.log(Buffer.from(encryptedMessage).toString("hex").toUpperCase());
 #### 復号化
 
 ```js
-bobMsgEncoder = new symbolSdk.symbol.MessageEncoder(bobKey);
-decryptMessageData = bobMsgEncoder.tryDecode(
-  aliceKey.publicKey,
-  Uint8Array.from(
-    Buffer.from(
-      "0167AF68C3E7EFBD7048F6E9140FAA14256B64DD19FD0708EDCF17758A81FCC00084D869D6F1434A77AF",
-      "hex",
-    ),
-  ),
-);
+decryptMessageData = bob.messageEncoder().tryDecode(alice.publicKey, encryptedMessage);
+
 console.log(decryptMessageData);
 if (decryptMessageData.isDecoded) {
   decryptMessage = new TextDecoder().decode(decryptMessageData.message);
@@ -317,8 +300,9 @@ if (decryptMessageData[0]) {
 Alice の秘密鍵でメッセージを署名し、Alice の公開鍵と署名でメッセージを検証します。
 
 ```js
-payload = Buffer.from("Hello Symbol!", "utf-8");
-signature = aliceKey.sign(payload);
+payload = Buffer.from("Hello Symbol!", 'utf-8');
+signature = alice.keyPair.sign(payload);
+
 console.log(signature.toString());
 ```
 
@@ -329,8 +313,8 @@ console.log(signature.toString());
 #### 検証
 
 ```js
-v = new symbolSdk.symbol.Verifier(aliceKey.publicKey);
-isVerified = v.verify(Buffer.from("Hello Symbol!", "utf-8"), signature);
+verifier = new symbolSdk.Verifier(alice.publicKey);
+isVerified = verifier.verify(Buffer.from("Hello Symbol!", 'utf-8'), signature);
 console.log(isVerified);
 ```
 
