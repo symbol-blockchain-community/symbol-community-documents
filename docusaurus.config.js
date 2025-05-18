@@ -73,7 +73,7 @@ const config = {
             position: "right",
           },
           {
-            href: "https://github.com/ymuichiro/symbol-community-documents",
+            href: "https://github.com/symbol-blockchain-community/symbol-community-documents",
             label: "GitHub",
             position: "right",
           },

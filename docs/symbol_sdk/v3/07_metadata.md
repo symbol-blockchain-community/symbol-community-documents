@@ -35,10 +35,10 @@ hasher.update(new TextEncoder().encode(key));
 digest = hasher.digest();
 lower = [...digest.subarray(0, 4)];
 lower.reverse();
-lowerValue = BigInt("0x" + symbolSdk.utils.uint8ToHex(lower));
+lowerValue = BigInt("0x" + sdkCore.utils.uint8ToHex(lower));
 higher = [...digest.subarray(4, 8)];
 higher.reverse();
-higherValue = BigInt("0x" + symbolSdk.utils.uint8ToHex(higher)) | 0x80000000n;
+higherValue = BigInt("0x" + sdkCore.utils.uint8ToHex(higher)) | 0x80000000n;
 keyId = lowerValue + higherValue * 0x100000000n;
 valueData = new TextEncoder().encode(value);
 
@@ -61,7 +61,7 @@ metadataInfo = await fetch(new URL("/metadata?" + query.toString(), NODE), {
 sizeDelta = valueData.length;
 if (metadataInfo.length > 0) {
   sizeDelta -= metadataInfo[0].metadataEntry.valueSize;
-  originData = symbolSdk.utils.hexToUint8(metadataInfo[0].metadataEntry.value);
+  originData = sdkCore.utils.hexToUint8(metadataInfo[0].metadataEntry.value);
   diffData = new Uint8Array(Math.max(originData.length, valueData.length));
   for (idx = 0; idx < diffData.length; idx++) {
     diffData[idx] =
@@ -72,56 +72,26 @@ if (metadataInfo.length > 0) {
 }
 
 // アカウントメタデータ登録Tx作成
-tx = facade.transactionFactory.createEmbedded({
-  type: "account_metadata_transaction_v1", // Txタイプ:アカウントメタデータ登録Tx
-  signerPublicKey: aliceKey.publicKey, // 署名者公開鍵
-  targetAddress: targetAddress,
-  scopedMetadataKey: keyId,
-  valueSizeDelta: sizeDelta,
-  value: valueData,
-});
-
-// マークルハッシュの算出
-embeddedTransactions = [tx];
-merkleHash = facade.constructor.hashEmbeddedTransactions(embeddedTransactions);
+metadataDescriptor = new symbolSdk.descriptors.AccountMetadataTransactionV1Descriptor(
+  targetAddress,
+  keyId,
+  sizeDelta,
+  valueData
+);
 
 // アグリゲートTx作成
-aggregateTx = facade.transactionFactory.create({
-  type: "aggregate_complete_transaction_v2",
-  signerPublicKey: aliceKey.publicKey, // 署名者公開鍵
-  deadline: facade.network.fromDatetime(Date.now()).addHours(2).timestamp, //Deadline:有効期限
-  transactionsHash: merkleHash,
-  transactions: embeddedTransactions,
-});
-
-// 連署により追加される連署情報のサイズを追加して最終的なTxサイズを算出する
-requiredCosignatures = 0; // 必要な連署者の数を指定
-calculatedCosignatures =
-  requiredCosignatures > aggregateTx.cosignatures.length
-    ? requiredCosignatures
-    : aggregateTx.cosignatures.length;
-sizePerCosignature = 8 + 32 + 64;
-calculatedSize =
-  aggregateTx.size -
-  aggregateTx.cosignatures.length * sizePerCosignature +
-  calculatedCosignatures * sizePerCosignature;
-aggregateTx.fee = new symbolSdk.symbol.Amount(BigInt(calculatedSize * 100)); //手数料
+embeddedTx = facade.createEmbeddedTransactionFromTypedDescriptor(metadataDescriptor, aliceKey.publicKey);
+embeddedTransactions = [embeddedTx];
+aggregateDescriptor = new symbolSdk.descriptors.AggregateCompleteTransactionV2Descriptor(
+  facade.static.hashEmbeddedTransactions(embeddedTransactions),
+  embeddedTransactions
+);
+aggregateTx = facade.createTransactionFromTypedDescriptor(aggregateDescriptor, aliceKey.publicKey, 100, 60 * 60 * 2);
 
 // 署名とアナウンス
-sig = facade.signTransaction(aliceKey, aggregateTx);
-jsonPayload = facade.transactionFactory.constructor.attachSignature(
-  aggregateTx,
-  sig,
-);
-await fetch(new URL("/transactions", NODE), {
-  method: "PUT",
-  headers: { "Content-Type": "application/json" },
-  body: jsonPayload,
-})
-  .then((res) => res.json())
-  .then((json) => {
-    return json;
-  });
+sig = aliceKey.signTransaction(aggregateTx);
+jsonPayload = facade.transactionFactory.static.attachSignature(aggregateTx, sig);
+await fetch(new URL('/transactions', NODE), { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: jsonPayload });
 ```
 
 メタデータの登録には記録先アカウントが承諾を示す署名が必要です。
@@ -145,10 +115,10 @@ hasher.update(new TextEncoder().encode(key));
 digest = hasher.digest();
 lower = [...digest.subarray(0, 4)];
 lower.reverse();
-lowerValue = BigInt("0x" + symbolSdk.utils.uint8ToHex(lower));
+lowerValue = BigInt("0x" + sdkCore.utils.uint8ToHex(lower));
 higher = [...digest.subarray(4, 8)];
 higher.reverse();
-higherValue = BigInt("0x" + symbolSdk.utils.uint8ToHex(higher)) | 0x80000000n;
+higherValue = BigInt("0x" + sdkCore.utils.uint8ToHex(higher)) | 0x80000000n;
 keyId = lowerValue + higherValue * 0x100000000n;
 valueData = new TextEncoder().encode(value);
 
@@ -167,11 +137,12 @@ metadataInfo = await fetch(new URL("/metadata?" + query.toString(), NODE), {
   .then((json) => {
     return json.data;
   });
+
 // 登録済の場合は差分データを作成する
 sizeDelta = valueData.length;
 if (metadataInfo.length > 0) {
   sizeDelta -= metadataInfo[0].metadataEntry.valueSize;
-  originData = symbolSdk.utils.hexToUint8(metadataInfo[0].metadataEntry.value);
+  originData = sdkCore.utils.hexToUint8(metadataInfo[0].metadataEntry.value);
   diffData = new Uint8Array(Math.max(originData.length, valueData.length));
   for (idx = 0; idx < diffData.length; idx++) {
     diffData[idx] =
@@ -182,47 +153,25 @@ if (metadataInfo.length > 0) {
 }
 
 // アカウントメタデータ登録Tx作成
-tx = facade.transactionFactory.createEmbedded({
-  type: "account_metadata_transaction_v1", // Txタイプ:アカウントメタデータ登録Tx
-  signerPublicKey: aliceKey.publicKey, // 署名者公開鍵
-  targetAddress: targetAddress,
-  scopedMetadataKey: keyId,
-  valueSizeDelta: sizeDelta,
-  value: valueData,
-});
-
-// マークルハッシュの算出
-embeddedTransactions = [tx];
-merkleHash = facade.constructor.hashEmbeddedTransactions(embeddedTransactions);
+metadataDescriptor = new symbolSdk.descriptors.AccountMetadataTransactionV1Descriptor(
+  targetAddress,
+  keyId,
+  sizeDelta,
+  valueData
+);
 
 // アグリゲートTx作成
-aggregateTx = facade.transactionFactory.create({
-  type: "aggregate_complete_transaction_v2",
-  signerPublicKey: aliceKey.publicKey, // 署名者公開鍵
-  deadline: facade.network.fromDatetime(Date.now()).addHours(2).timestamp, //Deadline:有効期限
-  transactionsHash: merkleHash,
-  transactions: embeddedTransactions,
-});
-
-// 連署により追加される連署情報のサイズを追加して最終的なTxサイズを算出する
-requiredCosignatures = 1; // 必要な連署者の数を指定
-calculatedCosignatures =
-  requiredCosignatures > aggregateTx.cosignatures.length
-    ? requiredCosignatures
-    : aggregateTx.cosignatures.length;
-sizePerCosignature = 8 + 32 + 64;
-calculatedSize =
-  aggregateTx.size -
-  aggregateTx.cosignatures.length * sizePerCosignature +
-  calculatedCosignatures * sizePerCosignature;
-aggregateTx.fee = new symbolSdk.symbol.Amount(BigInt(calculatedSize * 100)); //手数料
+embeddedTx = facade.createEmbeddedTransactionFromTypedDescriptor(metadataDescriptor, aliceKey.publicKey);
+embeddedTransactions = [embeddedTx];
+aggregateDescriptor = new symbolSdk.descriptors.AggregateCompleteTransactionV2Descriptor(
+  facade.static.hashEmbeddedTransactions(embeddedTransactions),
+  embeddedTransactions
+);
+aggregateTx = facade.createTransactionFromTypedDescriptor(aggregateDescriptor, aliceKey.publicKey, 100, 60 * 60 * 2);
 
 // 作成者による署名
-sig = facade.signTransaction(aliceKey, aggregateTx);
-jsonPayload = facade.transactionFactory.constructor.attachSignature(
-  aggregateTx,
-  sig,
-);
+sig = aliceKey.signTransaction(aggregateTx);
+jsonPayload = facade.transactionFactory.static.attachSignature(aggregateTx, sig);
 
 // 記録先アカウントによる連署
 coSig = facade.cosignTransaction(bobKey, aggregateTx, false);
@@ -235,11 +184,7 @@ await fetch(new URL("/transactions", NODE), {
   body: JSON.stringify({
     payload: symbolSdk.utils.uint8ToHex(aggregateTx.serialize()),
   }),
-})
-  .then((res) => res.json())
-  .then((json) => {
-    return json;
-  });
+});
 ```
 
 bobの秘密鍵が分からない場合はこの後の章で説明する
@@ -278,10 +223,10 @@ hasher.update(new TextEncoder().encode(key));
 digest = hasher.digest();
 lower = [...digest.subarray(0, 4)];
 lower.reverse();
-lowerValue = BigInt("0x" + symbolSdk.utils.uint8ToHex(lower));
+lowerValue = BigInt("0x" + sdkCore.utils.uint8ToHex(lower));
 higher = [...digest.subarray(4, 8)];
 higher.reverse();
-higherValue = BigInt("0x" + symbolSdk.utils.uint8ToHex(higher)) | 0x80000000n;
+higherValue = BigInt("0x" + sdkCore.utils.uint8ToHex(higher)) | 0x80000000n;
 keyId = lowerValue + higherValue * 0x100000000n;
 valueData = new TextEncoder().encode(value);
 
@@ -300,11 +245,12 @@ metadataInfo = await fetch(new URL("/metadata?" + query.toString(), NODE), {
   .then((json) => {
     return json.data;
   });
+
 // 登録済の場合は差分データを作成する
 sizeDelta = valueData.length;
 if (metadataInfo.length > 0) {
   sizeDelta -= metadataInfo[0].metadataEntry.valueSize;
-  originData = symbolSdk.utils.hexToUint8(metadataInfo[0].metadataEntry.value);
+  originData = sdkCore.utils.hexToUint8(metadataInfo[0].metadataEntry.value);
   diffData = new Uint8Array(Math.max(originData.length, valueData.length));
   for (idx = 0; idx < diffData.length; idx++) {
     diffData[idx] =
@@ -315,57 +261,27 @@ if (metadataInfo.length > 0) {
 }
 
 // モザイクメタデータ登録Tx作成
-tx = facade.transactionFactory.createEmbedded({
-  type: "mosaic_metadata_transaction_v1", // Txタイプ:モザイクメタデータ登録Tx
-  signerPublicKey: aliceKey.publicKey, // 署名者公開鍵
-  targetMosaicId: targetMosaic,
-  targetAddress: sourceAddress,
-  scopedMetadataKey: keyId,
-  valueSizeDelta: sizeDelta,
-  value: valueData,
-});
-
-// マークルハッシュの算出
-embeddedTransactions = [tx];
-merkleHash = facade.constructor.hashEmbeddedTransactions(embeddedTransactions);
+metadataDescriptor = new symbolSdk.descriptors.MosaicMetadataTransactionV1Descriptor(
+  targetAddress,
+  targetMosaic,
+  keyId,
+  sizeDelta,
+  valueData
+);
 
 // アグリゲートTx作成
-aggregateTx = facade.transactionFactory.create({
-  type: "aggregate_complete_transaction_v2",
-  signerPublicKey: aliceKey.publicKey, // 署名者公開鍵
-  deadline: facade.network.fromDatetime(Date.now()).addHours(2).timestamp, //Deadline:有効期限
-  transactionsHash: merkleHash,
-  transactions: embeddedTransactions,
-});
-
-// 連署により追加される連署情報のサイズを追加して最終的なTxサイズを算出する
-requiredCosignatures = 0; // 必要な連署者の数を指定
-calculatedCosignatures =
-  requiredCosignatures > aggregateTx.cosignatures.length
-    ? requiredCosignatures
-    : aggregateTx.cosignatures.length;
-sizePerCosignature = 8 + 32 + 64;
-calculatedSize =
-  aggregateTx.size -
-  aggregateTx.cosignatures.length * sizePerCosignature +
-  calculatedCosignatures * sizePerCosignature;
-aggregateTx.fee = new symbolSdk.symbol.Amount(BigInt(calculatedSize * 100)); //手数料
+embeddedTx = facade.createEmbeddedTransactionFromTypedDescriptor(metadataDescriptor, aliceKey.publicKey);
+embeddedTransactions = [embeddedTx];
+aggregateDescriptor = new symbolSdk.descriptors.AggregateCompleteTransactionV2Descriptor(
+  facade.static.hashEmbeddedTransactions(embeddedTransactions),
+  embeddedTransactions
+);
+aggregateTx = facade.createTransactionFromTypedDescriptor(aggregateDescriptor, aliceKey.publicKey, 100, 60 * 60 * 2);
 
 // 署名とアナウンス
-sig = facade.signTransaction(aliceKey, aggregateTx);
-jsonPayload = facade.transactionFactory.constructor.attachSignature(
-  aggregateTx,
-  sig,
-);
-await fetch(new URL("/transactions", NODE), {
-  method: "PUT",
-  headers: { "Content-Type": "application/json" },
-  body: jsonPayload,
-})
-  .then((res) => res.json())
-  .then((json) => {
-    return json;
-  });
+sig = aliceKey.signTransaction(aggregateTx);
+jsonPayload = facade.transactionFactory.static.attachSignature(aggregateTx, sig);
+await fetch(new URL('/transactions', NODE), { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: jsonPayload });
 ```
 
 ## 7.3 ネームスペースに登録
@@ -375,7 +291,7 @@ await fetch(new URL("/transactions", NODE), {
 
 ```js
 // ターゲットと作成者アドレスの設定
-targetNamespace = symbolSdk.symbol.generateNamespaceId("xembook"); // メタデータ記録先ネームスペース
+targetNamespace = symbolSdk.generateNamespaceId("xembook"); // メタデータ記録先ネームスペース
 namespaceInfo = await fetch(
   new URL("/namespaces/" + targetNamespace.toString(16).toUpperCase(), NODE),
   {
@@ -401,10 +317,10 @@ hasher.update(new TextEncoder().encode(key));
 digest = hasher.digest();
 lower = [...digest.subarray(0, 4)];
 lower.reverse();
-lowerValue = BigInt("0x" + symbolSdk.utils.uint8ToHex(lower));
+lowerValue = BigInt("0x" + sdkCore.utils.uint8ToHex(lower));
 higher = [...digest.subarray(4, 8)];
 higher.reverse();
-higherValue = BigInt("0x" + symbolSdk.utils.uint8ToHex(higher)) | 0x80000000n;
+higherValue = BigInt("0x" + sdkCore.utils.uint8ToHex(higher)) | 0x80000000n;
 keyId = lowerValue + higherValue * 0x100000000n;
 valueData = new TextEncoder().encode(value);
 
@@ -423,11 +339,12 @@ metadataInfo = await fetch(new URL("/metadata?" + query.toString(), NODE), {
   .then((json) => {
     return json.data;
   });
+
 // 登録済の場合は差分データを作成する
 sizeDelta = valueData.length;
 if (metadataInfo.length > 0) {
   sizeDelta -= metadataInfo[0].metadataEntry.valueSize;
-  originData = symbolSdk.utils.hexToUint8(metadataInfo[0].metadataEntry.value);
+  originData = sdkCore.utils.hexToUint8(metadataInfo[0].metadataEntry.value);
   diffData = new Uint8Array(Math.max(originData.length, valueData.length));
   for (idx = 0; idx < diffData.length; idx++) {
     diffData[idx] =
@@ -438,57 +355,27 @@ if (metadataInfo.length > 0) {
 }
 
 // ネームスペースメタデータ登録Tx作成
-tx = facade.transactionFactory.createEmbedded({
-  type: "namespace_metadata_transaction_v1", // Txタイプ:ネームスペースメタデータ登録Tx
-  signerPublicKey: aliceKey.publicKey, // 署名者公開鍵
-  targetNamespaceId: targetNamespace,
-  targetAddress: sourceAddress,
-  scopedMetadataKey: keyId,
-  valueSizeDelta: sizeDelta,
-  value: valueData,
-});
-
-// マークルハッシュの算出
-embeddedTransactions = [tx];
-merkleHash = facade.constructor.hashEmbeddedTransactions(embeddedTransactions);
+metadataDescriptor = new symbolSdk.descriptors.NamespaceMetadataTransactionV1Descriptor(
+  targetAddress,
+  targetNamespace,
+  keyId,
+  sizeDelta,
+  valueData
+);
 
 // アグリゲートTx作成
-aggregateTx = facade.transactionFactory.create({
-  type: "aggregate_complete_transaction_v2",
-  signerPublicKey: aliceKey.publicKey, // 署名者公開鍵
-  deadline: facade.network.fromDatetime(Date.now()).addHours(2).timestamp, //Deadline:有効期限
-  transactionsHash: merkleHash,
-  transactions: embeddedTransactions,
-});
-
-// 連署により追加される連署情報のサイズを追加して最終的なTxサイズを算出する
-requiredCosignatures = 0; // 必要な連署者の数を指定
-calculatedCosignatures =
-  requiredCosignatures > aggregateTx.cosignatures.length
-    ? requiredCosignatures
-    : aggregateTx.cosignatures.length;
-sizePerCosignature = 8 + 32 + 64;
-calculatedSize =
-  aggregateTx.size -
-  aggregateTx.cosignatures.length * sizePerCosignature +
-  calculatedCosignatures * sizePerCosignature;
-aggregateTx.fee = new symbolSdk.symbol.Amount(BigInt(calculatedSize * 100)); //手数料
+embeddedTx = facade.createEmbeddedTransactionFromTypedDescriptor(metadataDescriptor, aliceKey.publicKey);
+embeddedTransactions = [embeddedTx];
+aggregateDescriptor = new symbolSdk.descriptors.AggregateCompleteTransactionV2Descriptor(
+  facade.static.hashEmbeddedTransactions(embeddedTransactions),
+  embeddedTransactions
+);
+aggregateTx = facade.createTransactionFromTypedDescriptor(aggregateDescriptor, aliceKey.publicKey, 100, 60 * 60 * 2);
 
 // 署名とアナウンス
-sig = facade.signTransaction(aliceKey, aggregateTx);
-jsonPayload = facade.transactionFactory.constructor.attachSignature(
-  aggregateTx,
-  sig,
-);
-await fetch(new URL("/transactions", NODE), {
-  method: "PUT",
-  headers: { "Content-Type": "application/json" },
-  body: jsonPayload,
-})
-  .then((res) => res.json())
-  .then((json) => {
-    return json;
-  });
+sig = aliceKey.signTransaction(aggregateTx);
+jsonPayload = facade.transactionFactory.static.attachSignature(aggregateTx, sig);
+await fetch(new URL('/transactions', NODE), { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: jsonPayload });
 ```
 
 ## 7.4 確認

@@ -16,7 +16,7 @@ JavaScript を使用します。
 `symbol-sdk@3` は Node との REST API 接続の実装が削除されました。`Catapult REST Endpoints` を参照して直接実装をして下さい。
 
 Symbol SDK v3 Referenve<br/>
-https://symbol-blockchain-community.github.io/symbol-sdk-v3-reference/
+https://symbol.github.io/symbol/sdk/javascript/index.html
 
 Catapult REST Endpoints (1.0.4)<br/>
 https://symbol.github.io/symbol-openapi/v1.0.4/
@@ -71,12 +71,10 @@ F12 キーを押して開発者コンソールを開き、以下のスクリプ�
 
 ```js
 // @see https://www.npmjs.com/package/symbol-sdk?activeTab=versions
-const SDK_VERSION = "3.1.0";
-const symbolSdk = (
-  await import(
-    `https://www.unpkg.com/symbol-sdk@${SDK_VERSION}/dist/bundle.web.js`
-  )
-).default;
+const SDK_VERSION = "3.2.3";
+const sdk = await import(`https://www.unpkg.com/symbol-sdk@${SDK_VERSION}/dist/bundle.web.js`);
+const sdkCore = sdk.core;
+const symbolSdk = sdk.symbol;
 
 // Buffer を読み込んでおく
 (script = document.createElement("script")).src =
@@ -90,26 +88,14 @@ document.getElementsByTagName("head")[0].appendChild(script);
 const NODE = window.origin; //現在開いているページのURLがここに入ります
 const Buffer = buffer.Buffer;
 
-fetch(new URL("/node/info", NODE), {
-  method: "GET",
-  headers: { "Content-Type": "application/json" },
-})
-  .then((res) => res.json())
-  .then((json) => {
-    networkType = json.networkIdentifier;
-    generationHash = json.networkGenerationHashSeed;
-  });
-fetch(new URL("/network/properties", NODE), {
-  method: "GET",
-  headers: { "Content-Type": "application/json" },
-})
-  .then((res) => res.json())
-  .then((json) => {
-    e = json.network.epochAdjustment;
-    epochAdjustment = Number(e.substring(0, e.length - 1));
-    identifier = json.network.identifier; // v3 only
-    facade = new symbolSdk.facade.SymbolFacade(identifier); // v3 only
-  });
+const nodeInfo = await (await fetch(`${NODE}/node/info`)).json();
+const networkType = nodeInfo.networkIdentifier;
+const generationHash = nodeInfo.networkGenerationHashSeed;
+
+const nodeNetwork = await (await fetch(`${NODE}/network/properties`)).json();
+const epochAdjustment = Number(nodeNetwork.network.epochAdjustment.slice(0, -1));
+const identifier = nodeNetwork.network.identifier;
+const facade = new symbolSdk.SymbolFacade(identifier);
 ```
 
 これで準備完了です。
