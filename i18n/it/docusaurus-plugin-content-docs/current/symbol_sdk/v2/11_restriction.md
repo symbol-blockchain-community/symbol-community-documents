@@ -224,12 +224,12 @@ await txRepo.announce(signedTx).toPromise();
 
 | Operatore | Abbr. | significato       |
 | --------- | ----- | ----------------- |
-| =         | EQ    | uguaglianza       |
-| !=        | NE    | disuguaglianza    |
-| <         | LT    | minore            |
-| <=        | LE    | minore o uguale   |
-| >         | GT    | maggiore          |
-| <=        | GE    | maggiore o uguale |
+| `=`       | EQ    | uguaglianza       |
+| `!=`      | NE    | disuguaglianza    |
+| `<`       | LT    | minore            |
+| `<=`      | LE    | minore o uguale   |
+| `>`       | GT    | maggiore          |
+| `<=`      | GE    | maggiore o uguale |
 
 ### Applicare le restrizioni dei Mosaic agli Indirizzi
 

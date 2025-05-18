@@ -229,12 +229,12 @@ MosaicRestrictionType is as follows.
 
 | Operator | Abbreviation | English                  |
 | -------- | ------------ | ------------------------ |
-| =        | EQ           | equal to                 |
-| !=       | NE           | not equal to             |
-| <        | LT           | less than                |
-| <=       | LE           | less than or equal to    |
-| >        | GT           | greater than             |
-| <=       | GE           | greater than or equal to |
+| `=`      | EQ           | equal to                 |
+| `!=`     | NE           | not equal to             |
+| `<`      | LT           | less than                |
+| `<=`     | LE           | less than or equal to    |
+| `>`      | GT           | greater than             |
+| `<=`     | GE           | greater than or equal to |
 
 ### Applying mosaic restrictions to accounts
 

@@ -225,12 +225,12 @@ MosaicRestrictionType (代幣限制類型)如下。
 
 | Operator | Abbreviation | English                  |
 | -------- | ------------ | ------------------------ |
-| =        | EQ           | equal to                 |
-| !=       | NE           | not equal to             |
-| <        | LT           | less than                |
-| <=       | LE           | less than or equal to    |
-| >        | GT           | greater than             |
-| <=       | GE           | greater than or equal to |
+| `=`      | EQ           | equal to                 |
+| `!=`     | NE           | not equal to             |
+| `<`      | LT           | less than                |
+| `<=`     | LE           | less than or equal to    |
+| `>`      | GT           | greater than             |
+| `<=`     | GE           | greater than or equal to |
 
 ### 對帳戶應用馬賽克限制
 

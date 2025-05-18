@@ -15,7 +15,7 @@ listener.open();
 
 エンドポイントのフォーマットは以下の通りです。
 
-- wss://{node url}:3001/ws
+- `wss://{node url}:3001/ws`
 
 何も通信が無ければ、listener は 1 分で切断されます。
 

@@ -375,7 +375,7 @@ symbol-bootstrap config -p mainnet -a dual -c custom-preset.yml --upgrade
 19c9ac8edce9 mongo:4.4.3-bionic "docker-entrypoint.s ..." 2 天前 Up 40 小時 27017/tcp db
 ```
 
-如果存在STATUS為Exec(0)的容器則報錯，如果只想查看對應容器的日誌，執行如下 ${CONTAINER ID} 指定Exec輸出的容器ID (0).
+如果存在STATUS為Exec(0)的容器則報錯，如果只想查看對應容器的日誌，執行如下 `${CONTAINER ID}` 指定Exec輸出的容器ID (0).
 
 ```狂歡
 docker 日誌 ${CONTAINER ID}

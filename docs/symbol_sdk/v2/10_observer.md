@@ -19,7 +19,7 @@ listener.open();
 
 The format of the endpoints is as follows.
 
-- wss://{node url}:3001/ws
+- `wss://{node url}:3001/ws`
 
 If there is no communication, the listener is disconnected after one minute.
 

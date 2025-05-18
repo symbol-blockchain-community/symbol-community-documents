@@ -15,7 +15,7 @@ listener.open();
 
 Segue il formato per collegarsi ad un endpoint.
 
-- wss://{node url}:3001/ws
+- `wss://{node url}:3001/ws`
 
 Il timeout per mantenere attiva la connessione è di 1 minuto, oltre il quale, se non c'è stato scambio di informazioni il listener viene scollegato.
 

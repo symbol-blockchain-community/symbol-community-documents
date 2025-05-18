@@ -66,7 +66,7 @@ con l'aiuto della comunità giapponese
 ### [9.Intestatari delegati](./09_multisig.md)
 
 - [9.1 Preparazione dell'Indirizzo Cointestato](09_multisig.md#91-preparazione-dellindirizzo-cointestato)
-- [9.2 Registrazione dei cointestatari](09_multisig.md#92-Registrazione-dei-cointestatari)
+- [9.2 Registrazione dei cointestatari](09_multisig.md#92-registrazione-dei-cointestatari)
 - [9.3 Convalida di un Indirizzo Cointestato](09_multisig.md#93-convalida-di-un-indirizzo-cointestato)
 - [9.4 Eseguire una transazione dall'Indirizzo cointestato e firme dei cointestatari](09_multisig.md#94-eseguire-una-transazione-dallindirizzo-cointestato-e-firme-dei-cointestatari)
 - [9.5 Convalida di una transazione a firma multipla](09_multisig.md#95-convalida-di-una-transazione-a-firma-multipla)
@@ -76,7 +76,7 @@ con l'aiuto della comunità giapponese
 ### [10.Monitoraggio](./10_observer.md)
 
 - [10.1 Configurazione del Listener](10_observer.md#101-configurazione-del-listener)
-- [10.2 Ricevere notifiche sulle transaczioni](10_observer.md#102-ricevere-notifiche-sulle-transazioni)
+- [10.2 Ricevere notifiche sulle transaczioni](10_observer.md#102-ricevere-notifiche-sulle-ransazioni)
 - [10.3 Ricevere notifiche sui blocchi](10_observer.md#103-ricevere-notifiche-sui-blocchi)
 - [10.4 Richieste di firma](10_observer.md#104-richieste-di-firma)
 - [10.5 Consigli pratici](10_observer.md#105-consigli-pratici)

@@ -379,7 +379,7 @@ CONTAINER ID IMAGE COMMAND CREATED STATUS PORTS NAMES
 19c9ac8edce9 mongo:4.4.3-bionic "docker-entrypoint.s…" 2 days ago Up 40 hours 27017/tcp db
 ```
 
-If there is a container with a STATUS of Exec(0) then an error has occurred. If you want to check the log only for the corresponding container, execute as follows. ${CONTAINER ID} specifies the ID of the container output by Exec(0).
+If there is a container with a STATUS of Exec(0) then an error has occurred. If you want to check the log only for the corresponding container, execute as follows. `${CONTAINER ID}` specifies the ID of the container output by Exec(0).
 
 ```bash
 docker logs ${CONTAINER ID}

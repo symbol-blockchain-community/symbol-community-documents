@@ -357,12 +357,12 @@ MosaicRestrictionTypeについては以下の通りです。
 
 | 演算子 | 略称 | 英語                     |
 | ------ | ---- | ------------------------ |
-| =      | EQ   | equal to                 |
-| !=     | NE   | not equal to             |
-| <      | LT   | less than                |
-| <=     | LE   | less than or equal to    |
-| >      | GT   | greater than             |
-| <=     | GE   | greater than or equal to |
+| `=`    | EQ   | equal to                 |
+| `!=`   | NE   | not equal to             |
+| `<`    | LT   | less than                |
+| `<=`   | LE   | less than or equal to    |
+| `>`    | GT   | greater than             |
+| `<=`   | GE   | greater than or equal to |
 
 ### アカウントへのモザイク制限適用
 

@@ -15,7 +15,7 @@ listener.open();
 
 端點的格式如下。
 
-- wss://{node url}:3001/ws
+- `wss://{node url}:3001/ws`
 
 如果沒有通信，監聽器將在一分鐘後斷開連接。
 

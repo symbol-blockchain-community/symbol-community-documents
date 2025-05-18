@@ -206,7 +206,7 @@ namespaceId = new sym.NamespaceId("symbol.xym");
     id: Id {lower: 1106554862, higher: 3880491450}
 ```
 
-id 以内部数字 Uint64（{lower: 1106554862, higher: 3880491450}）表示。
+id 以内部数字 `Uint64（{lower: 1106554862, higher: 3880491450}）` 表示。
 
 ## 6.5 参考资料
 
