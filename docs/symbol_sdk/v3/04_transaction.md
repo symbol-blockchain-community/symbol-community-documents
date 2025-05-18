@@ -841,44 +841,56 @@ console.log(payloads);
 分割したデータを使用してトランザクションを作成します。
 
 ```js
-// 分割したデータごとにトランザクションを作成
+// 分割したデータごとにトランザクションを作成（SDK v3形式）
 innerTxs = payloads.map((payload) => {
-  return facade.transactionFactory.createEmbedded({
-    type: "transfer_transaction_v1",
-    signerPublicKey: aliceKey.publicKey,
-    recipientAddress: bobAddress.toString(),
-    message: new Uint8Array([0xff, ...new TextEncoder("utf-8").encode(payload)]), // 生データとして送信
-  });
+  // descriptor生成
+  const descriptor = new symbolSdk.descriptors.TransferTransactionV1Descriptor(
+    bobAddress,
+    [],
+    new Uint8Array([0xff, ...new TextEncoder("utf-8").encode(payload)])
+  );
+  // Embedded Tx生成
+  return facade.createEmbeddedTransactionFromTypedDescriptor(descriptor, aliceKey.publicKey);
 });
 
 // マークルハッシュの算出
-merkleHash = facade.constructor.hashEmbeddedTransactions(innerTxs);
+merkleHash = facade.static.hashEmbeddedTransactions(innerTxs);
 
-// アグリゲートTx作成
-aggregateTx = facade.transactionFactory.create({
-  type: "aggregate_complete_transaction_v2",
-  signerPublicKey: aliceKey.publicKey,
-  deadline: facade.network.fromDatetime(Date.now()).addHours(2).timestamp,
-  transactionsHash: merkleHash,
-  transactions: innerTxs,
-});
+// AggregateCompleteTransactionのdescriptor生成
+aggregateDescriptor = new symbolSdk.descriptors.AggregateCompleteTransactionV2Descriptor(
+  merkleHash,
+  innerTxs
+);
 
-// 手数料計算
-calculatedSize = aggregateTx.size;
-aggregateTx.fee = new symbolSdk.symbol.Amount(BigInt(calculatedSize * 100));
+// Aggregate Tx生成
+aggregateTx = facade.createTransactionFromTypedDescriptor(
+  aggregateDescriptor,
+  aliceKey.publicKey,
+  100, // feeMultiplier
+  60 * 60 * 2, // deadline
+  0 // maxFee
+);
+
+// 連署者数に応じた手数料計算
+requiredCosignatures = 0;
+calculatedCosignatures =
+  requiredCosignatures > aggregateTx.cosignatures.length
+    ? requiredCosignatures
+    : aggregateTx.cosignatures.length;
+sizePerCosignature = 8 + 32 + 64;
+calculatedSize =
+  aggregateTx.size -
+  aggregateTx.cosignatures.length * sizePerCosignature +
+  calculatedCosignatures * sizePerCosignature;
+aggregateTx.fee = new symbolSdk.models.Amount(BigInt(calculatedSize * 100));
 
 // 署名とアナウンス
-sig = facade.signTransaction(aliceKey, aggregateTx);
-jsonPayload = facade.transactionFactory.constructor.attachSignature(aggregateTx, sig);
-await fetch(new URL("/transactions", NODE), {
-  method: "PUT",
-  headers: { "Content-Type": "application/json" },
-  body: jsonPayload,
-})
-  .then((res) => res.json())
-  .then((json) => {
-    return json;
-  });
+sig = aliceKey.signTransaction(aggregateTx);
+jsonPayload = facade.transactionFactory.static.attachSignature(aggregateTx, sig);
+await fetch(
+  new URL('/transactions', NODE),
+  { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: jsonPayload }
+);
 ```
 
 このようにアグリゲートトランザクションを活用することで、大きなデータを分割して送信することができます。
