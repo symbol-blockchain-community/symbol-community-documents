@@ -15,9 +15,9 @@ sidebar_position: 3
 以下の手順で秘密鍵を作成し、秘密鍵より公開鍵を導出します。
 
 ```js
-aliceKey = facade.createAccount(sdkCore.PrivateKey.random());
+aliceKey = facade.createAccount(sdk.core.PrivateKey.random());
 // 既存のprivateKeyで作成する場合
-aliceKey = facade.createAccount(new sdkCore.PrivateKey("24B929287E1B68F7CB...."))
+aliceKey = facade.createAccount(new sdk.core.PrivateKey("24B929287E1B68F7CB...."))
 
 console.log(aliceKey);
 aliceAddress = facade.network.publicKeyToAddress(aliceKey.publicKey);
@@ -72,7 +72,7 @@ console.log(aliceRawAddress);
 
 ```js
 aliceKey = facade.createAccount(
-  new sdkCore.PrivateKey("1E9139CC1580B4AED6A1FE110085281D4982ED0D89CE07F3380EB83069B1****")
+  new sdk.core.PrivateKey("1E9139CC1580B4AED6A1FE110085281D4982ED0D89CE07F3380EB83069B1****")
 );
 
 aliceAddress = facade.network.publicKeyToAddress(aliceKey.publicKey);
@@ -81,7 +81,7 @@ aliceAddress = facade.network.publicKeyToAddress(aliceKey.publicKey);
 ### 公開鍵クラスの生成
 
 ```js
-alicePublicAccount = new symbolSdk.symbol.PublicKey(
+alicePublicAccount = new sdk.symbol.PublicKey(
   Uint8Array.from(
     Buffer.from(
       "D4933FC1E4C56F9DF9314E9E0533173E1AB727BDB2A04B59F048124E93BEFBD2",
@@ -90,7 +90,7 @@ alicePublicAccount = new symbolSdk.symbol.PublicKey(
   ),
 );
 alicePublicAccount = facade.createPublicAccount(
-  new sdkCore.PublicKey(
+  new sdk.core.PublicKey(
     "D4933FC1E4C56F9DF9314E9E0533173E1AB727BDB2A04B59F048124E93BEFBD2"
   )
 );
@@ -109,7 +109,7 @@ console.log(alicePublicAccount.publicKey.toString());
 ### アドレスクラスの生成
 
 ```js
-aliceAddress = new symbolSdk.symbol.Address(
+aliceAddress = new sdk.symbol.Address(
   "TBXUTAX6O6EUVPB6X7OBNX6UUXBMPPAFX7KE5TQ",
 );
 console.log(aliceAddress.toString());
@@ -235,7 +235,7 @@ console.log(displayAmount);
 #### 事前準備：対話のための Bob アカウントを生成
 
 ```js
-bobKey = facade.createAccount(sdkCore.PrivateKey.random());
+bobKey = facade.createAccount(sdk.core.PrivateKey.random());
 ```
 
 #### 暗号化
@@ -244,7 +244,7 @@ Alice の秘密鍵・Bob の公開鍵で暗号化し、Alice の公開鍵・Bob 
 
 ```js
 message = "Hello Symbol!";
-aliceMsgEncoder = new symbolSdk.symbol.MessageEncoder(aliceKey);
+aliceMsgEncoder = new sdk.symbol.MessageEncoder(alice);
 
 encryptedMessage = alice.messageEncoder().encode(bobKey.publicKey, new TextEncoder().encode(message));
 
@@ -313,7 +313,7 @@ console.log(signature.toString());
 #### 検証
 
 ```js
-verifier = new symbolSdk.Verifier(alice.publicKey);
+verifier = new sdk.symbol.Verifier(alice.publicKey);
 isVerified = verifier.verify(Buffer.from("Hello Symbol!", 'utf-8'), signature);
 console.log(isVerified);
 ```

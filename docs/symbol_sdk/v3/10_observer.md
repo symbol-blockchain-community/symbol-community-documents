@@ -303,7 +303,7 @@ function searchUrl(nodes) {
         .then((res) => res.json())
         .then((json) => {
           identifier = json.network.identifier; // v3 only
-          facade = new symbolSdk.facade.SymbolFacade(identifier); // v3 only
+          facade = new sdk.symbol.facade.SymbolFacade(identifier); // v3 only
           e = json.network.epochAdjustment;
           return Number(e.substring(0, e.length - 1));
         });
@@ -444,14 +444,14 @@ async function exeAggregateBondedCosignature(aggTx) {
     ) !== undefined
   ) {
     // Aliceのトランザクションで署名
-    cosignature = new symbolSdk.symbol.DetachedCosignature();
-    signTxHash = new symbolSdk.symbol.Hash256(
-      symbolSdk.utils.hexToUint8(aggTx.meta.hash),
+    cosignature = new sdk.symbol.symbol.DetachedCosignature();
+    signTxHash = new sdk.symbol.symbol.Hash256(
+      sdk.symbol.utils.hexToUint8(aggTx.meta.hash),
     );
     cosignature.parentHash = signTxHash;
     cosignature.version = 0n;
     cosignature.signerPublicKey = bobKey.publicKey;
-    cosignature.signature = new symbolSdk.symbol.Signature(
+    cosignature.signature = new sdk.symbol.symbol.Signature(
       bobKey.sign(signTxHash.bytes).bytes,
     );
 

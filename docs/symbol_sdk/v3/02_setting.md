@@ -73,8 +73,6 @@ F12 キーを押して開発者コンソールを開き、以下のスクリプ�
 // @see https://www.npmjs.com/package/symbol-sdk?activeTab=versions
 const SDK_VERSION = "3.2.3";
 const sdk = await import(`https://www.unpkg.com/symbol-sdk@${SDK_VERSION}/dist/bundle.web.js`);
-const sdkCore = sdk.core;
-const symbolSdk = sdk.symbol;
 
 // Buffer を読み込んでおく
 (script = document.createElement("script")).src =
@@ -95,7 +93,7 @@ const generationHash = nodeInfo.networkGenerationHashSeed;
 const nodeNetwork = await (await fetch(`${NODE}/network/properties`)).json();
 const epochAdjustment = Number(nodeNetwork.network.epochAdjustment.slice(0, -1));
 const identifier = nodeNetwork.network.identifier;
-const facade = new symbolSdk.SymbolFacade(identifier);
+const facade = new sdk.symbol.SymbolFacade(identifier);
 ```
 
 これで準備完了です。

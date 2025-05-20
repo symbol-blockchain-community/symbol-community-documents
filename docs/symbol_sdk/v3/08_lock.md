@@ -16,28 +16,28 @@ Symbolブロックチェーンにはハッシュロックとシークレット�
 ### アグリゲートボンデッドトランザクションの作成
 
 ```js
-bobKey = facade.createAccount(sdkCore.PrivateKey.random());
+bobKey = facade.createAccount(sdk.core.PrivateKey.random());
 bobAddress = facade.network.publicKeyToAddress(bobKey.publicKey);
 
-namespaceIds = symbolSdk.generateNamespacePath("symbol.xym");
+namespaceIds = sdk.symbol.generateNamespacePath("symbol.xym");
 namespaceId = namespaceIds[namespaceIds.length - 1];
 
 // アグリゲートTxに含めるTxを作成
 tx1 = facade.createEmbeddedTransactionFromTypedDescriptor(
-  new symbolSdk.descriptors.TransferTransactionV1Descriptor(
+  new sdk.symbol.descriptors.TransferTransactionV1Descriptor(
     bobAddress.toString(),
-    new symbolSdk.models.UnresolvedMosaicId(namespaceId),
-    new symbolSdk.models.Amount(1000000n),
+    new sdk.symbol.models.UnresolvedMosaicId(namespaceId),
+    new sdk.symbol.models.Amount(1000000n),
     new Uint8Array()
   ),
   aliceKey.publicKey
 );
 
 tx2 = facade.createEmbeddedTransactionFromTypedDescriptor(
-  new symbolSdk.descriptors.TransferTransactionV1Descriptor(
+  new sdk.symbol.descriptors.TransferTransactionV1Descriptor(
     aliceAddress.toString(),
-    new symbolSdk.models.UnresolvedMosaicId(0n),
-    new symbolSdk.models.Amount(0n),
+    new sdk.symbol.models.UnresolvedMosaicId(0n),
+    new sdk.symbol.models.Amount(0n),
     new Uint8Array([0x00, ...new TextEncoder("utf-8").encode("thank you!")])
   ),
   bobKey.publicKey
@@ -48,7 +48,7 @@ embeddedTransactions = [tx1, tx2];
 merkleHash = facade.static.hashEmbeddedTransactions(embeddedTransactions);
 
 // アグリゲートTx作成
-aggregateDescriptor = new symbolSdk.descriptors.AggregateBondedTransactionV2Descriptor(
+aggregateDescriptor = new sdk.symbol.descriptors.AggregateBondedTransactionV2Descriptor(
   merkleHash,
   embeddedTransactions
 );
@@ -69,10 +69,10 @@ tx1,tx2の2つのトランザクションをaggregateArrayで配列にする時�
 
 ```js
 // ハッシュロックTx作成
-lockDescriptor = new symbolSdk.descriptors.HashLockTransactionV1Descriptor(
-  new symbolSdk.models.UnresolvedMosaicId(namespaceId),
-  new symbolSdk.models.Amount(10n * 1000000n),
-  new symbolSdk.models.BlockDuration(480n),
+lockDescriptor = new sdk.symbol.descriptors.HashLockTransactionV1Descriptor(
+  new sdk.symbol.models.UnresolvedMosaicId(namespaceId),
+  new sdk.symbol.models.Amount(10n * 1000000n),
+  new sdk.symbol.models.BlockDuration(480n),
   facade.hashTransaction(aggregateTx)
 );
 hashLockTx = facade.createTransactionFromTypedDescriptor(lockDescriptor, aliceKey.publicKey, 100, 60 * 60 * 2);
@@ -134,14 +134,14 @@ txInfo = await fetch(
   });
 
 // 連署者の署名
-cosignature = new symbolSdk.models.DetachedCosignature();
-signTxHash = new symbolSdk.models.Hash256(
-  sdkCore.utils.hexToUint8(txInfo.meta.hash),
+cosignature = new sdk.symbol.models.DetachedCosignature();
+signTxHash = new sdk.symbol.models.Hash256(
+  sdk.core.utils.hexToUint8(txInfo.meta.hash),
 );
 cosignature.parentHash = signTxHash;
 cosignature.version = 0n;
 cosignature.signerPublicKey = bobKey.publicKey;
-cosignature.signature = new symbolSdk.models.Signature(
+cosignature.signature = new sdk.symbol.models.Signature(
   bobKey.sign(signTxHash.bytes).bytes,
 );
 
@@ -183,7 +183,7 @@ await fetch(new URL("/transactions/cosignature", NODE), {
 ロック解除にBob側からトランザクションをアナウンスする必要があるのでFAUCETで10XYMほど受信しておきます。
 
 ```js
-bobKey = facade.createAccount(sdkCore.PrivateKey.random());
+bobKey = facade.createAccount(sdk.core.PrivateKey.random());
 bobAddress = facade.network.publicKeyToAddress(bobKey.publicKey);
 console.log(bobAddress.toString());
 
@@ -207,8 +207,8 @@ proof = crypto.getRandomValues(new Uint8Array(20)); // 解除用キーワード
 hash = sha3_256.create();
 hash.update(proof);
 secret = hash.digest(); // ロック用キーワード
-console.log("secret:" + sdkCore.utils.uint8ToHex(secret));
-console.log("proof:" + sdkCore.utils.uint8ToHex(proof));
+console.log("secret:" + sdk.core.utils.uint8ToHex(secret));
+console.log("proof:" + sdk.core.utils.uint8ToHex(proof));
 ```
 
 ###### 出力例
@@ -222,13 +222,13 @@ console.log("proof:" + sdkCore.utils.uint8ToHex(proof));
 
 ```js
 // シークレットロックTx作成
-lockDescriptor = new symbolSdk.descriptors.SecretLockTransactionV1Descriptor(
+lockDescriptor = new sdk.symbol.descriptors.SecretLockTransactionV1Descriptor(
   secret,
-  symbolSdk.models.HashAlgorithm.SHA3_256,
+  sdk.symbol.models.HashAlgorithm.SHA3_256,
   bobAddress,
-  new symbolSdk.models.UnresolvedMosaicId(namespaceId),
-  new symbolSdk.models.Amount(1000000n),
-  new symbolSdk.models.BlockDuration(480n)
+  new sdk.symbol.models.UnresolvedMosaicId(namespaceId),
+  new sdk.symbol.models.Amount(1000000n),
+  new sdk.symbol.models.BlockDuration(480n)
 );
 lockTx = facade.createTransactionFromTypedDescriptor(lockDescriptor, aliceKey.publicKey, 100, 60 * 60 * 2);
 
@@ -261,7 +261,7 @@ LockHashAlgorithmは以下の通りです。
 
 ```js
 params = new URLSearchParams({
-  secret: symbolSdk.utils.uint8ToHex(secret),
+  secret: sdk.symbol.utils.uint8ToHex(secret),
 });
 result = await fetch(new URL("/lock/secret?" + params.toString(), NODE), {
   method: "GET",
@@ -306,9 +306,9 @@ Bobは事前に解除用キーワードを入手しておく必要がありま�
 
 ```js
 // シークレットプルーフTx作成
-proofDescriptor = new symbolSdk.descriptors.SecretProofTransactionV1Descriptor(
+proofDescriptor = new sdk.symbol.descriptors.SecretProofTransactionV1Descriptor(
   secret,
-  symbolSdk.models.HashAlgorithm.SHA3_256,
+  sdk.symbol.models.HashAlgorithm.SHA3_256,
   bobAddress,
   proof
 );
@@ -384,7 +384,7 @@ SecretProofTransactionにはモザイクの受信量の情報は含まれてい�
 
 ```js
 params = new URLSearchParams({
-  receiptType: symbolSdk.models.ReceiptType.LOCK_SECRET_COMPLETED.value,
+  receiptType: sdk.symbol.models.ReceiptType.LOCK_SECRET_COMPLETED.value,
   targetAddress: bob.address.toString(),
 });
 result = await fetch(

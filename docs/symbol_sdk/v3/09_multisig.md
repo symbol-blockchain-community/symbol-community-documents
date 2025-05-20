@@ -19,17 +19,17 @@ sidebar_position: 9
 本章でマルチシグ化したアカウントBobは、Carolの秘密鍵を紛失すると使えなくなってしまうのでご注意ください。
 
 ```js
-bobKey = facade.createAccount(sdkCore.PrivateKey.random());
+bobKey = facade.createAccount(sdk.core.PrivateKey.random());
 bobAddress = facade.network.publicKeyToAddress(bobKey.publicKey);
-carol1Key = facade.createAccount(sdkCore.PrivateKey.random());
+carol1Key = facade.createAccount(sdk.core.PrivateKey.random());
 carol1Address = facade.network.publicKeyToAddress(carol1Key.publicKey);
-carol2Key = facade.createAccount(sdkCore.PrivateKey.random());
+carol2Key = facade.createAccount(sdk.core.PrivateKey.random());
 carol2Address = facade.network.publicKeyToAddress(carol2Key.publicKey);
-carol3Key = facade.createAccount(sdkCore.PrivateKey.random());
+carol3Key = facade.createAccount(sdk.core.PrivateKey.random());
 carol3Address = facade.network.publicKeyToAddress(carol3Key.publicKey);
-carol4Key = facade.createAccount(sdkCore.PrivateKey.random());
+carol4Key = facade.createAccount(sdk.core.PrivateKey.random());
 carol4Address = facade.network.publicKeyToAddress(carol4Key.publicKey);
-carol5Key = facade.createAccount(sdkCore.PrivateKey.random());
+carol5Key = facade.createAccount(sdk.core.PrivateKey.random());
 carol5Address = facade.network.publicKeyToAddress(carol5Key.publicKey);
 
 console.log(bobKey.privateKey.toString());
@@ -67,7 +67,7 @@ Symbolではマルチシグアカウントを新規に作成するのではな�
 
 ```js
 // マルチシグ設定Tx作成
-multisigDescriptor = new symbolSdk.descriptors.MultisigAccountModificationTransactionV1Descriptor(
+multisigDescriptor = new sdk.symbol.descriptors.MultisigAccountModificationTransactionV1Descriptor(
   3,  // minApproval:承認のために必要な最小署名者数増分
   3,  // minRemoval:除名のために必要な最小署名者数増分
   [carol1Address, carol2Address, carol3Address, carol4Address],  // 追加する連署者リスト
@@ -77,7 +77,7 @@ multisigDescriptor = new symbolSdk.descriptors.MultisigAccountModificationTransa
 // アグリゲートTx作成
 embeddedTx = facade.createEmbeddedTransactionFromTypedDescriptor(multisigDescriptor, bobKey.publicKey);
 embeddedTransactions = [embeddedTx];
-aggregateDescriptor = new symbolSdk.descriptors.AggregateCompleteTransactionV2Descriptor(
+aggregateDescriptor = new sdk.symbol.descriptors.AggregateCompleteTransactionV2Descriptor(
   facade.static.hashEmbeddedTransactions(embeddedTransactions),
   embeddedTransactions
 );
@@ -102,7 +102,7 @@ await fetch(new URL("/transactions", NODE), {
   method: "PUT",
   headers: { "Content-Type": "application/json" },
   body: JSON.stringify({
-    payload: sdkCore.utils.uint8ToHex(aggregateTx.serialize()),
+    payload: sdk.core.utils.uint8ToHex(aggregateTx.serialize()),
   }),
 });
 ```
@@ -189,15 +189,15 @@ multisigAddresses に対して連署する権利を持っていることが分�
 アグリゲートコンプリートトランザクションの場合、ノードにアナウンスする前に連署者の署名を全て集めてからトランザクションを作成します。
 
 ```js
-namespaceIds = symbolSdk.generateNamespacePath("symbol.xym");
+namespaceIds = sdk.symbol.generateNamespacePath("symbol.xym");
 namespaceId = namespaceIds[namespaceIds.length - 1];
 
 // アグリゲートTxに含めるTxを作成
 tx = facade.createEmbeddedTransactionFromTypedDescriptor(
-  new symbolSdk.descriptors.TransferTransactionV1Descriptor(
+  new sdk.symbol.descriptors.TransferTransactionV1Descriptor(
     aliceAddress.toString(),
-    new symbolSdk.models.UnresolvedMosaicId(namespaceId),
-    new symbolSdk.models.Amount(1000000n),
+    new sdk.symbol.models.UnresolvedMosaicId(namespaceId),
+    new sdk.symbol.models.Amount(1000000n),
     new Uint8Array([0x00, ...new TextEncoder("utf-8").encode("test")])
   ),
   bobKey.publicKey
@@ -205,7 +205,7 @@ tx = facade.createEmbeddedTransactionFromTypedDescriptor(
 
 // アグリゲートTx作成
 embeddedTransactions = [tx];
-aggregateDescriptor = new symbolSdk.descriptors.AggregateCompleteTransactionV2Descriptor(
+aggregateDescriptor = new sdk.symbol.descriptors.AggregateCompleteTransactionV2Descriptor(
   facade.static.hashEmbeddedTransactions(embeddedTransactions),
   embeddedTransactions
 );
@@ -226,7 +226,7 @@ await fetch(new URL("/transactions", NODE), {
   method: "PUT",
   headers: { "Content-Type": "application/json" },
   body: JSON.stringify({
-    payload: sdkCore.utils.uint8ToHex(aggregateTx.serialize()),
+    payload: sdk.core.utils.uint8ToHex(aggregateTx.serialize()),
   }),
 });
 ```
@@ -237,15 +237,15 @@ await fetch(new URL("/transactions", NODE), {
 事前にハッシュロックでトランザクションを留め置きしておくことを宣言しておき、連署者がネットワーク上に留め置きされたトランザクションに追加署名することで完成となります。
 
 ```js
-namespaceIds = symbolSdk.symbol.generateNamespacePath("symbol.xym");
+namespaceIds = sdk.symbol.symbol.generateNamespacePath("symbol.xym");
 namespaceId = namespaceIds[namespaceIds.length - 1];
 
 // アグリゲートTxに含めるTxを作成
 tx = facade.createEmbeddedTransactionFromTypedDescriptor(
-  new symbolSdk.descriptors.TransferTransactionV1Descriptor(
+  new sdk.symbol.descriptors.TransferTransactionV1Descriptor(
     aliceAddress.toString(),
-    new symbolSdk.models.UnresolvedMosaicId(namespaceId),
-    new symbolSdk.models.Amount(1000000n),
+    new sdk.symbol.models.UnresolvedMosaicId(namespaceId),
+    new sdk.symbol.models.Amount(1000000n),
     new Uint8Array([0x00, ...new TextEncoder("utf-8").encode("test")])
   ),
   bobKey.publicKey
@@ -253,7 +253,7 @@ tx = facade.createEmbeddedTransactionFromTypedDescriptor(
 
 // アグリゲートTx作成
 embeddedTransactions = [tx];
-aggregateDescriptor = new symbolSdk.descriptors.AggregateBondedTransactionV2Descriptor(
+aggregateDescriptor = new sdk.symbol.descriptors.AggregateBondedTransactionV2Descriptor(
   facade.static.hashEmbeddedTransactions(embeddedTransactions),
   embeddedTransactions
 );
@@ -265,15 +265,15 @@ jsonPayload = facade.transactionFactory.static.attachSignature(aggregateTx, sig)
 
 // ハッシュロックTx作成
 hashLockTx = facade.createTransactionFromTypedDescriptor(
-  new symbolSdk.descriptors.HashLockTransactionV1Descriptor(
+  new sdk.symbol.descriptors.HashLockTransactionV1Descriptor(
     carol1Key.publicKey,
     10n * 1000000n,
-    new symbolSdk.models.BlockDuration(480n),
+    new sdk.symbol.models.BlockDuration(480n),
     facade.static.hashTransaction(aggregateTx)
   ),
   carol1Key.publicKey
 );
-hashLockTx.fee = new symbolSdk.symbol.Amount(BigInt(hashLockTx.size * 100)); // 手数料
+hashLockTx.fee = new sdk.symbol.symbol.Amount(BigInt(hashLockTx.size * 100)); // 手数料
 
 // 署名
 hashLockSig = carol1Key.signTransaction(hashLockTx);
@@ -384,24 +384,24 @@ console.log(txInfo);
   - Bob
     - txInfo.transaction.transactions[0].transaction.signerPublicKey
       - 09F81ED97EBB0A85C6DFEACF2B518EFB471BEDA18709EF4C60823B21698B7B22
-    - facade.network.publicKeyToAddress(new sdkCore.PublicKey(txInfo.transaction.transactions[0].transaction.signerPublicKey)).toString()
+    - facade.network.publicKeyToAddress(new sdk.core.PublicKey(txInfo.transaction.transactions[0].transaction.signerPublicKey)).toString()
       - TAUBDCXUGTUDJXKF2PSETQ62JGAESZCBNYSUW7Y
 - 起案者アカウント
   - Carol1
     - txInfo.transaction.signerPublicKey
       - E20A3B5BC132EBE9B075F1B326FE1C4C8827ACEF0DF7F24082D6C6A4A708980B
-    - facade.network.publicKeyToAddress(new sdkCore.PublicKey(txInfo.transaction.signerPublicKey)).toString()
+    - facade.network.publicKeyToAddress(new sdk.core.PublicKey(txInfo.transaction.signerPublicKey)).toString()
       - TCMMKDQUV45LRBU2HJZNLRT32MN7GLX76PLMULQ
 - 連署者アカウント
   - Carol3
     - txInfo.transaction.cosignatures[1].signerPublicKey
       - A33F1B26DE7498EAE8D27A084323BB9D3AA95486F879F248B679A3DEB06D6431
-    - facade.network.publicKeyToAddress(new sdkCore.PublicKey(txInfo.transaction.cosignatures[1].signerPublicKey)).toString()
+    - facade.network.publicKeyToAddress(new sdk.core.PublicKey(txInfo.transaction.cosignatures[1].signerPublicKey)).toString()
       - TB2EIC366LCAORC3AWQNR4ZFHWBPBU47VKOPD5Q
   - Carol3
     - txInfo.transaction.cosignatures[0].signerPublicKey
       - 0ABC3E2B403C9E1597DF04C8E9AE1E9D3F22D70D87A0A7BDC8D1B16BB9D324DD
-    - facade.network.publicKeyToAddress(new sdkCore.PublicKey(txInfo.transaction.cosignatures[0].signerPublicKey)).toString()
+    - facade.network.publicKeyToAddress(new sdk.core.PublicKey(txInfo.transaction.cosignatures[0].signerPublicKey)).toString()
       - TDTW4SWRMI64JM7TK6RJZFEW5XKI4KBQVPQM7QY
 
 ## 9.5 マルチシグ構成変更
@@ -413,7 +413,7 @@ console.log(txInfo);
 
 ```js
 // マルチシグ設定Tx作成
-multisigDescriptor = new symbolSdk.descriptors.MultisigAccountModificationTransactionV1Descriptor(
+multisigDescriptor = new sdk.symbol.descriptors.MultisigAccountModificationTransactionV1Descriptor(
   -1,  // minApproval:承認のために必要な最小署名者数増分
   -1,  // minRemoval:除名のために必要な最小署名者数増分
   [],  // 追加対象アドレスリスト
@@ -423,7 +423,7 @@ multisigDescriptor = new symbolSdk.descriptors.MultisigAccountModificationTransa
 // アグリゲートTx作成
 embeddedTx = facade.createEmbeddedTransactionFromTypedDescriptor(multisigDescriptor, bobKey.publicKey);
 embeddedTransactions = [embeddedTx];
-aggregateDescriptor = new symbolSdk.descriptors.AggregateCompleteTransactionV2Descriptor(
+aggregateDescriptor = new sdk.symbol.descriptors.AggregateCompleteTransactionV2Descriptor(
   facade.static.hashEmbeddedTransactions(embeddedTransactions),
   embeddedTransactions
 );
@@ -444,7 +444,7 @@ await fetch(new URL("/transactions", NODE), {
   method: "PUT",
   headers: { "Content-Type": "application/json" },
   body: JSON.stringify({
-    payload: sdkCore.utils.uint8ToHex(aggregateTx.serialize()),
+    payload: sdk.core.utils.uint8ToHex(aggregateTx.serialize()),
   }),
 });
 ```
@@ -456,7 +456,7 @@ await fetch(new URL("/transactions", NODE), {
 
 ```js
 // マルチシグ設定Tx作成
-multisigDescriptor = new symbolSdk.descriptors.MultisigAccountModificationTransactionV1Descriptor(
+multisigDescriptor = new sdk.symbol.descriptors.MultisigAccountModificationTransactionV1Descriptor(
   0,  // minApproval:承認のために必要な最小署名者数増分
   0,  // minRemoval:除名のために必要な最小署名者数増分
   [carol5Address],  // 追加対象アドレスリスト
@@ -466,7 +466,7 @@ multisigDescriptor = new symbolSdk.descriptors.MultisigAccountModificationTransa
 // アグリゲートTx作成
 embeddedTx = facade.createEmbeddedTransactionFromTypedDescriptor(multisigDescriptor, bobKey.publicKey);
 embeddedTransactions = [embeddedTx];
-aggregateDescriptor = new symbolSdk.descriptors.AggregateCompleteTransactionV2Descriptor(
+aggregateDescriptor = new sdk.symbol.descriptors.AggregateCompleteTransactionV2Descriptor(
   facade.static.hashEmbeddedTransactions(embeddedTransactions),
   embeddedTransactions
 );
@@ -487,7 +487,7 @@ await fetch(new URL("/transactions", NODE), {
   method: "PUT",
   headers: { "Content-Type": "application/json" },
   body: JSON.stringify({
-    payload: sdkCore.utils.uint8ToHex(aggregateTx.serialize()),
+    payload: sdk.core.utils.uint8ToHex(aggregateTx.serialize()),
   }),
 });
 ```
