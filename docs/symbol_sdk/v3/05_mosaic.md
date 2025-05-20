@@ -188,7 +188,7 @@ accountInfo.mosaics.forEach(async (mosaic) => {
 正確にはブロックチェーンへ「トランザクションを送信」することにより、アカウント間でのトークン残量を組み替える操作のことを言います。
 
 ```js
-//受信アカウント作成
+//受信アカウント作成(すでに3,4章で作成済みの場合はスキップ)
 bobKey = facade.createAccount(sdk.core.PrivateKey.random());
 // 既存のprivateKeyで作成する場合
 bobKey = facade.createAccount(new sdk.core.PrivateKey("24B929287E1B68F7CB...."))

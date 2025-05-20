@@ -21,7 +21,7 @@ aliceKey = facade.createAccount(new sdk.core.PrivateKey("24B929287E1B68F7CB...."
 
 console.log(aliceKey);
 aliceAddress = facade.network.publicKeyToAddress(aliceKey.publicKey);
-console.log(aliceAddress);
+console.log(aliceAddress.toString());
 ```
 
 ###### 出力例
@@ -81,7 +81,7 @@ aliceAddress = facade.network.publicKeyToAddress(aliceKey.publicKey);
 ### 公開鍵クラスの生成
 
 ```js
-alicePublicAccount = new sdk.symbol.PublicKey(
+alicePublicAccount = new sdk.core.PublicKey(
   Uint8Array.from(
     Buffer.from(
       "D4933FC1E4C56F9DF9314E9E0533173E1AB727BDB2A04B59F048124E93BEFBD2",
@@ -192,7 +192,7 @@ console.log(accountInfo); // まだ404エラー
 
 #### BigInt
 
-v3 では UInt64 は定義されておらず、大きすぎる数値を表現するために JavaScript の `BigInt` が使用されています。
+v3 では v2で定義されていた UInt64型は は定義されておらず、大きすぎる数値を表現するために JavaScript の `BigInt` が使用されています。
 以降の章で登場するため、ここで構文を紹介します。
 
 ```js
@@ -244,9 +244,9 @@ Alice の秘密鍵・Bob の公開鍵で暗号化し、Alice の公開鍵・Bob 
 
 ```js
 message = "Hello Symbol!";
-aliceMsgEncoder = new sdk.symbol.MessageEncoder(alice);
+aliceMsgEncoder = new sdk.symbol.MessageEncoder(aliceKey);
 
-encryptedMessage = alice.messageEncoder().encode(bobKey.publicKey, new TextEncoder().encode(message));
+encryptedMessage = aliceKey.messageEncoder().encode(bobKey.publicKey, new TextEncoder().encode(message));
 
 console.log(Buffer.from(encryptedMessage).toString("hex").toUpperCase());
 ```
@@ -258,7 +258,7 @@ console.log(Buffer.from(encryptedMessage).toString("hex").toUpperCase());
 #### 復号化
 
 ```js
-decryptMessageData = bob.messageEncoder().tryDecode(alice.publicKey, encryptedMessage);
+decryptMessageData = bobKey.messageEncoder().tryDecode(aliceKey.publicKey, encryptedMessage);
 
 console.log(decryptMessageData);
 if (decryptMessageData.isDecoded) {
@@ -301,7 +301,7 @@ Alice の秘密鍵でメッセージを署名し、Alice の公開鍵と署名�
 
 ```js
 payload = Buffer.from("Hello Symbol!", 'utf-8');
-signature = alice.keyPair.sign(payload);
+signature = aliceKey.keyPair.sign(payload);
 
 console.log(signature.toString());
 ```
@@ -313,7 +313,7 @@ console.log(signature.toString());
 #### 検証
 
 ```js
-verifier = new sdk.symbol.Verifier(alice.publicKey);
+verifier = new sdk.symbol.Verifier(aliceKey.publicKey);
 isVerified = verifier.verify(Buffer.from("Hello Symbol!", 'utf-8'), signature);
 console.log(isVerified);
 ```
@@ -327,9 +327,11 @@ console.log(isVerified);
 ### アカウントの保管
 
 アカウントの管理方法について説明しておきます。  
-秘密鍵はそのままで保存しないようにしてください。symbol-qr-library を利用して秘密鍵をパスフレーズで暗号化して保存する方法を紹介します。
+秘密鍵はそのままで保存しないようにしてください。[symbol-qr-library](https://www.npmjs.com/package/symbol-qr-library) を利用して秘密鍵をパスフレーズで暗号化して保存する方法を紹介します。
 
 #### 秘密鍵の暗号化
+
+※以下のコードはブラウザ用ではなく、npmパッケージとして使用する前提です。
 
 ```js
 qr = require("/node_modules/symbol-qr-library");

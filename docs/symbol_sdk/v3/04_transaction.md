@@ -176,7 +176,7 @@ tx = facade.transactionFactory.create({
 ### 署名
 
 ```js
-sig = facade.signTransaction(aliceKey, tx);
+sig = facade.signTransaction(aliceKey.keyPair, tx);
 jsonPayload = facade.transactionFactory.constructor.attachSignature(tx, sig);
 ```
 
@@ -733,15 +733,15 @@ merkleHash = facade.constructor.hashEmbeddedTransactions(embeddedTransactions);
 aggregateTx = facade.transactionFactory.create({
   type: "aggregate_complete_transaction_v2",
   signerPublicKey: aliceKey.publicKey, // 署名者公開鍵
-  deadline: facade.network.fromDatetime(Date.now()).addHours(2).timestamp, //Deadline:有効期限
+  deadline: facade.network.fromDatetime(new Date()).addHours(2).timestamp, //Deadline:有効期限
   transactionsHash: merkleHash,
   transactions: embeddedTransactions,
 });
-aggregateTx.fee = new sdk.symbol.Amount(1000000n); //手数料
+aggregateTx.fee = new sdk.symbol.models.Amount(1000000n); //手数料
 
 // 署名とアナウンス
-sig = facade.signTransaction(aliceKey, aggregateTx);
-jsonPayload = facade.transactionFactory.constructor.attachSignature(
+sig = facade.signTransaction(aliceKey.keyPair, aggregateTx);
+jsonPayload = facade.transactionFactory.static.attachSignature(
   aggregateTx,
   sig,
 );
@@ -774,7 +774,7 @@ await fetch(new URL("/transactions", NODE), {
 aggregateTx = facade.transactionFactory.create({
   type: "aggregate_complete_transaction_v2",
   signerPublicKey: aliceKey.publicKey, // 署名者公開鍵
-  deadline: facade.network.fromDatetime(Date.now()).addHours(2).timestamp, //Deadline:有効期限
+  deadline: facade.network.fromDatetime(new Date()).addHours(2).timestamp, //Deadline:有効期限
   transactionsHash: merkleHash,
   transactions: embeddedTransactions,
 });
@@ -790,7 +790,7 @@ calculatedSize =
   aggregateTx.size -
   aggregateTx.cosignatures.length * sizePerCosignature +
   calculatedCosignatures * sizePerCosignature;
-aggregateTx.fee = new sdk.symbol.Amount(BigInt(calculatedSize * 100)); //手数料
+aggregateTx.fee = new sdk.symbol.models.Amount(BigInt(calculatedSize * 100)); //手数料
 ```
 
 ## 4.7 現場で使えるヒント
@@ -882,7 +882,7 @@ calculatedSize =
   aggregateTx.size -
   aggregateTx.cosignatures.length * sizePerCosignature +
   calculatedCosignatures * sizePerCosignature;
-aggregateTx.fee = new sdk.models.Amount(BigInt(calculatedSize * 100));
+aggregateTx.fee = new sdk.symbol.models.Amount(BigInt(calculatedSize * 100));
 
 // 署名とアナウンス
 sig = aliceKey.signTransaction(aggregateTx);
