@@ -18,12 +18,12 @@ Aliceが起案者となりトランザクションを作成し、署名します
 
 ```js
 // Bobアカウント生成
-bobKey = facade.createAccount(sdkCore.PrivateKey.random());
+bobKey = facade.createAccount(sdk.core.PrivateKey.random());
 bobAddress = facade.network.publicKeyToAddress(bobKey.publicKey);
 
 // アグリゲートTxに含めるTxを作成
 innerTx1 = facade.createEmbeddedTransactionFromTypedDescriptor(
-  new symbolSdk.descriptors.TransferTransactionV1Descriptor(
+  new sdk.symbol.descriptors.TransferTransactionV1Descriptor(
     bobAddress,
     [],
     new Uint8Array([0x00, ...new TextEncoder().encode("tx1")])
@@ -32,7 +32,7 @@ innerTx1 = facade.createEmbeddedTransactionFromTypedDescriptor(
 );
 
 innerTx2 = facade.createEmbeddedTransactionFromTypedDescriptor(
-  new symbolSdk.descriptors.TransferTransactionV1Descriptor(
+  new sdk.symbol.descriptors.TransferTransactionV1Descriptor(
     aliceKey.address,
     [],
     new Uint8Array([0x00, ...new TextEncoder().encode("tx2")])
@@ -45,7 +45,7 @@ embeddedTransactions = [innerTx1, innerTx2];
 merkleHash = facade.static.hashEmbeddedTransactions(embeddedTransactions);
 
 // アグリゲートTx作成
-aggregateDescriptor = new symbolSdk.descriptors.AggregateCompleteTransactionV2Descriptor(
+aggregateDescriptor = new sdk.symbol.descriptors.AggregateCompleteTransactionV2Descriptor(
   merkleHash,
   embeddedTransactions
 );
@@ -60,7 +60,7 @@ aggregateTx = facade.createTransactionFromTypedDescriptor(
 requiredCosignatures = 1; // 必要な連署者の数
 sizePerCosignature = 8 + 32 + 64;
 calculatedSize = aggregateTx.size + requiredCosignatures * sizePerCosignature;
-aggregateTx.fee = new symbolSdk.models.Amount(BigInt(calculatedSize * 100)); //手数料
+aggregateTx.fee = new sdk.symbol.models.Amount(BigInt(calculatedSize * 100)); //手数料
 
 // 署名
 sig = aliceKey.signTransaction(aggregateTx);
@@ -86,8 +86,8 @@ signedPayloadをBobに渡して署名を促します。
 Aliceから受け取ったsignedPayloadでトランザクションを復元します。
 
 ```js
-tx = symbolSdk.SymbolTransactionFactory.deserialize(
-  sdkCore.utils.hexToUint8(signedPayload)
+tx = sdk.symbol.SymbolTransactionFactory.deserialize(
+  sdk.core.utils.hexToUint8(signedPayload)
 );
 console.log(tx);
 ```
@@ -131,7 +131,7 @@ console.log(res);
 次にBobが連署します。
 
 ```js
-bobCosignature = symbolSdk.SymbolFacade.cosignTransactionHash(bobKey.keyPair, tx._transactionsHash, true);
+bobCosignature = sdk.symbol.SymbolFacade.cosignTransactionHash(bobKey.keyPair, tx._transactionsHash, true);
 bobSignedTxSignature = bobCosignature.signature;
 bobSignedTxSignerPublicKey = bobCosignature.signerPublicKey;
 ```
@@ -145,19 +145,19 @@ AliceはBobからbobSignedTxSignature,bobSignedTxSignerPublicKeyを受け取り�
 また事前にAlice自身で作成したsignedPayloadを用意します。
 
 ```js
-recreatedTx = symbolSdk.SymbolTransactionFactory.deserialize(
-  sdkCore.utils.hexToUint8(signedPayload)
+recreatedTx = sdk.symbol.SymbolTransactionFactory.deserialize(
+  sdk.core.utils.hexToUint8(signedPayload)
 );
 
 // 連署者の署名を追加
-cosignature = new symbolSdk.models.Cosignature();
+cosignature = new sdk.symbol.models.Cosignature();
 cosignature.parentHash = facade.hashTransaction(recreatedTx);
 cosignature.version = 0n;
 cosignature.signerPublicKey = bobSignedTxSignerPublicKey;
 cosignature.signature = bobSignedTxSignature;
 recreatedTx.cosignatures.push(cosignature);
 
-signedPayloadWithCosig = sdkCore.utils.uint8ToHex(recreatedTx.serialize());
+signedPayloadWithCosig = sdk.core.utils.uint8ToHex(recreatedTx.serialize());
 
 // アナウンス
 await fetch(new URL("/transactions", NODE), {

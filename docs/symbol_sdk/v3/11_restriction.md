@@ -9,7 +9,7 @@ sidebar_position: 11
 
 ```js
 // 使い捨てアカウントCarolの生成
-carolKey = facade.createAccount(sdkCore.PrivateKey.random());
+carolKey = facade.createAccount(sdk.core.PrivateKey.random());
 carolAddress = facade.network.publicKeyToAddress(carolKey.publicKey);
 console.log(carolAddress.toString());
 
@@ -26,16 +26,16 @@ console.log(
 ### 指定アドレスからの受信制限・指定アドレスへの送信制限
 
 ```js
-bobKey = facade.createAccount(sdkCore.PrivateKey.random());
+bobKey = facade.createAccount(sdk.core.PrivateKey.random());
 bobAddress = facade.network.publicKeyToAddress(bobKey.publicKey);
 
 // 制限設定
-f = symbolSdk.models.AccountRestrictionFlags.ADDRESS.value; // アドレス制限
-f += symbolSdk.models.AccountRestrictionFlags.BLOCK.value; // ブロック
-flags = new symbolSdk.models.AccountRestrictionFlags(f);
+f = sdk.symbol.models.AccountRestrictionFlags.ADDRESS.value; // アドレス制限
+f += sdk.symbol.models.AccountRestrictionFlags.BLOCK.value; // ブロック
+flags = new sdk.symbol.models.AccountRestrictionFlags(f);
 
 // アドレス制限設定Tx作成
-restrictionDescriptor = new symbolSdk.descriptors.AccountAddressRestrictionTransactionV1Descriptor(
+restrictionDescriptor = new sdk.symbol.descriptors.AccountAddressRestrictionTransactionV1Descriptor(
   flags,
   [bobAddress],
   []
@@ -58,24 +58,24 @@ await fetch(new URL("/transactions", NODE), {
 `AccountRestrictionFlags` との対応は以下の通りです。
 
 - AllowIncomingAddress：指定アドレスからのみ受信許可
-  - symbolSdk.models.AccountRestrictionFlags.ADDRESS
+  - sdk.symbol.models.AccountRestrictionFlags.ADDRESS
 - AllowOutgoingAddress：指定アドレス宛のみ送信許可
-  - symbolSdk.models.AccountRestrictionFlags.ADDRESS + symbolSdk.models.AccountRestrictionFlags.OUTGOING
+  - sdk.symbol.models.AccountRestrictionFlags.ADDRESS + sdk.symbol.models.AccountRestrictionFlags.OUTGOING
 - BlockIncomingAddress：指定アドレスからの受信受拒否
-  - symbolSdk.models.AccountRestrictionFlags.ADDRESS + symbolSdk.models.AccountRestrictionFlags.BLOCK
+  - sdk.symbol.models.AccountRestrictionFlags.ADDRESS + sdk.symbol.models.AccountRestrictionFlags.BLOCK
 - BlockOutgoingAddress：指定アドレス宛への送信禁止
-  - symbolSdk.models.AccountRestrictionFlags.ADDRESS + symbolSdk.models.AccountRestrictionFlags.BLOCK + symbolSdk.models.AccountRestrictionFlags.OUTGOING
+  - sdk.symbol.models.AccountRestrictionFlags.ADDRESS + sdk.symbol.models.AccountRestrictionFlags.BLOCK + sdk.symbol.models.AccountRestrictionFlags.OUTGOING
 
 ### 指定モザイクの受信制限
 
 ```js
 // 制限設定
-f = symbolSdk.models.AccountRestrictionFlags.MOSAIC_ID.value; // モザイク制限
-f += symbolSdk.models.AccountRestrictionFlags.BLOCK.value; // ブロック
-flags = new symbolSdk.models.AccountRestrictionFlags(f);
+f = sdk.symbol.models.AccountRestrictionFlags.MOSAIC_ID.value; // モザイク制限
+f += sdk.symbol.models.AccountRestrictionFlags.BLOCK.value; // ブロック
+flags = new sdk.symbol.models.AccountRestrictionFlags(f);
 
 // モザイク制限設定Tx作成
-restrictionDescriptor = new symbolSdk.descriptors.AccountMosaicRestrictionTransactionV1Descriptor(
+restrictionDescriptor = new sdk.symbol.descriptors.AccountMosaicRestrictionTransactionV1Descriptor(
   flags,
   [0x72c0212e67a08bcen],
   []
@@ -98,9 +98,9 @@ await fetch(new URL("/transactions", NODE), {
 `AccountRestrictionFlags` との対応は以下の通りです。
 
 - AllowMosaic：指定モザイクを含むトランザクションのみ受信許可
-  - symbolSdk.models.AccountRestrictionFlags.MOSAIC_ID
+  - sdk.symbol.models.AccountRestrictionFlags.MOSAIC_ID
 - BlockMosaic：指定モザイクを含むトランザクションを受信拒否
-  - symbolSdk.models.AccountRestrictionFlags.MOSAIC_ID + symbolSdk.models.AccountRestrictionFlags.BLOCK
+  - sdk.symbol.models.AccountRestrictionFlags.MOSAIC_ID + sdk.symbol.models.AccountRestrictionFlags.BLOCK
 
 モザイク送信の制限機能はありません。
 また、後述するモザイクのふるまいを制限するグローバルモザイク制限と混同しないようにご注意ください。
@@ -109,14 +109,14 @@ await fetch(new URL("/transactions", NODE), {
 
 ```js
 // 制限設定
-f = symbolSdk.models.AccountRestrictionFlags.TRANSACTION_TYPE.value; // トランザクション制限
-f += symbolSdk.models.AccountRestrictionFlags.OUTGOING.value; // 送信
-flags = new symbolSdk.models.AccountRestrictionFlags(f);
+f = sdk.symbol.models.AccountRestrictionFlags.TRANSACTION_TYPE.value; // トランザクション制限
+f += sdk.symbol.models.AccountRestrictionFlags.OUTGOING.value; // 送信
+flags = new sdk.symbol.models.AccountRestrictionFlags(f);
 
 // トランザクション制限設定Tx作成
-restrictionDescriptor = new symbolSdk.descriptors.AccountOperationRestrictionTransactionV1Descriptor(
+restrictionDescriptor = new sdk.symbol.descriptors.AccountOperationRestrictionTransactionV1Descriptor(
   flags,
-  [symbolSdk.models.TransactionType.ACCOUNT_OPERATION_RESTRICTION.value],
+  [sdk.symbol.models.TransactionType.ACCOUNT_OPERATION_RESTRICTION.value],
   []
 );
 tx = facade.createTransactionFromTypedDescriptor(restrictionDescriptor, carolKey.publicKey, 100, 60 * 60 * 2);
@@ -137,9 +137,9 @@ await fetch(new URL("/transactions", NODE), {
 `AccountRestrictionFlags` との対応は以下の通りです。
 
 - AllowOutgoingTransactionType：指定トランザクションの送信のみ許可
-  - symbolSdk.models.AccountRestrictionFlags.TRANSACTION_TYPE + symbolSdk.models.AccountRestrictionFlags.OUTGOING
+  - sdk.symbol.models.AccountRestrictionFlags.TRANSACTION_TYPE + sdk.symbol.models.AccountRestrictionFlags.OUTGOING
 - BlockOutgoingTransactionType：指定トランザクションの送信を禁止
-  - symbolSdk.models.AccountRestrictionFlags.TRANSACTION_TYPE + symbolSdk.models.AccountRestrictionFlags.OUTGOING + symbolSdk.models.AccountRestrictionFlags.BLOCK
+  - sdk.symbol.models.AccountRestrictionFlags.TRANSACTION_TYPE + sdk.symbol.models.AccountRestrictionFlags.OUTGOING + sdk.symbol.models.AccountRestrictionFlags.BLOCK
 
 TransactionTypeについては以下の通りです。
 
@@ -209,17 +209,17 @@ restrictableをtrueにしてCarolでモザイクを作成します。
 
 ```js
 // モザイクフラグ設定
-f = symbolSdk.models.MosaicFlags.NONE.value;
-f += symbolSdk.models.MosaicFlags.SUPPLY_MUTABLE.value; // 供給量変更の可否
-f += symbolSdk.models.MosaicFlags.TRANSFERABLE.value; // 第三者への譲渡可否
-f += symbolSdk.models.MosaicFlags.RESTRICTABLE.value; // グローバル制限設定の可否
-f += symbolSdk.models.MosaicFlags.REVOKABLE.value; // 発行者からの還収可否
-flags = new symbolSdk.models.MosaicFlags(f);
+f = sdk.symbol.models.MosaicFlags.NONE.value;
+f += sdk.symbol.models.MosaicFlags.SUPPLY_MUTABLE.value; // 供給量変更の可否
+f += sdk.symbol.models.MosaicFlags.TRANSFERABLE.value; // 第三者への譲渡可否
+f += sdk.symbol.models.MosaicFlags.RESTRICTABLE.value; // グローバル制限設定の可否
+f += sdk.symbol.models.MosaicFlags.REVOKABLE.value; // 発行者からの還収可否
+flags = new sdk.symbol.models.MosaicFlags(f);
 
 // ナンス設定
-array = new Uint8Array(symbolSdk.models.MosaicNonce.SIZE);
+array = new Uint8Array(sdk.symbol.models.MosaicNonce.SIZE);
 crypto.getRandomValues(array);
-nonce = new symbolSdk.models.MosaicNonce(
+nonce = new sdk.symbol.models.MosaicNonce(
   array[0] * 0x00000001 +
     array[1] * 0x00000100 +
     array[2] * 0x00010000 +
@@ -227,22 +227,22 @@ nonce = new symbolSdk.models.MosaicNonce(
 );
 
 // モザイク定義
-mosaicDefDescriptor = new symbolSdk.descriptors.MosaicDefinitionTransactionV1Descriptor(
-  new symbolSdk.models.MosaicId(
-    symbolSdk.generateMosaicId(carolAddress, nonce.value),
+mosaicDefDescriptor = new sdk.symbol.descriptors.MosaicDefinitionTransactionV1Descriptor(
+  new sdk.symbol.models.MosaicId(
+    sdk.symbol.generateMosaicId(carolAddress, nonce.value),
   ),
   0, // divisibility:可分性
-  new symbolSdk.models.BlockDuration(0n), // duration:有効期限
+  new sdk.symbol.models.BlockDuration(0n), // duration:有効期限
   nonce,
   flags
 );
 mosaicDefTx = facade.createEmbeddedTransactionFromTypedDescriptor(mosaicDefDescriptor, carolKey.publicKey);
 
 // モザイク変更
-mosaicChangeDescriptor = new symbolSdk.descriptors.MosaicSupplyChangeTransactionV1Descriptor(
+mosaicChangeDescriptor = new sdk.symbol.descriptors.MosaicSupplyChangeTransactionV1Descriptor(
   mosaicDefTx.id.value,
-  new symbolSdk.models.Amount(1000000n), // 数量
-  symbolSdk.models.MosaicSupplyChangeAction.INCREASE
+  new sdk.symbol.models.Amount(1000000n), // 数量
+  sdk.symbol.models.MosaicSupplyChangeAction.INCREASE
 );
 mosaicChangeTx = facade.createEmbeddedTransactionFromTypedDescriptor(mosaicChangeDescriptor, carolKey.publicKey);
 
@@ -255,18 +255,18 @@ hasher.update(new TextEncoder().encode(key));
 digest = hasher.digest();
 lower = [...digest.subarray(0, 4)];
 lower.reverse();
-lowerValue = BigInt("0x" + sdkCore.utils.uint8ToHex(lower));
+lowerValue = BigInt("0x" + sdk.core.utils.uint8ToHex(lower));
 higher = [...digest.subarray(4, 8)];
 higher.reverse();
-higherValue = BigInt("0x" + sdkCore.utils.uint8ToHex(higher)) | 0x80000000n;
+higherValue = BigInt("0x" + sdk.core.utils.uint8ToHex(higher)) | 0x80000000n;
 keyId = lowerValue + higherValue * 0x100000000n;
 
 // グローバルモザイク制限
-mosaicGlobalResDescriptor = new symbolSdk.descriptors.MosaicGlobalRestrictionTransactionV1Descriptor(
+mosaicGlobalResDescriptor = new sdk.symbol.descriptors.MosaicGlobalRestrictionTransactionV1Descriptor(
   mosaicDefTx.id.value,
   keyId,
   1n,
-  symbolSdk.models.MosaicRestrictionType.EQ
+  sdk.symbol.models.MosaicRestrictionType.EQ
 );
 mosaicGlobalResTx = facade.createEmbeddedTransactionFromTypedDescriptor(mosaicGlobalResDescriptor, carolKey.publicKey);
 
@@ -275,7 +275,7 @@ embeddedTransactions = [mosaicDefTx, mosaicChangeTx, mosaicGlobalResTx];
 merkleHash = facade.static.hashEmbeddedTransactions(embeddedTransactions);
 
 // アグリゲートTx作成
-aggregateDescriptor = new symbolSdk.descriptors.AggregateCompleteTransactionV2Descriptor(
+aggregateDescriptor = new sdk.symbol.descriptors.AggregateCompleteTransactionV2Descriptor(
   merkleHash,
   embeddedTransactions
 );
@@ -315,7 +315,7 @@ Carol,Bobに対してグローバル制限モザイクに対しての適格情�
 
 ```js
 // Carolに適用
-carolMosaicAddressResDescriptor = new symbolSdk.descriptors.MosaicAddressRestrictionTransactionV1Descriptor(
+carolMosaicAddressResDescriptor = new sdk.symbol.descriptors.MosaicAddressRestrictionTransactionV1Descriptor(
   mosaicDefTx.id.value,
   keyId,
   0xffffffffffffffffn,
@@ -334,7 +334,7 @@ await fetch(new URL("/transactions", NODE), {
 });
 
 // Bobに適用
-bobMosaicAddressResDescriptor = new symbolSdk.descriptors.MosaicAddressRestrictionTransactionV1Descriptor(
+bobMosaicAddressResDescriptor = new sdk.symbol.descriptors.MosaicAddressRestrictionTransactionV1Descriptor(
   mosaicDefTx.id.value,
   keyId,
   0xffffffffffffffffn,
@@ -423,7 +423,7 @@ trTx = facade.transactionFactory.create({
   mosaics: [{ mosaicId: mosaicDefTx.id.value, amount: 1n }],
   message: new Uint8Array(),
 });
-trTx.fee = new symbolSdk.symbol.Amount(BigInt(trTx.size * 100)); //手数料
+trTx.fee = new sdk.symbol.symbol.Amount(BigInt(trTx.size * 100)); //手数料
 // 署名とアナウンス
 sig = facade.signTransaction(carolKey, trTx);
 jsonPayload = facade.transactionFactory.constructor.attachSignature(trTx, sig);
@@ -438,7 +438,7 @@ await fetch(new URL("/transactions", NODE), {
   });
 
 // 失敗（CarolからDaveに送信）
-daveKey = facade.createAccount(sdkCore.PrivateKey.random());
+daveKey = facade.createAccount(sdk.core.PrivateKey.random());
 daveAddress = facade.network.publicKeyToAddress(daveKey.publicKey);
 // Tx作成
 trTx = facade.transactionFactory.create({
@@ -449,7 +449,7 @@ trTx = facade.transactionFactory.create({
   mosaics: [{ mosaicId: mosaicDefTx.id.value, amount: 1n }],
   message: new Uint8Array(),
 });
-trTx.fee = new symbolSdk.symbol.Amount(BigInt(trTx.size * 100)); //手数料
+trTx.fee = new sdk.symbol.symbol.Amount(BigInt(trTx.size * 100)); //手数料
 
 // 署名とアナウンス
 sig = facade.signTransaction(carolKey, trTx);

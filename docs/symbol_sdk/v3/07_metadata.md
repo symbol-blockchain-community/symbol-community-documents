@@ -35,10 +35,10 @@ hasher.update(new TextEncoder().encode(key));
 digest = hasher.digest();
 lower = [...digest.subarray(0, 4)];
 lower.reverse();
-lowerValue = BigInt("0x" + sdkCore.utils.uint8ToHex(lower));
+lowerValue = BigInt("0x" + sdk.core.utils.uint8ToHex(lower));
 higher = [...digest.subarray(4, 8)];
 higher.reverse();
-higherValue = BigInt("0x" + sdkCore.utils.uint8ToHex(higher)) | 0x80000000n;
+higherValue = BigInt("0x" + sdk.core.utils.uint8ToHex(higher)) | 0x80000000n;
 keyId = lowerValue + higherValue * 0x100000000n;
 valueData = new TextEncoder().encode(value);
 
@@ -61,7 +61,7 @@ metadataInfo = await fetch(new URL("/metadata?" + query.toString(), NODE), {
 sizeDelta = valueData.length;
 if (metadataInfo.length > 0) {
   sizeDelta -= metadataInfo[0].metadataEntry.valueSize;
-  originData = sdkCore.utils.hexToUint8(metadataInfo[0].metadataEntry.value);
+  originData = sdk.core.utils.hexToUint8(metadataInfo[0].metadataEntry.value);
   diffData = new Uint8Array(Math.max(originData.length, valueData.length));
   for (idx = 0; idx < diffData.length; idx++) {
     diffData[idx] =
@@ -72,7 +72,7 @@ if (metadataInfo.length > 0) {
 }
 
 // アカウントメタデータ登録Tx作成
-metadataDescriptor = new symbolSdk.descriptors.AccountMetadataTransactionV1Descriptor(
+metadataDescriptor = new sdk.symbol.descriptors.AccountMetadataTransactionV1Descriptor(
   targetAddress,
   keyId,
   sizeDelta,
@@ -82,7 +82,7 @@ metadataDescriptor = new symbolSdk.descriptors.AccountMetadataTransactionV1Descr
 // アグリゲートTx作成
 embeddedTx = facade.createEmbeddedTransactionFromTypedDescriptor(metadataDescriptor, aliceKey.publicKey);
 embeddedTransactions = [embeddedTx];
-aggregateDescriptor = new symbolSdk.descriptors.AggregateCompleteTransactionV2Descriptor(
+aggregateDescriptor = new sdk.symbol.descriptors.AggregateCompleteTransactionV2Descriptor(
   facade.static.hashEmbeddedTransactions(embeddedTransactions),
   embeddedTransactions
 );
@@ -115,10 +115,10 @@ hasher.update(new TextEncoder().encode(key));
 digest = hasher.digest();
 lower = [...digest.subarray(0, 4)];
 lower.reverse();
-lowerValue = BigInt("0x" + sdkCore.utils.uint8ToHex(lower));
+lowerValue = BigInt("0x" + sdk.core.utils.uint8ToHex(lower));
 higher = [...digest.subarray(4, 8)];
 higher.reverse();
-higherValue = BigInt("0x" + sdkCore.utils.uint8ToHex(higher)) | 0x80000000n;
+higherValue = BigInt("0x" + sdk.core.utils.uint8ToHex(higher)) | 0x80000000n;
 keyId = lowerValue + higherValue * 0x100000000n;
 valueData = new TextEncoder().encode(value);
 
@@ -142,7 +142,7 @@ metadataInfo = await fetch(new URL("/metadata?" + query.toString(), NODE), {
 sizeDelta = valueData.length;
 if (metadataInfo.length > 0) {
   sizeDelta -= metadataInfo[0].metadataEntry.valueSize;
-  originData = sdkCore.utils.hexToUint8(metadataInfo[0].metadataEntry.value);
+  originData = sdk.core.utils.hexToUint8(metadataInfo[0].metadataEntry.value);
   diffData = new Uint8Array(Math.max(originData.length, valueData.length));
   for (idx = 0; idx < diffData.length; idx++) {
     diffData[idx] =
@@ -153,7 +153,7 @@ if (metadataInfo.length > 0) {
 }
 
 // アカウントメタデータ登録Tx作成
-metadataDescriptor = new symbolSdk.descriptors.AccountMetadataTransactionV1Descriptor(
+metadataDescriptor = new sdk.symbol.descriptors.AccountMetadataTransactionV1Descriptor(
   targetAddress,
   keyId,
   sizeDelta,
@@ -163,7 +163,7 @@ metadataDescriptor = new symbolSdk.descriptors.AccountMetadataTransactionV1Descr
 // アグリゲートTx作成
 embeddedTx = facade.createEmbeddedTransactionFromTypedDescriptor(metadataDescriptor, aliceKey.publicKey);
 embeddedTransactions = [embeddedTx];
-aggregateDescriptor = new symbolSdk.descriptors.AggregateCompleteTransactionV2Descriptor(
+aggregateDescriptor = new sdk.symbol.descriptors.AggregateCompleteTransactionV2Descriptor(
   facade.static.hashEmbeddedTransactions(embeddedTransactions),
   embeddedTransactions
 );
@@ -182,7 +182,7 @@ await fetch(new URL("/transactions", NODE), {
   method: "PUT",
   headers: { "Content-Type": "application/json" },
   body: JSON.stringify({
-    payload: symbolSdk.utils.uint8ToHex(aggregateTx.serialize()),
+    payload: sdk.symbol.utils.uint8ToHex(aggregateTx.serialize()),
   }),
 });
 ```
@@ -209,8 +209,8 @@ mosaicInfo = await fetch(
   .then((json) => {
     return json;
   });
-sourceAddress = new symbolSdk.symbol.Address(
-  symbolSdk.utils.hexToUint8(mosaicInfo.mosaic.ownerAddress),
+sourceAddress = new sdk.symbol.symbol.Address(
+  sdk.symbol.utils.hexToUint8(mosaicInfo.mosaic.ownerAddress),
 ); // モザイク作成者アドレス
 
 // キーと値の設定
@@ -223,10 +223,10 @@ hasher.update(new TextEncoder().encode(key));
 digest = hasher.digest();
 lower = [...digest.subarray(0, 4)];
 lower.reverse();
-lowerValue = BigInt("0x" + sdkCore.utils.uint8ToHex(lower));
+lowerValue = BigInt("0x" + sdk.core.utils.uint8ToHex(lower));
 higher = [...digest.subarray(4, 8)];
 higher.reverse();
-higherValue = BigInt("0x" + sdkCore.utils.uint8ToHex(higher)) | 0x80000000n;
+higherValue = BigInt("0x" + sdk.core.utils.uint8ToHex(higher)) | 0x80000000n;
 keyId = lowerValue + higherValue * 0x100000000n;
 valueData = new TextEncoder().encode(value);
 
@@ -250,7 +250,7 @@ metadataInfo = await fetch(new URL("/metadata?" + query.toString(), NODE), {
 sizeDelta = valueData.length;
 if (metadataInfo.length > 0) {
   sizeDelta -= metadataInfo[0].metadataEntry.valueSize;
-  originData = sdkCore.utils.hexToUint8(metadataInfo[0].metadataEntry.value);
+  originData = sdk.core.utils.hexToUint8(metadataInfo[0].metadataEntry.value);
   diffData = new Uint8Array(Math.max(originData.length, valueData.length));
   for (idx = 0; idx < diffData.length; idx++) {
     diffData[idx] =
@@ -261,7 +261,7 @@ if (metadataInfo.length > 0) {
 }
 
 // モザイクメタデータ登録Tx作成
-metadataDescriptor = new symbolSdk.descriptors.MosaicMetadataTransactionV1Descriptor(
+metadataDescriptor = new sdk.symbol.descriptors.MosaicMetadataTransactionV1Descriptor(
   targetAddress,
   targetMosaic,
   keyId,
@@ -272,7 +272,7 @@ metadataDescriptor = new symbolSdk.descriptors.MosaicMetadataTransactionV1Descri
 // アグリゲートTx作成
 embeddedTx = facade.createEmbeddedTransactionFromTypedDescriptor(metadataDescriptor, aliceKey.publicKey);
 embeddedTransactions = [embeddedTx];
-aggregateDescriptor = new symbolSdk.descriptors.AggregateCompleteTransactionV2Descriptor(
+aggregateDescriptor = new sdk.symbol.descriptors.AggregateCompleteTransactionV2Descriptor(
   facade.static.hashEmbeddedTransactions(embeddedTransactions),
   embeddedTransactions
 );
@@ -291,7 +291,7 @@ await fetch(new URL('/transactions', NODE), { method: 'PUT', headers: { 'Content
 
 ```js
 // ターゲットと作成者アドレスの設定
-targetNamespace = symbolSdk.generateNamespaceId("xembook"); // メタデータ記録先ネームスペース
+targetNamespace = sdk.symbol.generateNamespaceId("xembook"); // メタデータ記録先ネームスペース
 namespaceInfo = await fetch(
   new URL("/namespaces/" + targetNamespace.toString(16).toUpperCase(), NODE),
   {
@@ -303,8 +303,8 @@ namespaceInfo = await fetch(
   .then((json) => {
     return json;
   });
-sourceAddress = new symbolSdk.symbol.Address(
-  symbolSdk.utils.hexToUint8(namespaceInfo.namespace.ownerAddress),
+sourceAddress = new sdk.symbol.symbol.Address(
+  sdk.symbol.utils.hexToUint8(namespaceInfo.namespace.ownerAddress),
 ); // ネームスペース作成者アドレス
 
 // キーと値の設定
@@ -317,10 +317,10 @@ hasher.update(new TextEncoder().encode(key));
 digest = hasher.digest();
 lower = [...digest.subarray(0, 4)];
 lower.reverse();
-lowerValue = BigInt("0x" + sdkCore.utils.uint8ToHex(lower));
+lowerValue = BigInt("0x" + sdk.core.utils.uint8ToHex(lower));
 higher = [...digest.subarray(4, 8)];
 higher.reverse();
-higherValue = BigInt("0x" + sdkCore.utils.uint8ToHex(higher)) | 0x80000000n;
+higherValue = BigInt("0x" + sdk.core.utils.uint8ToHex(higher)) | 0x80000000n;
 keyId = lowerValue + higherValue * 0x100000000n;
 valueData = new TextEncoder().encode(value);
 
@@ -344,7 +344,7 @@ metadataInfo = await fetch(new URL("/metadata?" + query.toString(), NODE), {
 sizeDelta = valueData.length;
 if (metadataInfo.length > 0) {
   sizeDelta -= metadataInfo[0].metadataEntry.valueSize;
-  originData = sdkCore.utils.hexToUint8(metadataInfo[0].metadataEntry.value);
+  originData = sdk.core.utils.hexToUint8(metadataInfo[0].metadataEntry.value);
   diffData = new Uint8Array(Math.max(originData.length, valueData.length));
   for (idx = 0; idx < diffData.length; idx++) {
     diffData[idx] =
@@ -355,7 +355,7 @@ if (metadataInfo.length > 0) {
 }
 
 // ネームスペースメタデータ登録Tx作成
-metadataDescriptor = new symbolSdk.descriptors.NamespaceMetadataTransactionV1Descriptor(
+metadataDescriptor = new sdk.symbol.descriptors.NamespaceMetadataTransactionV1Descriptor(
   targetAddress,
   targetNamespace,
   keyId,
@@ -366,7 +366,7 @@ metadataDescriptor = new symbolSdk.descriptors.NamespaceMetadataTransactionV1Des
 // アグリゲートTx作成
 embeddedTx = facade.createEmbeddedTransactionFromTypedDescriptor(metadataDescriptor, aliceKey.publicKey);
 embeddedTransactions = [embeddedTx];
-aggregateDescriptor = new symbolSdk.descriptors.AggregateCompleteTransactionV2Descriptor(
+aggregateDescriptor = new sdk.symbol.descriptors.AggregateCompleteTransactionV2Descriptor(
   facade.static.hashEmbeddedTransactions(embeddedTransactions),
   embeddedTransactions
 );

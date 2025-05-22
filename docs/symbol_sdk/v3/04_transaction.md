@@ -41,7 +41,7 @@ sidebar_position: 4
 送信先のBobアドレスを作成しておきます。
 
 ```js
-bobKey = facade.createAccount(sdkCore.PrivateKey.random());
+bobKey = facade.createAccount(sdk.core.PrivateKey.random());
 console.log(bobKey.address.toString());
 ```
 
@@ -61,15 +61,15 @@ messageData = new Uint8Array([
 // または下記
 messageData = "\0Hello, Symbol!";  // 平文メッセージ（先頭に0x00）
 
-descriptor = new symbolSdk.descriptors.TransferTransactionV1Descriptor(
+descriptor = new sdk.symbol.descriptors.TransferTransactionV1Descriptor(
   bobKey.address,
   [
     // 1XYM 送金
-    new symbolSdk.descriptors.UnresolvedMosaicDescriptor(
+    new sdk.symbol.descriptors.UnresolvedMosaicDescriptor(
       // symbol.xymのモザイクID: 0x72C0212E67A08BCE
-      new symbolSdk.models.UnresolvedMosaicId(0x72C0212E67A08BCEn),
+      new sdk.symbol.models.UnresolvedMosaicId(0x72C0212E67A08BCEn),
       // 1XYM(1 * 可分性6)
-      new symbolSdk.models.Amount(1n * 1_000_000n)
+      new sdk.symbol.models.Amount(1n * 1_000_000n)
     )
   ],
   messageData
@@ -117,7 +117,7 @@ messageData = new Uint8Array([
 
 ```js
 message = "Hello Symbol!";
-aliceMsgEncoder = new symbolSdk.MessageEncoder(aliceKey.keyPair);
+aliceMsgEncoder = new sdk.symbol.MessageEncoder(aliceKey.keyPair);
 messageData = aliceMsgEncoder.encode(
   bobKey.publicKey,
   new TextEncoder().encode(message),
@@ -154,7 +154,7 @@ tx = facade.transactionFactory.create({
   type: "transfer_transaction_v1", // Txタイプ:転送Tx
   // 省略
 });
-tx.fee = new symbolSdk.symbol.Amount(BigInt(tx.size * 100)); //手数料
+tx.fee = new sdk.symbol.Amount(BigInt(tx.size * 100)); //手数料
 ```
 
 ##### maxFee = 17600 として指定する方法
@@ -176,7 +176,7 @@ tx = facade.transactionFactory.create({
 ### 署名
 
 ```js
-sig = facade.signTransaction(aliceKey, tx);
+sig = facade.signTransaction(aliceKey.keyPair, tx);
 jsonPayload = facade.transactionFactory.constructor.attachSignature(tx, sig);
 ```
 
@@ -450,7 +450,7 @@ plainMessage = new Uint8Array([
   ...new TextEncoder("utf-8").encode("Hello, Symbol!"),
 ]);
 console.log(plainMessage);
-aliceMsgEncoder = new symbolSdk.symbol.MessageEncoder(aliceKey);
+aliceMsgEncoder = new sdk.symbol.MessageEncoder(aliceKey);
 encryptedMessage = aliceMsgEncoder.encode(
   bobKey.publicKey,
   new TextEncoder().encode(message),
@@ -523,7 +523,7 @@ console.log(signedTx.hash);
 
 ```js
 // 暗号化メッセージの作成
-aliceMsgEncoder = new symbolSdk.symbol.MessageEncoder(aliceKey);
+aliceMsgEncoder = new sdk.symbol.MessageEncoder(aliceKey);
 encryptedMessage = aliceMsgEncoder.encode(
   bobKey.publicKey,
   new TextEncoder().encode("Hello Symbol!"),
@@ -540,7 +540,7 @@ tx = facade.transactionFactory.create({
   ],
   message: encryptedMessage,
 });
-tx.fee = new symbolSdk.symbol.Amount(BigInt(tx.size * 100)); //手数料
+tx.fee = new sdk.symbol.Amount(BigInt(tx.size * 100)); //手数料
 
 // 署名とアナウンス
 sig = facade.signTransaction(aliceKey, tx);
@@ -603,7 +603,7 @@ txInfo = await fetch(
   });
 
 // メッセージを復号化して表示
-bobMsgEncoder = new symbolSdk.symbol.MessageEncoder(bobKey);
+bobMsgEncoder = new sdk.symbol.MessageEncoder(bobKey);
 console.log(
   bobMsgEncoder.tryDecode(
     aliceKey.publicKey,
@@ -628,7 +628,7 @@ v2 で作成したメッセージを v3 で読み込むためには、16進数�
 messageV2 = txInfo.transaction.message.substr(2); // メッセージタイプを取り除く
 hex1 = Buffer.from(messageV2, "hex"); // 1回目の16進数文字列から戻す変換
 hex2 = Buffer.from(hex1.toString(), "hex"); // 2回目の16進数文字列から戻す変換
-bobMsgEncoder = new symbolSdk.symbol.MessageEncoder(bobKey);
+bobMsgEncoder = new sdk.symbol.MessageEncoder(bobKey);
 console.log(
   bobMsgEncoder.tryDecode(aliceKey.publicKey, new Uint8Array([0x01, ...hex2])),
 ); // メッセージタイプ 0x01 を付けてメッセージを復号する
@@ -659,7 +659,7 @@ v2 で読み込めるようにするため、 v3 でメッセージを作成す�
 
 ```js
 // 暗号化メッセージの作成
-aliceMsgEncoder = new symbolSdk.symbol.MessageEncoder(aliceKey);
+aliceMsgEncoder = new sdk.symbol.MessageEncoder(aliceKey);
 encrypted = aliceMsgEncoder.encode(bobKey.publicKey, "Hello Symbol!");
 hex1 = Buffer.from(encrypted).subarray(1).toString("hex").toUpperCase();
 encryptedMessage = new Uint8Array([0x01, ...new TextEncoder().encode(hex1)]);
@@ -705,9 +705,9 @@ Symbolでは複数のトランザクションを1ブロックにまとめてア�
 ### 起案者の署名だけが必要な場合
 
 ```js
-bobKey = new symbolSdk.symbol.KeyPair(symbolSdk.PrivateKey.random());
+bobKey = new sdk.symbol.KeyPair(sdk.PrivateKey.random());
 bobAddress = facade.network.publicKeyToAddress(bobKey.publicKey);
-carolKey = new symbolSdk.symbol.KeyPair(symbolSdk.PrivateKey.random());
+carolKey = new sdk.symbol.KeyPair(sdk.PrivateKey.random());
 carolAddress = facade.network.publicKeyToAddress(carolKey.publicKey);
 
 // アグリゲートTxに含めるTxを作成
@@ -733,15 +733,15 @@ merkleHash = facade.constructor.hashEmbeddedTransactions(embeddedTransactions);
 aggregateTx = facade.transactionFactory.create({
   type: "aggregate_complete_transaction_v2",
   signerPublicKey: aliceKey.publicKey, // 署名者公開鍵
-  deadline: facade.network.fromDatetime(Date.now()).addHours(2).timestamp, //Deadline:有効期限
+  deadline: facade.network.fromDatetime(new Date()).addHours(2).timestamp, //Deadline:有効期限
   transactionsHash: merkleHash,
   transactions: embeddedTransactions,
 });
-aggregateTx.fee = new symbolSdk.symbol.Amount(1000000n); //手数料
+aggregateTx.fee = new sdk.symbol.models.Amount(1000000n); //手数料
 
 // 署名とアナウンス
-sig = facade.signTransaction(aliceKey, aggregateTx);
-jsonPayload = facade.transactionFactory.constructor.attachSignature(
+sig = facade.signTransaction(aliceKey.keyPair, aggregateTx);
+jsonPayload = facade.transactionFactory.static.attachSignature(
   aggregateTx,
   sig,
 );
@@ -774,7 +774,7 @@ await fetch(new URL("/transactions", NODE), {
 aggregateTx = facade.transactionFactory.create({
   type: "aggregate_complete_transaction_v2",
   signerPublicKey: aliceKey.publicKey, // 署名者公開鍵
-  deadline: facade.network.fromDatetime(Date.now()).addHours(2).timestamp, //Deadline:有効期限
+  deadline: facade.network.fromDatetime(new Date()).addHours(2).timestamp, //Deadline:有効期限
   transactionsHash: merkleHash,
   transactions: embeddedTransactions,
 });
@@ -790,7 +790,7 @@ calculatedSize =
   aggregateTx.size -
   aggregateTx.cosignatures.length * sizePerCosignature +
   calculatedCosignatures * sizePerCosignature;
-aggregateTx.fee = new symbolSdk.symbol.Amount(BigInt(calculatedSize * 100)); //手数料
+aggregateTx.fee = new sdk.symbol.models.Amount(BigInt(calculatedSize * 100)); //手数料
 ```
 
 ## 4.7 現場で使えるヒント
@@ -844,7 +844,7 @@ console.log(payloads);
 // 分割したデータごとにトランザクションを作成（SDK v3形式）
 innerTxs = payloads.map((payload) => {
   // descriptor生成
-  const descriptor = new symbolSdk.descriptors.TransferTransactionV1Descriptor(
+  const descriptor = new sdk.symbol.descriptors.TransferTransactionV1Descriptor(
     bobAddress,
     [],
     new Uint8Array([0xff, ...new TextEncoder("utf-8").encode(payload)])
@@ -857,7 +857,7 @@ innerTxs = payloads.map((payload) => {
 merkleHash = facade.static.hashEmbeddedTransactions(innerTxs);
 
 // AggregateCompleteTransactionのdescriptor生成
-aggregateDescriptor = new symbolSdk.descriptors.AggregateCompleteTransactionV2Descriptor(
+aggregateDescriptor = new sdk.symbol.descriptors.AggregateCompleteTransactionV2Descriptor(
   merkleHash,
   innerTxs
 );
@@ -882,7 +882,7 @@ calculatedSize =
   aggregateTx.size -
   aggregateTx.cosignatures.length * sizePerCosignature +
   calculatedCosignatures * sizePerCosignature;
-aggregateTx.fee = new symbolSdk.models.Amount(BigInt(calculatedSize * 100));
+aggregateTx.fee = new sdk.symbol.models.Amount(BigInt(calculatedSize * 100));
 
 // 署名とアナウンス
 sig = aliceKey.signTransaction(aggregateTx);

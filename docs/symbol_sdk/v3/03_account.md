@@ -15,13 +15,13 @@ sidebar_position: 3
 以下の手順で秘密鍵を作成し、秘密鍵より公開鍵を導出します。
 
 ```js
-aliceKey = facade.createAccount(sdkCore.PrivateKey.random());
+aliceKey = facade.createAccount(sdk.core.PrivateKey.random());
 // 既存のprivateKeyで作成する場合
-aliceKey = facade.createAccount(new sdkCore.PrivateKey("24B929287E1B68F7CB...."))
+aliceKey = facade.createAccount(new sdk.core.PrivateKey("24B929287E1B68F7CB...."))
 
 console.log(aliceKey);
 aliceAddress = facade.network.publicKeyToAddress(aliceKey.publicKey);
-console.log(aliceAddress);
+console.log(aliceAddress.toString());
 ```
 
 ###### 出力例
@@ -72,7 +72,7 @@ console.log(aliceRawAddress);
 
 ```js
 aliceKey = facade.createAccount(
-  new sdkCore.PrivateKey("1E9139CC1580B4AED6A1FE110085281D4982ED0D89CE07F3380EB83069B1****")
+  new sdk.core.PrivateKey("1E9139CC1580B4AED6A1FE110085281D4982ED0D89CE07F3380EB83069B1****")
 );
 
 aliceAddress = facade.network.publicKeyToAddress(aliceKey.publicKey);
@@ -81,7 +81,7 @@ aliceAddress = facade.network.publicKeyToAddress(aliceKey.publicKey);
 ### 公開鍵クラスの生成
 
 ```js
-alicePublicAccount = new symbolSdk.symbol.PublicKey(
+alicePublicAccount = new sdk.core.PublicKey(
   Uint8Array.from(
     Buffer.from(
       "D4933FC1E4C56F9DF9314E9E0533173E1AB727BDB2A04B59F048124E93BEFBD2",
@@ -90,7 +90,7 @@ alicePublicAccount = new symbolSdk.symbol.PublicKey(
   ),
 );
 alicePublicAccount = facade.createPublicAccount(
-  new sdkCore.PublicKey(
+  new sdk.core.PublicKey(
     "D4933FC1E4C56F9DF9314E9E0533173E1AB727BDB2A04B59F048124E93BEFBD2"
   )
 );
@@ -109,7 +109,7 @@ console.log(alicePublicAccount.publicKey.toString());
 ### アドレスクラスの生成
 
 ```js
-aliceAddress = new symbolSdk.symbol.Address(
+aliceAddress = new sdk.symbol.Address(
   "TBXUTAX6O6EUVPB6X7OBNX6UUXBMPPAFX7KE5TQ",
 );
 console.log(aliceAddress.toString());
@@ -192,7 +192,7 @@ console.log(accountInfo); // まだ404エラー
 
 #### BigInt
 
-v3 では UInt64 は定義されておらず、大きすぎる数値を表現するために JavaScript の `BigInt` が使用されています。
+v3 では v2で定義されていた UInt64型は は定義されておらず、大きすぎる数値を表現するために JavaScript の `BigInt` が使用されています。
 以降の章で登場するため、ここで構文を紹介します。
 
 ```js
@@ -235,7 +235,7 @@ console.log(displayAmount);
 #### 事前準備：対話のための Bob アカウントを生成
 
 ```js
-bobKey = facade.createAccount(sdkCore.PrivateKey.random());
+bobKey = facade.createAccount(sdk.core.PrivateKey.random());
 ```
 
 #### 暗号化
@@ -244,9 +244,9 @@ Alice の秘密鍵・Bob の公開鍵で暗号化し、Alice の公開鍵・Bob 
 
 ```js
 message = "Hello Symbol!";
-aliceMsgEncoder = new symbolSdk.symbol.MessageEncoder(aliceKey);
+aliceMsgEncoder = new sdk.symbol.MessageEncoder(aliceKey);
 
-encryptedMessage = alice.messageEncoder().encode(bobKey.publicKey, new TextEncoder().encode(message));
+encryptedMessage = aliceKey.messageEncoder().encode(bobKey.publicKey, new TextEncoder().encode(message));
 
 console.log(Buffer.from(encryptedMessage).toString("hex").toUpperCase());
 ```
@@ -258,7 +258,7 @@ console.log(Buffer.from(encryptedMessage).toString("hex").toUpperCase());
 #### 復号化
 
 ```js
-decryptMessageData = bob.messageEncoder().tryDecode(alice.publicKey, encryptedMessage);
+decryptMessageData = bobKey.messageEncoder().tryDecode(aliceKey.publicKey, encryptedMessage);
 
 console.log(decryptMessageData);
 if (decryptMessageData.isDecoded) {
@@ -301,7 +301,7 @@ Alice の秘密鍵でメッセージを署名し、Alice の公開鍵と署名�
 
 ```js
 payload = Buffer.from("Hello Symbol!", 'utf-8');
-signature = alice.keyPair.sign(payload);
+signature = aliceKey.keyPair.sign(payload);
 
 console.log(signature.toString());
 ```
@@ -313,7 +313,7 @@ console.log(signature.toString());
 #### 検証
 
 ```js
-verifier = new symbolSdk.Verifier(alice.publicKey);
+verifier = new sdk.symbol.Verifier(aliceKey.publicKey);
 isVerified = verifier.verify(Buffer.from("Hello Symbol!", 'utf-8'), signature);
 console.log(isVerified);
 ```
@@ -327,9 +327,11 @@ console.log(isVerified);
 ### アカウントの保管
 
 アカウントの管理方法について説明しておきます。  
-秘密鍵はそのままで保存しないようにしてください。symbol-qr-library を利用して秘密鍵をパスフレーズで暗号化して保存する方法を紹介します。
+秘密鍵はそのままで保存しないようにしてください。[symbol-qr-library](https://www.npmjs.com/package/symbol-qr-library) を利用して秘密鍵をパスフレーズで暗号化して保存する方法を紹介します。
 
 #### 秘密鍵の暗号化
+
+※以下のコードはブラウザ用ではなく、npmパッケージとして使用する前提です。
 
 ```js
 qr = require("/node_modules/symbol-qr-library");
